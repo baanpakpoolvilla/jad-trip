@@ -19,6 +19,13 @@ type Defaults = {
   bio: string;
   avatarUrl: string;
   isGuide: boolean;
+  socialWebsite: string;
+  socialLine: string;
+  socialFacebook: string;
+  socialInstagram: string;
+  socialTiktok: string;
+  socialYoutube: string;
+  socialX: string;
 };
 
 export function OrganizerProfileForm({ defaults }: { defaults: Defaults }) {
@@ -41,6 +48,8 @@ export function OrganizerProfileForm({ defaults }: { defaults: Defaults }) {
     }
   }, [state, router]);
 
+  const initial = defaults.name.trim().charAt(0) || "?";
+
   return (
     <form action={formAction} className="space-y-6">
       {state && "error" in state && state.error ? (
@@ -51,6 +60,73 @@ export function OrganizerProfileForm({ defaults }: { defaults: Defaults }) {
           บันทึกโปรไฟล์แล้ว
         </p>
       ) : null}
+
+      <input type="hidden" name="avatarUrl" value={avatarUrl} readOnly />
+
+      <div className="flex flex-col items-center text-center">
+        <div
+          className="relative size-28 shrink-0 overflow-hidden rounded-full border-2 border-border bg-canvas-muted shadow-sm ring-1 ring-black/5 sm:size-36"
+          role="img"
+          aria-label={
+            avatarUrl ? "รูปโปรไฟล์ปัจจุบัน" : "ยังไม่มีรูปโปรไฟล์"
+          }
+        >
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <div className="flex size-full items-center justify-center bg-brand-light/40 text-2xl font-semibold text-brand sm:text-3xl">
+              {initial}
+            </div>
+          )}
+        </div>
+        <p className="mt-3 text-xs font-medium uppercase tracking-wide text-fg-muted">
+          รูปโปรไฟล์
+        </p>
+        <p className="mt-1 max-w-sm text-[11px] leading-relaxed text-fg-hint sm:text-xs">
+          แสดงบนการ์ดผู้จัดในหน้าทริป — JPEG / PNG / WebP / GIF ไม่เกิน 5 MB
+        </p>
+        <input
+          type="file"
+          accept={ORGANIZER_IMAGE_ACCEPT}
+          disabled={pending || avatarBusy}
+          className="jad-input mx-auto mt-3 max-w-full file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-brand-mid sm:max-w-md"
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (!f) return;
+            setUploadErr(null);
+            setAvatarBusy(true);
+            try {
+              setAvatarUrl(await uploadOrganizerImageFile(f));
+            } catch (err) {
+              setUploadErr(
+                err instanceof Error ? err.message : "อัปโหลดไม่สำเร็จ",
+              );
+            } finally {
+              setAvatarBusy(false);
+            }
+          }}
+        />
+        {avatarBusy ? (
+          <p className="mt-2 text-xs text-fg-muted">กำลังอัปโหลด…</p>
+        ) : null}
+        {uploadErr ? (
+          <p className="mt-2 max-w-md text-sm text-red-600 dark:text-red-400">{uploadErr}</p>
+        ) : null}
+        {avatarUrl ? (
+          <button
+            type="button"
+            className="mt-2 text-xs font-medium text-brand hover:text-brand-mid"
+            onClick={() => {
+              setAvatarUrl("");
+              setUploadErr(null);
+            }}
+          >
+            ลบรูปโปรไฟล์
+          </button>
+        ) : null}
+      </div>
 
       <div className="jad-card space-y-4">
         <p className="text-xs font-medium uppercase tracking-wide text-brand">บัญชี</p>
@@ -88,62 +164,6 @@ export function OrganizerProfileForm({ defaults }: { defaults: Defaults }) {
             className="jad-input mt-1"
           />
         </div>
-        <input type="hidden" name="avatarUrl" value={avatarUrl} readOnly />
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
-            รูปโปรไฟล์ — อัปโหลด (JPEG / PNG / WebP / GIF ไม่เกิน 5 MB)
-          </label>
-          {avatarUrl ? (
-            <div className="relative mt-2 inline-block max-w-full">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={avatarUrl}
-                alt=""
-                className="max-h-32 max-w-[200px] rounded-xl border border-border object-cover"
-              />
-            </div>
-          ) : null}
-          <input
-            type="file"
-            accept={ORGANIZER_IMAGE_ACCEPT}
-            disabled={pending || avatarBusy}
-            className="jad-input mt-2 file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-brand-mid"
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              e.target.value = "";
-              if (!f) return;
-              setUploadErr(null);
-              setAvatarBusy(true);
-              try {
-                setAvatarUrl(await uploadOrganizerImageFile(f));
-              } catch (err) {
-                setUploadErr(
-                  err instanceof Error ? err.message : "อัปโหลดไม่สำเร็จ",
-                );
-              } finally {
-                setAvatarBusy(false);
-              }
-            }}
-          />
-          {avatarBusy ? (
-            <p className="mt-1 text-xs text-fg-muted">กำลังอัปโหลด…</p>
-          ) : null}
-          {uploadErr ? (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{uploadErr}</p>
-          ) : null}
-          {avatarUrl ? (
-            <button
-              type="button"
-              className="mt-2 text-xs font-medium text-brand hover:text-brand-mid"
-              onClick={() => {
-                setAvatarUrl("");
-                setUploadErr(null);
-              }}
-            >
-              ลบรูปโปรไฟล์
-            </button>
-          ) : null}
-        </div>
         <div>
           <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
             แนะนำตัว / ประสบการณ์นำทริป
@@ -174,6 +194,95 @@ export function OrganizerProfileForm({ defaults }: { defaults: Defaults }) {
           <p className="mt-2 font-mono text-[11px] text-fg-hint">
             รหัสผู้ใช้ของคุณ: {defaults.userId}
           </p>
+        </div>
+      </div>
+
+      <div className="jad-card space-y-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-brand">โซเชียลมีเดีย</p>
+        <p className="text-[11px] leading-relaxed text-fg-muted sm:text-xs">
+          ไม่บังคับ — วาง URL เต็ม (เช่น <span className="font-mono text-fg-hint">https://…</span>) จะแสดงในหน้าโปรไฟล์สาธารณะของคุณเท่านั้น
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
+              เว็บไซต์ / Linktree
+            </label>
+            <input
+              name="socialWebsite"
+              type="text"
+              inputMode="url"
+              placeholder="https://"
+              defaultValue={defaults.socialWebsite}
+              autoComplete="url"
+              className="jad-input mt-1"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">LINE</label>
+            <input
+              name="socialLine"
+              type="text"
+              inputMode="url"
+              placeholder="https://line.me/… หรือลิงก์อื่น"
+              defaultValue={defaults.socialLine}
+              className="jad-input mt-1"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">Facebook</label>
+            <input
+              name="socialFacebook"
+              type="text"
+              inputMode="url"
+              placeholder="https://facebook.com/…"
+              defaultValue={defaults.socialFacebook}
+              className="jad-input mt-1"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">Instagram</label>
+            <input
+              name="socialInstagram"
+              type="text"
+              inputMode="url"
+              placeholder="https://instagram.com/…"
+              defaultValue={defaults.socialInstagram}
+              className="jad-input mt-1"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">TikTok</label>
+            <input
+              name="socialTiktok"
+              type="text"
+              inputMode="url"
+              placeholder="https://tiktok.com/@…"
+              defaultValue={defaults.socialTiktok}
+              className="jad-input mt-1"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">YouTube</label>
+            <input
+              name="socialYoutube"
+              type="text"
+              inputMode="url"
+              placeholder="https://youtube.com/…"
+              defaultValue={defaults.socialYoutube}
+              className="jad-input mt-1"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">X (Twitter)</label>
+            <input
+              name="socialX"
+              type="text"
+              inputMode="url"
+              placeholder="https://x.com/…"
+              defaultValue={defaults.socialX}
+              className="jad-input mt-1"
+            />
+          </div>
         </div>
       </div>
 

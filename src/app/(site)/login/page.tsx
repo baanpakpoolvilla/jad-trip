@@ -3,9 +3,16 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { LoginForm } from "@/components/login-form";
 
-export default async function LoginPage() {
+type Props = { searchParams: Promise<{ reset?: string | string[] }> };
+
+export default async function LoginPage({ searchParams }: Props) {
   const session = await auth();
   if (session?.user) redirect("/post-login");
+
+  const sp = await searchParams;
+  const raw = sp.reset;
+  const resetOk =
+    raw === "1" || (Array.isArray(raw) && raw.includes("1"));
 
   return (
     <div className="space-y-6">
@@ -14,7 +21,7 @@ export default async function LoginPage() {
         <p className="text-sm text-fg-muted">สำหรับผู้จัดทริปและแอดมิน</p>
       </header>
       <div className="jad-card">
-        <LoginForm />
+        <LoginForm resetSuccess={resetOk} />
       </div>
       <p className="text-center text-sm text-fg-muted">
         ยังไม่มีบัญชี?{" "}

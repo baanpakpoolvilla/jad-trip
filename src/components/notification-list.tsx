@@ -21,6 +21,8 @@ export type NotificationListItem = {
   href: string | null;
   readAt: string | null;
   createdAtIso: string;
+  /** แสดงวันที่แบบอ่านง่าย — สร้างฝั่งเซิร์ฟเวอร์ (ห้ามส่งฟังก์ชันเข้า client) */
+  createdAtLabel: string;
 };
 
 function relativePastTh(iso: string): string | null {
@@ -49,12 +51,10 @@ function KindIcon({ kind }: { kind: string }) {
 
 export function NotificationList({
   items,
-  formatDate,
   totalCount,
   unreadCount,
 }: {
   items: NotificationListItem[];
-  formatDate: (iso: string) => string;
   totalCount: number;
   unreadCount: number;
 }) {
@@ -175,7 +175,7 @@ export function NotificationList({
                     <p className="mt-1 text-sm leading-relaxed text-fg-muted">{n.message}</p>
                     <p className="mt-2 text-xs text-fg-hint">
                       {rel ? <span>{rel} · </span> : null}
-                      <span className="tabular-nums">{formatDate(n.createdAtIso)}</span>
+                      <span className="tabular-nums">{n.createdAtLabel}</span>
                       <span className="text-fg-hint"> · {meta.shortHint}</span>
                     </p>
                   </div>

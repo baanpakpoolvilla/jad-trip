@@ -142,7 +142,7 @@ export function OrganizerAppShell({
   };
 
   useEffect(() => {
-    setMenuOpen(false);
+    queueMicrotask(() => setMenuOpen(false));
   }, [pathname]);
 
   useEffect(() => {

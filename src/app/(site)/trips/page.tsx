@@ -32,7 +32,10 @@ export default async function TripsPage({ searchParams }: Props) {
           <p className="rounded-lg bg-canvas-muted px-3 py-2 font-mono text-xs text-fg break-all">
             /o/รหัสย่อ8ตัว
           </p>
-          <p className="text-xs text-fg-hint">ลิงก์ย่อจะเปิดหน้ารายการทริปของผู้จัดอัตโนมัติ</p>
+          <p className="text-xs text-fg-hint">
+            ลิงก์ย่อจะเปิดหน้ารายการทริปของผู้จัดอัตโนมัติ — โปรไฟล์สาธารณะอยู่ที่{" "}
+            <span className="font-mono text-fg-muted">/o/รหัสย่อ8ตัว/profile</span>
+          </p>
           <p className="rounded-lg bg-canvas-muted px-3 py-2 font-mono text-xs text-fg break-all">
             /trips?o=รหัสผู้จัด
           </p>
@@ -45,6 +48,7 @@ export default async function TripsPage({ searchParams }: Props) {
   }
 
   const host = await getOrganizerBrochureHost(organizerParam);
+
   if (!host) {
     return (
       <div className="space-y-8">

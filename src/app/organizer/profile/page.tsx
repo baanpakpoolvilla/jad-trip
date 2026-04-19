@@ -21,6 +21,13 @@ export default async function OrganizerProfilePage() {
       avatarUrl: true,
       isGuide: true,
       updatedAt: true,
+      socialWebsite: true,
+      socialLine: true,
+      socialFacebook: true,
+      socialInstagram: true,
+      socialTiktok: true,
+      socialYoutube: true,
+      socialX: true,
     },
   });
   if (!user) redirect("/login");
@@ -33,6 +40,13 @@ export default async function OrganizerProfilePage() {
     bio: user.bio ?? "",
     avatarUrl: user.avatarUrl ?? "",
     isGuide: user.isGuide,
+    socialWebsite: user.socialWebsite ?? "",
+    socialLine: user.socialLine ?? "",
+    socialFacebook: user.socialFacebook ?? "",
+    socialInstagram: user.socialInstagram ?? "",
+    socialTiktok: user.socialTiktok ?? "",
+    socialYoutube: user.socialYoutube ?? "",
+    socialX: user.socialX ?? "",
   };
 
   return (

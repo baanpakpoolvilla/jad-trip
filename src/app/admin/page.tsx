@@ -18,7 +18,7 @@ export default async function AdminHomePage() {
         <h1 className="jad-page-title">ภาพรวม</h1>
         <p className="text-sm text-fg-muted">ข้อมูลรวมในระบบ</p>
       </header>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
           { label: "ผู้ใช้", value: users, href: "/admin/users" },
           { label: "ทริป", value: trips, href: "/admin/trips" },
@@ -28,10 +28,10 @@ export default async function AdminHomePage() {
           <Link
             key={c.label}
             href={c.href}
-            className="jad-card-interactive block transition-colors"
+            className="jad-card-interactive block min-w-0 px-2 py-2.5 transition-colors sm:px-4 sm:py-4"
           >
-            <p className="text-sm text-fg-muted">{c.label}</p>
-            <p className="mt-2 text-3xl font-semibold tabular-nums text-fg">{c.value}</p>
+            <p className="line-clamp-2 text-[11px] leading-snug text-fg-muted sm:text-sm">{c.label}</p>
+            <p className="mt-1 text-xl font-semibold tabular-nums text-fg sm:mt-2 sm:text-3xl">{c.value}</p>
           </Link>
         ))}
       </div>

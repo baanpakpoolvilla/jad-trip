@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { AdminBrandLink, AdminNav } from "@/components/admin-nav";
+import { AdminBrandLink, AdminMobileHeader, AdminNav } from "@/components/admin-nav";
 import { SignOutButton } from "@/components/sign-out-button";
 
 export default async function AdminLayout({
@@ -19,7 +19,7 @@ export default async function AdminLayout({
           <AdminBrandLink />
         </div>
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3" aria-label="เมนูหลักแอดมิน">
-          <AdminNav variant="sidebar" />
+          <AdminNav />
         </nav>
         <div className="border-t border-white/10 p-3">
           <SignOutButton variant="onBrand" className="w-full justify-center" />
@@ -27,14 +27,8 @@ export default async function AdminLayout({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 border-b border-brand-active/30 bg-brand shadow-sm md:hidden">
-          <div className="flex flex-col gap-3 px-3 py-3">
-            <div className="flex items-center justify-between gap-2">
-              <AdminBrandLink />
-              <SignOutButton variant="onBrand" />
-            </div>
-            <AdminNav variant="mobile" />
-          </div>
+        <header className="sticky top-0 z-30 border-b border-brand-active/30 bg-brand shadow-sm md:hidden">
+          <AdminMobileHeader />
         </header>
 
         <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">

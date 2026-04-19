@@ -31,18 +31,6 @@ export function BookingForm({ tripId }: { tripId: string }) {
       </div>
       <div>
         <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
-          อีเมล
-        </label>
-        <input
-          name="participantEmail"
-          type="email"
-          required
-          autoComplete="email"
-          className="jad-input mt-1"
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
           เบอร์โทร
         </label>
         <input

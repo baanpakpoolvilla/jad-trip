@@ -32,6 +32,11 @@ const tripFormSchema = z.object({
   safetyNotes: z.string().optional(),
   guideProvides: z.string().optional(),
   guideUserId: z.string().optional(),
+  destinationName: z.string().optional(),
+  destinationLat: z.string().optional(),
+  destinationLng: z.string().optional(),
+  meetPointLat: z.string().optional(),
+  meetPointLng: z.string().optional(),
   intent: z.enum(["draft", "publish"]),
 });
 
@@ -57,8 +62,57 @@ function parseTripForm(formData: FormData) {
     safetyNotes: formData.get("safetyNotes")?.toString() ?? "",
     guideProvides: formData.get("guideProvides")?.toString() ?? "",
     guideUserId: formData.get("guideUserId")?.toString() ?? "",
+    destinationName: formData.get("destinationName")?.toString() ?? "",
+    destinationLat: formData.get("destinationLat")?.toString() ?? "",
+    destinationLng: formData.get("destinationLng")?.toString() ?? "",
+    meetPointLat: formData.get("meetPointLat")?.toString() ?? "",
+    meetPointLng: formData.get("meetPointLng")?.toString() ?? "",
     intent: formData.get("intent") === "publish" ? "publish" : "draft",
   });
+}
+
+function parseDestinationFromParsed(v: z.infer<typeof tripFormSchema>):
+  | { ok: true; destinationName: string; destinationLat: number | null; destinationLng: number | null }
+  | { ok: false; error: string } {
+  const name = trim(v.destinationName);
+  const latS = trim(v.destinationLat);
+  const lngS = trim(v.destinationLng);
+  if (!latS && !lngS) {
+    return { ok: true, destinationName: name, destinationLat: null, destinationLng: null };
+  }
+  if (!latS || !lngS) {
+    return { ok: false, error: "พิกัดจุดหมายไม่ครบ — ล้างจุดหมายแล้วเลือกใหม่ หรือปล่อยว่าง" };
+  }
+  const lat = Number(latS);
+  const lng = Number(lngS);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+    return { ok: false, error: "พิกัดจุดหมายไม่ถูกต้อง" };
+  }
+  return {
+    ok: true,
+    destinationName: name || "สถานที่บนแผนที่",
+    destinationLat: lat,
+    destinationLng: lng,
+  };
+}
+
+function parseMeetPointCoords(v: z.infer<typeof tripFormSchema>):
+  | { ok: true; meetPointLat: number | null; meetPointLng: number | null }
+  | { ok: false; error: string } {
+  const latS = trim(v.meetPointLat);
+  const lngS = trim(v.meetPointLng);
+  if (!latS && !lngS) {
+    return { ok: true, meetPointLat: null, meetPointLng: null };
+  }
+  if (!latS || !lngS) {
+    return { ok: false, error: "พิกัดจุดนัดพบไม่ครบ — ล้างแผนที่แล้วเลือกใหม่ หรือปล่อยว่าง" };
+  }
+  const lat = Number(latS);
+  const lng = Number(lngS);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+    return { ok: false, error: "พิกัดจุดนัดพบไม่ถูกต้อง" };
+  }
+  return { ok: true, meetPointLat: lat, meetPointLng: lng };
 }
 
 function tripRichContentFromParsed(v: z.infer<typeof tripFormSchema>) {
@@ -135,6 +189,12 @@ export async function createTrip(
   const guideResolved = await resolveGuideUserId(trim(v.guideUserId), null);
   if (!guideResolved.ok) return { error: guideResolved.error };
 
+  const dest = parseDestinationFromParsed(v);
+  if (!dest.ok) return { error: dest.error };
+
+  const meetCoords = parseMeetPointCoords(v);
+  if (!meetCoords.ok) return { error: meetCoords.error };
+
   const created = await db.trip.create({
     data: {
       organizerId: session.user.id,
@@ -142,6 +202,11 @@ export async function createTrip(
       shortDescription: v.shortDescription.trim(),
       description: v.description.trim(),
       meetPoint: v.meetPoint.trim(),
+      meetPointLat: meetCoords.meetPointLat,
+      meetPointLng: meetCoords.meetPointLng,
+      destinationName: dest.destinationName,
+      destinationLat: dest.destinationLat,
+      destinationLng: dest.destinationLng,
       startAt,
       endAt,
       maxParticipants: v.maxParticipants,
@@ -207,6 +272,12 @@ export async function updateTrip(
   );
   if (!guideResolved.ok) return { error: guideResolved.error };
 
+  const dest = parseDestinationFromParsed(v);
+  if (!dest.ok) return { error: dest.error };
+
+  const meetCoords = parseMeetPointCoords(v);
+  if (!meetCoords.ok) return { error: meetCoords.error };
+
   const hasBookings = trip._count.bookings > 0;
   const isPublished = trip.status === TripStatus.PUBLISHED;
   const rich = tripRichContentFromParsed(v);
@@ -218,6 +289,11 @@ export async function updateTrip(
         shortDescription: v.shortDescription.trim(),
         description: v.description.trim(),
         meetPoint: v.meetPoint.trim(),
+        meetPointLat: meetCoords.meetPointLat,
+        meetPointLng: meetCoords.meetPointLng,
+        destinationName: dest.destinationName,
+        destinationLat: dest.destinationLat,
+        destinationLng: dest.destinationLng,
         policyNotes: (v.policyNotes ?? "").trim(),
         ...rich,
         guideUserId: guideResolved.id,
@@ -233,6 +309,11 @@ export async function updateTrip(
         shortDescription: v.shortDescription.trim(),
         description: v.description.trim(),
         meetPoint: v.meetPoint.trim(),
+        meetPointLat: meetCoords.meetPointLat,
+        meetPointLng: meetCoords.meetPointLng,
+        destinationName: dest.destinationName,
+        destinationLat: dest.destinationLat,
+        destinationLng: dest.destinationLng,
         startAt,
         endAt,
         maxParticipants: v.maxParticipants,
@@ -332,7 +413,10 @@ export async function getTripForOrganizer(tripId: string) {
   return db.trip.findFirst({
     where: { id: tripId, organizerId: session.user.id },
     include: {
-      bookings: { orderBy: { createdAt: "desc" } },
+      bookings: {
+        where: { status: "CONFIRMED" },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 }

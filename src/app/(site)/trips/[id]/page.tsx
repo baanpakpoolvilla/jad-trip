@@ -4,11 +4,20 @@ import { ArrowLeft, MapPin } from "lucide-react";
 import {
   OrganizerProfileCard,
   parseGalleryUrls,
+  TripDestinationSection,
   TripGalleryGrid,
   TripHero,
   TripRichBlock,
 } from "@/components/trip-public-parts";
-import { getPublishedTripById, organizerPublicBrochureHrefFromOrganizer } from "@/lib/trips-public";
+import {
+  getPublishedTripById,
+  organizerPublicBrochureHrefFromOrganizer,
+  organizerPublicProfilePath,
+} from "@/lib/trips-public";
+import {
+  tripDestinationMapEmbedUrl,
+  tripDestinationOpenStreetMapUrl,
+} from "@/lib/trip-destination-map-embed";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +40,9 @@ export default async function TripDetailPage({ params }: Props) {
 
   const gallery = parseGalleryUrls(trip.galleryImageUrls ?? "");
   const org = trip.organizer;
+  const organizerPublicProfileHref = org.brochureShareCode?.trim()
+    ? organizerPublicProfilePath(org.brochureShareCode)
+    : null;
 
   return (
     <article className="space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] sm:space-y-6 sm:pb-[calc(8rem+env(safe-area-inset-bottom,0px))]">
@@ -56,12 +68,92 @@ export default async function TripDetailPage({ params }: Props) {
 
       <TripRichBlock title="ภาพรวมทริป" body={trip.description} variant="card" />
 
-      {/* Organizer */}
+      {/* ลำดับเดียวกับหมวด «เล่าเรื่องทริป» ในฟอร์มผู้จัด */}
+      <TripRichBlock title="การเดินทางระหว่างทริป" body={trip.travelNotes} variant="travel" />
+      <TripRichBlock
+        title="รวมในราคา · ค่าใช้จ่ายเพิ่ม"
+        body={trip.highlights}
+        variant="highlight"
+        bodyAsList
+      />
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
+        <TripRichBlock
+          title="ของที่ควรเตรียม"
+          body={trip.packingList}
+          variant="packing"
+          bodyAsList
+        />
+        <TripRichBlock title="ข้อควรระวัง" body={trip.safetyNotes} variant="warning" bodyAsList />
+      </div>
+      <TripRichBlock
+        title="สิ่งที่ทีมงานจัดให้"
+        body={trip.guideProvides}
+        variant="guide"
+        bodyAsList
+      />
+
+      <TripRichBlock title="กำหนดการ (ไทม์ไลน์)" body={trip.itinerary} variant="itinerary" />
+
+      {/* Meet point */}
+      <section className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:rounded-2xl sm:p-6">
+        <div className="flex items-start gap-3">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-light text-brand sm:size-9 sm:rounded-lg">
+            <MapPin className="size-4 sm:size-4.5" strokeWidth={1.5} aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h2 className="text-[15px] font-semibold text-fg sm:text-[17px]">จุดนัดพบ / จุดรวมกลุ่ม</h2>
+            <p className="jad-prose-flow mt-2 whitespace-pre-wrap sm:mt-2.5">{trip.meetPoint}</p>
+            {trip.meetPointLat != null &&
+            trip.meetPointLng != null &&
+            Number.isFinite(trip.meetPointLat) &&
+            Number.isFinite(trip.meetPointLng) ? (
+              <>
+                <div className="relative mt-4 aspect-video w-full min-h-48 overflow-hidden rounded-lg border border-border/70 bg-canvas-muted/40 sm:min-h-56">
+                  <iframe
+                    title="แผนที่จุดนัดพบ"
+                    src={tripDestinationMapEmbedUrl(trip.meetPointLat, trip.meetPointLng, 15)}
+                    className="absolute inset-0 h-full w-full border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    allowFullScreen
+                  />
+                </div>
+                <p className="mt-2 text-[10px] text-fg-hint sm:text-xs">
+                  <a
+                    href={tripDestinationOpenStreetMapUrl(trip.meetPointLat, trip.meetPointLng, 16)}
+                    className="font-medium text-brand hover:text-brand-mid"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    เปิดจุดนี้ใน OpenStreetMap
+                  </a>
+                </p>
+              </>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      {trip.destinationLat != null &&
+      trip.destinationLng != null &&
+      Number.isFinite(trip.destinationLat) &&
+      Number.isFinite(trip.destinationLng) ? (
+        <TripDestinationSection
+          name={trip.destinationName ?? ""}
+          lat={trip.destinationLat}
+          lon={trip.destinationLng}
+        />
+      ) : null}
+
+      {/* Gallery */}
+      <TripGalleryGrid urls={gallery} altBase={trip.title} />
+
       <OrganizerProfileCard
         name={org.name}
         phone={org.phone}
         bio={org.bio}
         avatarUrl={org.avatarUrl}
+        publicProfileHref={organizerPublicProfileHref}
       />
 
       {trip.guide ? (
@@ -74,41 +166,7 @@ export default async function TripDetailPage({ params }: Props) {
         />
       ) : null}
 
-      {/* Meet point */}
-      <section className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:rounded-2xl sm:p-6">
-        <div className="flex items-start gap-3">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-light text-brand sm:size-9 sm:rounded-lg">
-            <MapPin className="size-4 sm:size-4.5" strokeWidth={1.5} aria-hidden />
-          </div>
-          <div className="min-w-0 flex-1 pt-0.5">
-            <h2 className="text-[15px] font-semibold text-fg sm:text-[17px]">จุดนัดพบ / จุดรวมกลุ่ม</h2>
-            <p className="jad-prose-flow mt-2 whitespace-pre-wrap sm:mt-2.5">{trip.meetPoint}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* กำหนดการ → ราคารวมอะไร → ทีมงาน → การเดินทาง → ของใช้ / ความปลอดภัย → สิ่งที่ทีมจัดให้ */}
-      <TripRichBlock title="กำหนดการเดินทาง" body={trip.itinerary} variant="itinerary" />
-
-      <TripRichBlock
-        title="รวมในราคา · ค่าใช้จ่ายเพิ่ม"
-        body={trip.highlights}
-        variant="highlight"
-      />
-
       <TripRichBlock title="รู้จักไกด์ / ทีมงาน" body={trip.guideDetails} variant="guide" />
-
-      <TripRichBlock title="การเดินทาง" body={trip.travelNotes} variant="card" />
-
-      <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
-        <TripRichBlock title="สิ่งที่ต้องเตรียม" body={trip.packingList} variant="packing" />
-        <TripRichBlock title="สิ่งที่ต้องระวัง" body={trip.safetyNotes} variant="warning" />
-      </div>
-
-      <TripRichBlock title="สิ่งที่ทีมงานจัดให้" body={trip.guideProvides} variant="guide" />
-
-      {/* Gallery */}
-      <TripGalleryGrid urls={gallery} altBase={trip.title} />
 
       {/* Policy / cancellation */}
       {trip.policyNotes?.trim() ? (

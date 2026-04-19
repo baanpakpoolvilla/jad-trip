@@ -9,6 +9,12 @@ const navItemClass =
 
 export async function PublicShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
+  const dashboardHref =
+    session?.user?.role === "ADMIN"
+      ? "/admin"
+      : session?.user?.role === "ORGANIZER"
+        ? "/organizer"
+        : null;
   const organizerBrochureHref =
     session?.user?.role === "ORGANIZER" && session.user.id
       ? await getOrganizerPublicBrochureHref(session.user.id)
@@ -25,7 +31,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
         }}
       >
         <div className="jad-container flex min-h-12 items-center gap-2 px-3 py-2 sm:min-h-13 sm:gap-3 sm:px-6 sm:py-2.5">
-          <PublicBrandLink />
+          <PublicBrandLink dashboardHref={dashboardHref} />
           <nav
             className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto pb-0.5 text-sm [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-2 [&::-webkit-scrollbar]:hidden"
             aria-label="เมนูหลัก"

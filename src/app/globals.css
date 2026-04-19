@@ -139,9 +139,9 @@
     @apply border-brand-mid outline-none ring-2 ring-brand-mid/25 ring-offset-2;
   }
 
-  /* รายการทริป — การ์ดแนวตั้ง (กระชับ) */
+  /* รายการทริป — การ์ดแนวตั้ง (รายการสาธารณะ /trips?o=…) */
   .jt-trip-card {
-    @apply flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface p-3 transition-all;
+    @apply flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface p-3.5 transition-all sm:p-4;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 

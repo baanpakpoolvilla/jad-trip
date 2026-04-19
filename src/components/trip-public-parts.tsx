@@ -1,5 +1,23 @@
-import { Calendar, Compass, MapPinned, Package, ShieldAlert, Star, UserRound, Users } from "lucide-react";
+import Link from "next/link";
+import {
+  Calendar,
+  Car,
+  Compass,
+  MapPin,
+  MapPinned,
+  Package,
+  ShieldAlert,
+  Star,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { formatBangkokTripDates } from "@/lib/datetime";
+import {
+  tripDestinationGoogleMapsWebUrl,
+  tripDestinationMapEmbedUrl,
+  tripDestinationOpenStreetMapUrl,
+} from "@/lib/trip-destination-map-embed";
+import { itineraryIsStructuredJson, type TripItineraryDay } from "@/lib/trip-itinerary-json";
 
 export function parseGalleryUrls(text: string): string[] {
   return text
@@ -143,9 +161,69 @@ export function TripGalleryGrid({ urls, altBase }: { urls: string[]; altBase: st
   );
 }
 
+// ─── Destination (map) ───────────────────────────────────────────────────────
+
+/** แสดงเมื่อผู้จัดเลือกจุดหมายจากแผนที่ในฟอร์มทริป */
+export function TripDestinationSection({
+  name,
+  lat,
+  lon,
+}: {
+  name: string;
+  lat: number;
+  lon: number;
+}) {
+  const label = name.trim() || "จุดหมายปลายทาง";
+  const osmHref = tripDestinationOpenStreetMapUrl(lat, lon, 15);
+  return (
+    <section className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:rounded-2xl sm:p-6">
+      <div className="flex items-start gap-3">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent-light text-accent sm:size-9 sm:rounded-lg">
+          <MapPin className="size-4 sm:size-4.5" strokeWidth={1.5} aria-hidden />
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <h2 className="text-[15px] font-semibold text-fg sm:text-[17px]">จุดหมายปลายทาง</h2>
+          <p className="jad-prose-flow mt-2 text-sm leading-relaxed sm:mt-2.5">{label}</p>
+          <div className="relative mt-3 aspect-video w-full min-h-48 overflow-hidden rounded-lg border border-border/70 bg-canvas-muted/40 sm:mt-4 sm:min-h-56">
+            <iframe
+              title="แผนที่จุดหมายปลายทาง"
+              src={tripDestinationMapEmbedUrl(lat, lon, 13)}
+              className="absolute inset-0 h-full w-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          </div>
+          <p className="mt-2 text-[10px] text-fg-hint sm:text-xs">
+            <a href={osmHref} className="font-medium text-brand hover:text-brand-mid" target="_blank" rel="noreferrer">
+              เปิดใน OpenStreetMap
+            </a>
+            {" · "}
+            <a
+              href={tripDestinationGoogleMapsWebUrl(lat, lon, 14)}
+              className="font-medium text-brand hover:text-brand-mid"
+              target="_blank"
+              rel="noreferrer"
+            >
+              เปิดใน Google Maps
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Rich content block ────────────────────────────────────────────────────────
 
-type RichBlockVariant = "card" | "warning" | "guide" | "packing" | "itinerary" | "highlight";
+type RichBlockVariant =
+  | "card"
+  | "warning"
+  | "guide"
+  | "packing"
+  | "itinerary"
+  | "highlight"
+  | "travel";
 
 const VARIANT_CONFIG: Record<
   RichBlockVariant,
@@ -158,6 +236,11 @@ const VARIANT_CONFIG: Record<
   },
   itinerary: {
     icon: <Calendar className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />,
+    accentClass: "bg-brand-light text-brand",
+    wrapClass: "rounded-xl border border-border bg-surface p-4 shadow-sm sm:rounded-2xl sm:p-6",
+  },
+  travel: {
+    icon: <Car className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />,
     accentClass: "bg-brand-light text-brand",
     wrapClass: "rounded-xl border border-border bg-surface p-4 shadow-sm sm:rounded-2xl sm:p-6",
   },
@@ -183,9 +266,60 @@ const VARIANT_CONFIG: Record<
   },
 };
 
-/** แยกย่อหน้าในกำหนดการให้อ่านเป็นช่วง ๆ (เช่น แยกตามวัน) โดยไม่บังคับรูปแบบ */
+function TripItineraryStructured({ days }: { days: TripItineraryDay[] }) {
+  if (days.length === 0) return null;
+  return (
+    <div className="mt-2 space-y-3 sm:mt-2.5 sm:space-y-4">
+      {days.flatMap((day, di) => {
+        const title = day.title.trim();
+        const slots = day.slots.filter((s) => s.time.trim() || s.detail.trim());
+        if (!title && slots.length === 0) return [];
+        return [
+          <div
+            key={di}
+            className="rounded-lg border border-border/70 bg-canvas-muted/30 px-3 py-2.5 sm:rounded-xl sm:px-4 sm:py-3.5"
+          >
+            {title ? <h3 className="text-sm font-semibold text-fg sm:text-base">{title}</h3> : null}
+            {slots.length > 0 ? (
+              <ul className={title ? "mt-2 space-y-2.5 sm:space-y-3" : "space-y-2.5 sm:space-y-3"}>
+                {slots.map((s, si) => (
+                  <li key={si} className="border-l-2 border-brand/40 pl-3 sm:pl-3.5">
+                    {s.time.trim() ? (
+                      <p className="text-xs font-semibold tabular-nums text-brand sm:text-sm">{s.time.trim()}</p>
+                    ) : null}
+                    {s.detail.trim() ? (
+                      <p
+                        className={`jad-prose-flow whitespace-pre-wrap text-sm text-fg sm:text-[15px] ${s.time.trim() ? "mt-1" : ""}`}
+                      >
+                        {s.detail.trim()}
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>,
+        ];
+      })}
+    </div>
+  );
+}
+
+/** แยกย่อหน้าในกำหนดการ — รองรับ JSON จากตัวสร้างในแดชบอร์ด และข้อความเดิม */
 function TripItineraryBody({ text }: { text: string }) {
   const trimmed = text.trim();
+  if (!trimmed) return null;
+  if (itineraryIsStructuredJson(trimmed)) {
+    let parsed: { v?: number; days?: TripItineraryDay[] } | null = null;
+    try {
+      parsed = JSON.parse(trimmed) as { v?: number; days?: TripItineraryDay[] };
+    } catch {
+      parsed = null;
+    }
+    if (parsed && parsed.v === 1 && Array.isArray(parsed.days)) {
+      return <TripItineraryStructured days={parsed.days} />;
+    }
+  }
   const blocks = trimmed.split(/\n\s*\n+/).filter(Boolean);
   if (blocks.length <= 1) {
     return <p className="jad-prose-flow mt-2.5 whitespace-pre-wrap">{trimmed}</p>;
@@ -204,14 +338,66 @@ function TripItineraryBody({ text }: { text: string }) {
   );
 }
 
+/** บรรทัดจากฟอร์ม BulletLinesField / ข้อความเก่าที่คั่นด้วยบรรทัดใหม่ */
+function bodyToBulletLines(body: string): string[] {
+  return body
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^[\s•\-\*]+/, "").trim())
+    .filter(Boolean);
+}
+
+function TripBulletList({ body }: { body: string }) {
+  const lines = bodyToBulletLines(body);
+  if (!lines.length) return null;
+  return (
+    <ul className="mt-2.5 list-none space-y-2 sm:mt-2.5 sm:space-y-2.5">
+      {lines.map((line, i) => (
+        <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-fg sm:text-[15px]">
+          <span className="mt-2 size-1.5 shrink-0 rounded-full bg-brand" aria-hidden />
+          <span className="jad-prose-flow min-w-0">{line}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** ตรงกับ TripTravelNotesField: บรรทัดแรก «รูปแบบการเดินทาง: …» กับรายละเอียดด้านล่าง */
+function TripTravelNotesPublic({ text }: { text: string }) {
+  const t = text.trim();
+  if (!t) return null;
+  const m = t.match(/^รูปแบบการเดินทาง:\s*([\s\S]*?)(?:\n\n([\s\S]*)|\s*$)/);
+  if (m) {
+    const head = m[1]!.trim();
+    const detail = (m[2] ?? "").trim();
+    return (
+      <div className="mt-2.5 space-y-2 sm:space-y-2.5">
+        <p className="text-sm leading-relaxed text-fg sm:text-[15px]">
+          <span className="font-semibold text-fg">รูปแบบการเดินทาง</span>
+          <span className="text-fg-muted"> · </span>
+          <span>{head}</span>
+        </p>
+        {detail ? (
+          <p className="jad-prose-flow whitespace-pre-wrap text-sm leading-relaxed text-fg sm:text-[15px]">
+            {detail}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+  return <p className="jad-prose-flow mt-2.5 whitespace-pre-wrap text-sm sm:text-[15px]">{t}</p>;
+}
+
 export function TripRichBlock({
   title,
   body,
   variant = "card",
+  bodyAsList = false,
 }: {
   title: string;
   body: string | null | undefined;
   variant?: RichBlockVariant;
+  /** แสดงเป็นบรรทัดละจุด (สอดคล้อง BulletLinesField ในฟอร์ม) */
+  bodyAsList?: boolean;
 }) {
   if (!body?.trim()) return null;
   const { icon, accentClass, wrapClass } = VARIANT_CONFIG[variant];
@@ -228,6 +414,10 @@ export function TripRichBlock({
           <h2 className="text-[15px] font-semibold leading-snug text-fg sm:text-[17px]">{title}</h2>
           {variant === "itinerary" ? (
             <TripItineraryBody text={body} />
+          ) : variant === "travel" ? (
+            <TripTravelNotesPublic text={body} />
+          ) : bodyAsList ? (
+            <TripBulletList body={body} />
           ) : (
             <p className="jad-prose-flow mt-2.5 whitespace-pre-wrap">{body.trim()}</p>
           )}
@@ -245,18 +435,23 @@ export function OrganizerProfileCard({
   bio,
   avatarUrl,
   variant = "organizer",
+  publicProfileHref,
 }: {
   name: string;
   phone: string | null | undefined;
   bio: string | null | undefined;
   avatarUrl: string | null | undefined;
   variant?: "organizer" | "guide";
+  /** ลิงก์โปรไฟล์สาธารณะของผู้จัด — เฉพาะ `variant="organizer"` */
+  publicProfileHref?: string | null;
 }) {
   const label = variant === "guide" ? "ไกด์ประจำทริป" : "ผู้จัดทริป";
+  const profileHrefTrimmed = publicProfileHref?.trim() ?? "";
+  const showProfileLink = variant === "organizer" && profileHrefTrimmed.length > 0;
   return (
-    <section className="flex gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm sm:gap-5 sm:rounded-2xl sm:p-6">
+    <section className="flex gap-4 rounded-xl border border-border bg-surface p-4 shadow-sm sm:gap-6 sm:rounded-2xl sm:p-6">
       {/* Avatar */}
-      <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-brand-light bg-brand-light sm:size-18 sm:rounded-2xl">
+      <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-brand-light bg-brand-light sm:size-24 sm:rounded-2xl">
         {avatarUrl?.trim() ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -267,7 +462,7 @@ export function OrganizerProfileCard({
           />
         ) : (
           <div className="flex size-full items-center justify-center text-brand">
-            <UserRound className="size-8 opacity-60" strokeWidth={1.25} aria-hidden />
+            <UserRound className="size-10 opacity-60 sm:size-11" strokeWidth={1.25} aria-hidden />
           </div>
         )}
       </div>
@@ -276,6 +471,16 @@ export function OrganizerProfileCard({
       <div className="min-w-0 flex-1">
         <p className="jad-section-label">{label}</p>
         <p className="mt-0.5 text-base font-semibold leading-snug text-fg sm:mt-1 sm:text-xl">{name}</p>
+        {showProfileLink ? (
+          <p className="mt-1.5">
+            <Link
+              href={profileHrefTrimmed}
+              className="text-sm font-medium text-brand hover:text-brand-mid hover:underline"
+            >
+              โปรไฟล์ผู้จัด (สาธารณะ) →
+            </Link>
+          </p>
+        ) : null}
         {phone?.trim() ? (
           <p className="mt-1.5 text-sm text-fg-muted">
             <span className="text-fg-hint">โทร</span>{" "}

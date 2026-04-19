@@ -15,7 +15,13 @@ import {
   uploadOrganizerImageFile,
 } from "@/lib/organizer-upload-image";
 import type { GuideSearchResult } from "@/app/actions/guide-search";
+import { TripDestinationPicker } from "@/components/trip-destination-picker";
+import { TripMeetPointPicker } from "@/components/trip-meet-point-picker";
+import { TripItineraryBuilder } from "@/components/trip-itinerary-builder";
 import { TripGuidePicker } from "@/components/trip-guide-picker";
+import { TripTravelNotesField } from "@/components/trip-travel-notes-field";
+import { BulletLinesField } from "@/components/bullet-lines-field";
+import type { NewTripDemoPrefill } from "@/lib/demo-new-trip-prefill";
 
 function defaultWeekAhead() {
   const start = new Date();
@@ -48,7 +54,12 @@ type TripWithOrganizer = Trip & {
 };
 
 type Props =
-  | { mode: "create"; organizerProfile?: OrganizerProfilePreview | null }
+  | {
+      mode: "create";
+      organizerProfile?: OrganizerProfilePreview | null;
+      /** เติมฟอร์มตัวอย่าง (เช่น ล็อกอิน demo-organizer) */
+      demoTripPrefill?: NewTripDemoPrefill | null;
+    }
   | {
       mode: "edit";
       tripId: string;
@@ -61,6 +72,7 @@ function FormSection({
   step,
   title,
   lede,
+  underTitle,
   children,
   dense,
 }: {
@@ -68,59 +80,63 @@ function FormSection({
   step?: number;
   title: string;
   lede?: string;
+  /** เนื้อหาใต้หัวข้อหมวด แต่เหนือเส้นแบ่งหลัก — อยู่ในกล่อง section เดียวกับหัวข้อ */
+  underTitle?: ReactNode;
   children: ReactNode;
   /** กระชับขึ้น — ใช้หน้าสร้างทริป */
   dense?: boolean;
 }) {
   const hasStep = typeof step === "number";
+  const shell =
+    dense === true
+      ? "rounded-xl border border-border/80 bg-linear-to-b from-surface to-canvas/30 p-3 shadow-sm sm:p-4"
+      : "rounded-xl border border-border/80 bg-linear-to-b from-surface to-canvas/35 p-4 shadow-sm sm:p-5";
+  const bodyPad = hasStep ? (dense ? "sm:pl-9" : "sm:pl-12") : "";
+  const bodyGap = dense ? "space-y-2.5 sm:space-y-3" : "space-y-5";
   return (
-    <section
-      id={id}
-      className={dense ? "scroll-mt-24 space-y-2" : "scroll-mt-28 space-y-3"}
-    >
-      <div className={`flex items-start ${dense ? "gap-2" : "gap-3"}`}>
-        {hasStep ? (
-          <span
-            className={
-              dense
-                ? "flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-light text-xs font-bold text-brand shadow-sm"
-                : "flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-light text-sm font-bold text-brand shadow-sm"
-            }
-            aria-hidden
-          >
-            {step}
-          </span>
-        ) : null}
-        <div className={`min-w-0 flex-1 ${dense ? "" : "pt-0.5"}`}>
-          <h2
-            className={
-              dense
-                ? "text-sm font-semibold tracking-tight text-fg"
-                : "text-base font-semibold tracking-tight text-fg"
-            }
-          >
-            {title}
-          </h2>
-          {lede ? (
-            <p
+    <section id={id} className={dense ? "scroll-mt-24" : "scroll-mt-28"}>
+      <div className={shell}>
+        <div className={`flex items-start ${dense ? "gap-2" : "gap-3"}`}>
+          {hasStep ? (
+            <span
               className={
                 dense
-                  ? "mt-1 text-[11px] leading-snug text-fg-muted"
-                  : "mt-1.5 text-sm leading-relaxed text-fg-muted"
+                  ? "flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-light text-xs font-bold text-brand shadow-sm"
+                  : "flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-light text-sm font-bold text-brand shadow-sm"
+              }
+              aria-hidden
+            >
+              {step}
+            </span>
+          ) : null}
+          <div className={`min-w-0 flex-1 ${dense ? "" : "pt-0.5"}`}>
+            <h2
+              className={
+                dense
+                  ? "text-sm font-semibold tracking-tight text-fg"
+                  : "text-base font-semibold tracking-tight text-fg"
               }
             >
-              {lede}
-            </p>
-          ) : null}
+              {title}
+            </h2>
+            {lede ? (
+              <p
+                className={
+                  dense
+                    ? "mt-1 text-[11px] leading-snug text-fg-muted"
+                    : "mt-1.5 text-sm leading-relaxed text-fg-muted"
+                }
+              >
+                {lede}
+              </p>
+            ) : null}
+          </div>
         </div>
-      </div>
-      <div className={hasStep ? (dense ? "sm:pl-9" : "sm:pl-12") : undefined}>
+        {underTitle ? (
+          <div className={dense ? "mt-3 min-w-0" : "mt-4 min-w-0"}>{underTitle}</div>
+        ) : null}
         <div
-          className={
-            dense
-              ? "space-y-3 rounded-lg border border-border/70 bg-surface/80 p-3 shadow-sm sm:p-4"
-              : "space-y-5 rounded-xl border border-border/80 bg-linear-to-b from-surface to-canvas/35 p-4 shadow-sm sm:p-5"
-          }
+          className={`border-t border-border/60 ${dense ? "mt-3 pt-3" : "mt-4 pt-4"} ${bodyPad} ${bodyGap}`}
         >
           {children}
         </div>
@@ -207,6 +223,11 @@ export function TripForm(props: Props) {
   const router = useRouter();
   const organizerPreview = organizerPreviewFromProps(props);
 
+  const demoFill = props.mode === "create" ? props.demoTripPrefill : null;
+  const demoRest = demoFill
+    ? (({ guide, ...r }: NewTripDemoPrefill) => (void guide, r))(demoFill)
+    : null;
+
   const defaults =
     props.mode === "create"
       ? {
@@ -218,6 +239,11 @@ export function TripForm(props: Props) {
           guideDetails: "",
           itinerary: "",
           meetPoint: "",
+          meetPointLat: null as number | null,
+          meetPointLng: null as number | null,
+          destinationName: "",
+          destinationLat: null as number | null,
+          destinationLng: null as number | null,
           travelNotes: "",
           highlights: "",
           packingList: "",
@@ -228,6 +254,7 @@ export function TripForm(props: Props) {
           pricePerPerson: 1500,
           bookingClosesAt: "",
           policyNotes: "",
+          ...(demoRest ?? {}),
         }
       : {
           title: props.trip.title,
@@ -238,6 +265,11 @@ export function TripForm(props: Props) {
           guideDetails: props.trip.guideDetails ?? "",
           itinerary: props.trip.itinerary ?? "",
           meetPoint: props.trip.meetPoint,
+          meetPointLat: props.trip.meetPointLat ?? null,
+          meetPointLng: props.trip.meetPointLng ?? null,
+          destinationName: props.trip.destinationName ?? "",
+          destinationLat: props.trip.destinationLat ?? null,
+          destinationLng: props.trip.destinationLng ?? null,
           travelNotes: props.trip.travelNotes ?? "",
           highlights: props.trip.highlights ?? "",
           packingList: props.trip.packingList ?? "",
@@ -255,9 +287,8 @@ export function TripForm(props: Props) {
 
   const locked = props.mode === "edit" && props.locked;
   const fid = useId();
-  const isCreate = props.mode === "create";
-  /** หน้าสร้างทริป — ฟอร์มกระชับ */
-  const dense = isCreate;
+  /** ฟอร์มกระชับทั้งสร้างและแก้ไข (เลย์เอาต์เดียวกับหน้าสร้างทริป) */
+  const dense = true;
 
   const [coverUrl, setCoverUrl] = useState(
     () => defaults.coverImageUrl,
@@ -366,6 +397,187 @@ export function TripForm(props: Props) {
       </FormSection>
 
       <FormSection
+        id="trip-section-story"
+        dense={dense}
+        title="เล่าเรื่องทริป"
+        lede={
+          dense
+            ? undefined
+            : "ข้อมูลนี้แสดงบนหน้ารายละเอียด — ยิ่งชัด ผู้จองยิ่งมั่นใจ"
+        }
+        underTitle={
+          <FieldRow
+            dense={dense}
+            label="ภาพรวมทริป"
+            hint={
+              dense
+                ? undefined
+                : "อธิบายว่าทำอะไรบ้าง ใครเหมาะกับทริปนี้ และสิ่งที่ได้รับ"
+            }
+            controlId={`${fid}-description`}
+          >
+            <textarea
+              id={`${fid}-description`}
+              name="description"
+              required
+              rows={dense ? 5 : 6}
+              defaultValue={defaults.description}
+              placeholder={
+                dense
+                  ? "กิจกรรมหลัก ระดับความเหนื่อย รวม/ไม่รวมอะไรบ้าง"
+                  : "เช่น ลำดับวันโดยย่อ กิจกรรมหลัก ระดับความเหนื่อย หรือสิ่งที่รวม/ไม่รวม"
+              }
+              className={`jad-input resize-y ${dense ? "min-h-[120px]" : "min-h-[140px]"}`}
+            />
+          </FieldRow>
+        }
+      >
+        <div className={dense ? "space-y-3" : "space-y-5"}>
+            <input type="hidden" name="guideDetails" defaultValue={defaults.guideDetails} />
+            <FieldRow
+              dense={dense}
+              label="การเดินทางระหว่างทริป"
+              optional
+              controlId={`${fid}-travel`}
+            >
+              <TripTravelNotesField
+                formInputId={`${fid}-travel`}
+                defaultValue={defaults.travelNotes}
+                dense={dense}
+              />
+            </FieldRow>
+            <FieldRow
+              dense={dense}
+              label="รวมในราคา · ค่าใช้จ่ายเพิ่ม"
+              hint={
+                dense
+                  ? undefined
+                  : "เช่น หัวข้อ 'รวม' กับ 'ไม่รวม / จ่ายเอง' แยกย่อหน้า หรือใช้ bullet — ชัดเท่าที่จำเป็น ไม่ต้องยาวมาก"
+              }
+              optional
+              controlId={`${fid}-highlights`}
+            >
+              <BulletLinesField
+                name="highlights"
+                baseId={`${fid}-highlights`}
+                defaultValue={defaults.highlights}
+                dense={dense}
+                addLabel="เพิ่มข้อ"
+                rowPlaceholder="เช่น รวม: ที่พัก 4 คืน — หรือ ไม่รวม: ตั๋วเครื่องบิน"
+              />
+            </FieldRow>
+            <div className={dense ? "grid gap-3 sm:grid-cols-2" : "grid gap-5 sm:grid-cols-2"}>
+              <FieldRow
+                dense={dense}
+                label="ของที่ควรเตรียม"
+                optional
+                controlId={`${fid}-pack`}
+              >
+                <BulletLinesField
+                  name="packingList"
+                  baseId={`${fid}-pack`}
+                  defaultValue={defaults.packingList}
+                  dense={dense}
+                  addLabel="เพิ่มข้อ"
+                  rowPlaceholder="เช่น รองเท้าเดินป่า หมวก ยาเฉพาะตัว"
+                />
+              </FieldRow>
+              <FieldRow
+                dense={dense}
+                label="ข้อควรระวัง"
+                hint={dense ? undefined : "ทางชัน แดดจัด ฝน อากาศ หรือข้อจำกัดด้านสุขภาพ"}
+                optional
+                controlId={`${fid}-safety`}
+              >
+                <BulletLinesField
+                  name="safetyNotes"
+                  baseId={`${fid}-safety`}
+                  defaultValue={defaults.safetyNotes}
+                  dense={dense}
+                  addLabel="เพิ่มข้อ"
+                  rowPlaceholder="เช่น ทางชัน แดดจัด — หรือ โรคประจำตัวที่ควรแจ้ง"
+                />
+              </FieldRow>
+            </div>
+            <FieldRow
+              dense={dense}
+              label="สิ่งที่ทีมงานจัดให้"
+              hint={dense ? undefined : "เช่น น้ำดื่ม อาหารว่าง ชุดปฐมพยาบาลเบื้องต้น"}
+              optional
+              controlId={`${fid}-provides`}
+            >
+              <BulletLinesField
+                name="guideProvides"
+                baseId={`${fid}-provides`}
+                defaultValue={defaults.guideProvides}
+                dense={dense}
+                addLabel="เพิ่มข้อ"
+                rowPlaceholder="เช่น น้ำดื่ม อาหารว่าง ปฐมพยาบาลเบื้องต้น"
+              />
+            </FieldRow>
+        </div>
+      </FormSection>
+
+      <FormSection
+        id="trip-section-itinerary"
+        dense={dense}
+        title="กำหนดการ (ไทม์ไลน์)"
+        lede={
+          dense
+            ? "ไม่บังคับ — เพิ่มวันแล้วใส่ช่วงเวลากับกิจกรรม"
+            : "ไม่บังคับ — กด «เพิ่มวัน» แล้วใส่หัวข้อวัน ในแต่ละวันกด «เพิ่มช่วงเวลา» แล้วกรอกเวลากับรายละเอียดทีละช่วง"
+        }
+      >
+        <TripItineraryBuilder
+          name="itinerary"
+          formInputId={`${fid}-itinerary`}
+          defaultValue={defaults.itinerary}
+          dense={!!dense}
+        />
+      </FormSection>
+
+      <FormSection
+        id="trip-section-meet"
+        dense={dense}
+        title="จุดนัดพบ / จุดรวมกลุ่ม"
+        lede={
+          dense
+            ? "ค้นหาบนแผนที่หรือพิมพ์รายละเอียดด้านล่าง"
+            : "ค้นหาบนแผนที่เพื่อตั้งจุดเช็คอิน แล้วแก้ข้อความด้านล่างให้ชัด — หรือพิมพ์เองทั้งหมดก็ได้"
+        }
+      >
+        <TripMeetPointPicker
+          fid={fid}
+          dense={dense}
+          formInputId={`${fid}-meet`}
+          defaultMeetPoint={defaults.meetPoint}
+          defaultLat={defaults.meetPointLat}
+          defaultLng={defaults.meetPointLng}
+          locked={locked}
+        />
+      </FormSection>
+
+      <FormSection
+        id="trip-section-destination"
+        dense={dense}
+        title="จุดหมายปลายทาง"
+        lede={
+          dense
+            ? "ไม่บังคับ — พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ (OpenStreetMap)"
+            : "ไม่บังคับ — พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ ข้อมูลจาก OpenStreetMap"
+        }
+      >
+        <TripDestinationPicker
+          dense={dense}
+          fid={fid}
+          hideHeading
+          defaultName={defaults.destinationName}
+          defaultLat={defaults.destinationLat}
+          defaultLng={defaults.destinationLng}
+        />
+      </FormSection>
+
+      <FormSection
         id="trip-section-media"
         dense={dense}
         title="รูปหน้าปกและแกลเลอรี"
@@ -462,7 +674,7 @@ export function TripForm(props: Props) {
             htmlFor={`${fid}-gallery`}
             className={dense ? "text-xs font-medium text-fg sm:text-sm" : "text-sm font-medium text-fg"}
           >
-            รูปเพิ่มเติม
+            แกลลอรี่
             <span className="ml-1.5 text-[11px] font-normal text-fg-hint sm:text-xs">ไม่บังคับ</span>
           </label>
           <p id={`${fid}-gallery-hint`} className={dense ? "sr-only" : "text-xs leading-relaxed text-fg-muted"}>
@@ -479,18 +691,19 @@ export function TripForm(props: Props) {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt="" className="h-full w-full object-cover" />
-                  {!locked ? (
-                    <button
-                      type="button"
-                      className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-sm font-bold text-white hover:bg-black/75"
-                      aria-label="ลบรูป"
-                      onClick={() =>
-                        setGalleryLines((prev) => prev.filter((_, j) => j !== i))
-                      }
-                    >
+                  <button
+                    type="button"
+                    className="absolute right-0.5 top-0.5 flex size-8 items-center justify-center rounded-full border border-white/30 bg-black/70 text-lg font-light leading-none text-white shadow-sm backdrop-blur-[2px] transition-colors hover:bg-black/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/40"
+                    aria-label={`ลบรูปนี้ออกจากแกลเลอรี (ลำดับที่ ${i + 1})`}
+                    title="ลบรูปนี้"
+                    onClick={() =>
+                      setGalleryLines((prev) => prev.filter((_, j) => j !== i))
+                    }
+                  >
+                    <span aria-hidden className="translate-y-[-0.5px]">
                       ×
-                    </button>
-                  ) : null}
+                    </span>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -500,7 +713,7 @@ export function TripForm(props: Props) {
             type="file"
             accept={ORGANIZER_IMAGE_ACCEPT}
             multiple
-            disabled={pending || galleryBusy || locked}
+            disabled={pending || galleryBusy}
             aria-describedby={`${fid}-gallery-hint`}
             className="jad-input file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-brand-mid"
             onChange={async (e) => {
@@ -525,7 +738,7 @@ export function TripForm(props: Props) {
             }}
           />
           {galleryBusy ? (
-            <p className="text-xs text-fg-muted">กำลังอัปโหลดแกลเลอรี…</p>
+            <p className="text-xs text-fg-muted">กำลังอัปโหลดแกลลอรี่…</p>
           ) : null}
         </div>
       </FormSection>
@@ -637,201 +850,24 @@ export function TripForm(props: Props) {
             </p>
           )}
           <TripGuidePicker
-            initialGuideUserId={props.mode === "edit" ? props.trip.guideUserId : null}
+            initialGuideUserId={
+              props.mode === "edit"
+                ? props.trip.guideUserId
+                : props.mode === "create" && props.demoTripPrefill
+                  ? props.demoTripPrefill.guide.id
+                  : null
+            }
             initialGuide={
               props.mode === "edit" && props.trip.guide
                 ? props.trip.guide
-                : null
+                : props.mode === "create" && props.demoTripPrefill
+                  ? props.demoTripPrefill.guide
+                  : null
             }
           />
         </div>
       </FormSection>
 
-      <FormSection
-        id="trip-section-story"
-        dense={dense}
-        title="เล่าเรื่องทริป"
-        lede={
-          dense
-            ? undefined
-            : "ข้อมูลนี้แสดงบนหน้ารายละเอียด — ยิ่งชัด ผู้จองยิ่งมั่นใจ"
-        }
-      >
-        <FieldRow
-          dense={dense}
-          label="ภาพรวมทริป"
-          hint={
-            dense
-              ? undefined
-              : "อธิบายว่าทำอะไรบ้าง ใครเหมาะกับทริปนี้ และสิ่งที่ได้รับ"
-          }
-          controlId={`${fid}-description`}
-        >
-          <textarea
-            id={`${fid}-description`}
-            name="description"
-            required
-            rows={dense ? 5 : 6}
-            defaultValue={defaults.description}
-            placeholder={
-              dense
-                ? "กิจกรรมหลัก ระดับความเหนื่อย รวม/ไม่รวมอะไรบ้าง"
-                : "เช่น ลำดับวันโดยย่อ กิจกรรมหลัก ระดับความเหนื่อย หรือสิ่งที่รวม/ไม่รวม"
-            }
-            className={`jad-input resize-y ${dense ? "min-h-[120px]" : "min-h-[140px]"}`}
-          />
-        </FieldRow>
-        <FieldRow
-          dense={dense}
-          label="กำหนดการ (ไทม์ไลน์)"
-          hint={
-            dense
-              ? undefined
-              : "แบ่งวันด้วยบรรทัดว่าง 1 บรรทัด — หัวข้อวันแรก/วันที่สอง แล้วตามด้วยเวลาและกิจกรรมย่อย ๆ"
-          }
-          optional
-          controlId={`${fid}-itinerary`}
-        >
-          <textarea
-            id={`${fid}-itinerary`}
-            name="itinerary"
-            rows={dense ? 4 : 5}
-            placeholder={`วันแรก\n20:00 นัดสนามบิน — เช็คอิน\n23:10 ขึ้นเครื่อง\n\nวันที่สอง\n07:30 ถึงปลายทาง — เดินทางต่อ…`}
-            defaultValue={defaults.itinerary}
-            className={`jad-input resize-y ${dense ? "min-h-[100px]" : "min-h-[120px]"}`}
-          />
-        </FieldRow>
-        <FieldRow
-          dense={dense}
-          label="จุดนัดพบ / จุดรวมกลุ่ม"
-          hint={dense ? undefined : "ระบุชื่อสถานที่ ลานจอด หรือพิกัดสั้น ๆ ถ้ามี"}
-          controlId={`${fid}-meet`}
-        >
-          <input
-            id={`${fid}-meet`}
-            name="meetPoint"
-            required
-            defaultValue={defaults.meetPoint}
-            placeholder="เช่น BTS หมอชิต ทางออก 3 / ลานจอดรถ…"
-            className="jad-input"
-          />
-        </FieldRow>
-
-        <details className="group rounded-lg border border-border/80 bg-canvas/40 open:bg-canvas/25">
-          <summary
-            className={`cursor-pointer list-none outline-none transition-colors hover:bg-canvas/60 [&::-webkit-details-marker]:hidden ${dense ? "px-2.5 py-2 text-xs font-medium text-fg" : "px-3 py-2.5 text-sm font-medium text-fg"}`}
-          >
-            <span className="inline-flex items-center gap-2">
-              <span className="text-fg-muted transition-transform group-open:rotate-90" aria-hidden>
-                ▸
-              </span>
-              {dense ? "รายละเอียดเสริม" : "รายละเอียดเสริม (ไกด์ การเดินทาง ของใช้ ฯลฯ)"}
-            </span>
-          </summary>
-          <div className={`border-t border-border/60 px-3 ${dense ? "space-y-3 py-3" : "space-y-5 py-4"}`}>
-            <FieldRow
-              dense={dense}
-              label="รู้จักไกด์ / ทีมงาน"
-              hint={dense ? undefined : "ประสบการณ์ ใบรับรอง หรือสไตล์การนำทริป"}
-              optional
-              controlId={`${fid}-guideDetails`}
-            >
-              <textarea
-                id={`${fid}-guideDetails`}
-                name="guideDetails"
-                rows={4}
-                placeholder="เช่น ไกด์ท้องถิ่น พูดไทย–อังกฤษ มีใบอนุญาต…"
-                defaultValue={defaults.guideDetails}
-                className="jad-input min-h-[96px] resize-y"
-              />
-            </FieldRow>
-            <FieldRow
-              dense={dense}
-              label="การเดินทางระหว่างทริป"
-              hint={dense ? undefined : "รถตู้สาธารณะ รถส่วนตัว จุดจอด หรือค่าใช้จ่ายเดินทาง"}
-              optional
-              controlId={`${fid}-travel`}
-            >
-              <textarea
-                id={`${fid}-travel`}
-                name="travelNotes"
-                rows={3}
-                placeholder="เช่น รถตู้รับส่งตามจุดนัด / ผู้ร่วมทริปขับตามกัน…"
-                defaultValue={defaults.travelNotes}
-                className="jad-input min-h-[72px] resize-y"
-              />
-            </FieldRow>
-            <FieldRow
-              dense={dense}
-              label="รวมในราคา · ค่าใช้จ่ายเพิ่ม"
-              hint={
-                dense
-                  ? undefined
-                  : "เช่น หัวข้อ 'รวม' กับ 'ไม่รวม / จ่ายเอง' แยกย่อหน้า หรือใช้ bullet — ชัดเท่าที่จำเป็น ไม่ต้องยาวมาก"
-              }
-              optional
-              controlId={`${fid}-highlights`}
-            >
-              <textarea
-                id={`${fid}-highlights`}
-                name="highlights"
-                rows={4}
-                placeholder={`รวม: ที่พัก 4 คืน, รถไฟตามโปรแกรม, มื้อหลักตามระบุ\nไม่รวม: ตั๋วเครื่องบิน, มื้ออิสระ, ทิปไกด์ท้องถิ่น`}
-                defaultValue={defaults.highlights}
-                className="jad-input min-h-[96px] resize-y"
-              />
-            </FieldRow>
-            <div className={dense ? "grid gap-3 sm:grid-cols-2" : "grid gap-5 sm:grid-cols-2"}>
-              <FieldRow
-                dense={dense}
-                label="ของที่ควรเตรียม"
-                optional
-                controlId={`${fid}-pack`}
-              >
-                <textarea
-                  id={`${fid}-pack`}
-                  name="packingList"
-                  rows={4}
-                  placeholder="รองเท้า หมวก ยาเฉพาะตัว …"
-                  defaultValue={defaults.packingList}
-                  className="jad-input min-h-[96px] resize-y"
-                />
-              </FieldRow>
-              <FieldRow
-                dense={dense}
-                label="ข้อควรระวัง"
-                hint={dense ? undefined : "ทางชัน แดดจัด ฝน อากาศ หรือข้อจำกัดด้านสุขภาพ"}
-                optional
-                controlId={`${fid}-safety`}
-              >
-                <textarea
-                  id={`${fid}-safety`}
-                  name="safetyNotes"
-                  rows={4}
-                  defaultValue={defaults.safetyNotes}
-                  className="jad-input min-h-[96px] resize-y"
-                />
-              </FieldRow>
-            </div>
-            <FieldRow
-              dense={dense}
-              label="สิ่งที่ทีมงานจัดให้"
-              hint={dense ? undefined : "เช่น น้ำดื่ม อาหารว่าง ชุดปฐมพยาบาลเบื้องต้น"}
-              optional
-              controlId={`${fid}-provides`}
-            >
-              <textarea
-                id={`${fid}-provides`}
-                name="guideProvides"
-                rows={3}
-                placeholder="อาหารว่าง น้ำดื่ม ปฐมพยาบาลเบื้องต้น …"
-                defaultValue={defaults.guideProvides}
-                className="jad-input min-h-[72px] resize-y"
-              />
-            </FieldRow>
-          </div>
-        </details>
-      </FormSection>
 
       <FormSection
         id="trip-section-booking"
@@ -843,7 +879,13 @@ export function TripForm(props: Props) {
             : "เวลาเป็นเขตเวลาไทย — ตรวจให้ตรงกับวันจริงของทริป"
         }
       >
-        <div className={dense ? "grid gap-3 sm:grid-cols-2" : "grid gap-5 sm:grid-cols-2"}>
+        <div
+          className={
+            dense
+              ? "grid grid-cols-2 gap-3 *:min-w-0"
+              : "grid grid-cols-2 gap-4 sm:gap-5 *:min-w-0"
+          }
+        >
           <FieldRow dense={dense} label="เริ่มทริป" controlId={`${fid}-start`}>
             <input
               id={`${fid}-start`}
@@ -867,12 +909,14 @@ export function TripForm(props: Props) {
             />
           </FieldRow>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <FieldRow
-            label="จำนวนที่นั่งสูงสุด"
-            hint="นับรวมทุกคนที่จ่ายเต็มที่นั่ง (ยกเว้นกติกาพิเศษของคุณ)"
-            controlId={`${fid}-maxp`}
-          >
+        <div
+          className={
+            dense
+              ? "grid grid-cols-2 gap-3 *:min-w-0"
+              : "grid grid-cols-2 gap-4 sm:gap-5 *:min-w-0"
+          }
+        >
+          <FieldRow dense={dense} label="จำนวนที่นั่งสูงสุด" controlId={`${fid}-maxp`}>
             <input
               id={`${fid}-maxp`}
               name="maxParticipants"

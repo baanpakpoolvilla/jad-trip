@@ -68,10 +68,12 @@ export default async function BookingPage({ params }: Props) {
             <dt className="text-fg-muted">ชื่อผู้จอง</dt>
             <dd className="text-right font-medium text-fg">{booking.participantName}</dd>
           </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-fg-muted">อีเมล</dt>
-            <dd className="text-right text-fg">{booking.participantEmail}</dd>
-          </div>
+          {booking.participantEmail.trim() ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-fg-muted">อีเมล</dt>
+              <dd className="text-right text-fg">{booking.participantEmail}</dd>
+            </div>
+          ) : null}
           <div className="flex justify-between gap-4">
             <dt className="text-fg-muted">โทร</dt>
             <dd className="text-right text-fg">{booking.participantPhone}</dd>

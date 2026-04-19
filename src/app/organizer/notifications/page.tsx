@@ -45,32 +45,7 @@ export default async function OrganizerNotificationsPage() {
         </p>
       </header>
 
-      <section className="jad-card space-y-4" aria-labelledby="notif-help-heading">
-        <h2 id="notif-help-heading" className="text-sm font-semibold text-fg">
-          แจ้งเตือนคืออะไร?
-        </h2>
-        <p className="text-sm leading-relaxed text-fg-muted">
-          หน้านี้รวบรวมเหตุการณ์สำคัญของทริปที่คุณเป็นผู้จัด โดยเฉพาะเมื่อมีผู้จองชำระเงินสำเร็จ
-          ระบบจะสร้างรายการพร้อมลิงก์ไปหน้าทริปเพื่อตรวจรายชื่อผู้จองและสถานะการชำระเงิน
-        </p>
-        <ul className="list-inside list-disc space-y-1.5 text-sm text-fg-muted">
-          <li>
-            <span className="font-medium text-fg">ชำระผ่านสลิป</span> — เมื่อผู้จองอัปโหลดสลิปและระบบตรวจสอบผ่าน
-            (PromptPay / โอนธนาคารตามที่คุณตั้งค่า)
-          </li>
-          <li>
-            <span className="font-medium text-fg">ชำระผ่าน Stripe</span> — เมื่อการชำระด้วยบัตรหรือช่องทางที่ Stripe รองรับสำเร็จ
-          </li>
-        </ul>
-        <p className="text-xs leading-relaxed text-fg-hint">
-          การกด «ทำเครื่องหมายว่าอ่านแล้ว» จะลดตัวเลขแจ้งเตือนบนเมนู — ไม่กระทบสถานะการจองในฐานข้อมูล
-        </p>
-      </section>
-
-      <section className="space-y-4" aria-labelledby="notif-list-heading">
-        <h2 id="notif-list-heading" className="text-lg font-semibold text-fg">
-          รายการล่าสุด
-        </h2>
+      <div className="space-y-4">
         <NotificationList
           totalCount={totalCount}
           unreadCount={unreadCount}
@@ -82,10 +57,10 @@ export default async function OrganizerNotificationsPage() {
             href: n.href,
             readAt: n.readAt?.toISOString() ?? null,
             createdAtIso: n.createdAt.toISOString(),
+            createdAtLabel: formatBangkok(n.createdAt),
           }))}
-          formatDate={(iso) => formatBangkok(new Date(iso))}
         />
-      </section>
+      </div>
     </div>
   );
 }

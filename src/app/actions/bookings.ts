@@ -15,7 +15,6 @@ import {
 const bookingSchema = z.object({
   tripId: z.string().min(1),
   participantName: z.string().min(2, "กรอกชื่อ"),
-  participantEmail: z.string().email("อีเมลไม่ถูกต้อง"),
   participantPhone: z.string().min(8, "กรอกเบอร์โทร"),
 });
 
@@ -30,7 +29,6 @@ export async function createBooking(
   const raw = {
     tripId: formData.get("tripId"),
     participantName: formData.get("participantName"),
-    participantEmail: formData.get("participantEmail"),
     participantPhone: formData.get("participantPhone"),
     acceptTerms: formData.get("acceptTerms"),
   };
@@ -60,7 +58,7 @@ export async function createBooking(
       data: {
         tripId: trip.id,
         participantName: parsed.data.participantName.trim(),
-        participantEmail: parsed.data.participantEmail.trim().toLowerCase(),
+        participantEmail: "",
         participantPhone: parsed.data.participantPhone.trim(),
         viewToken,
         expiresAt,

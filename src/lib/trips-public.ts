@@ -15,6 +15,53 @@ export function organizerBrochureShortPath(brochureShareCode: string) {
   return `/o/${c}`;
 }
 
+/** โปรไฟล์ผู้จัดแบบสาธารณะ (ไม่มีอีเมล/เบอร์/ข้อมูลรับเงิน) */
+export function organizerPublicProfilePath(brochureShareCode: string) {
+  return `${organizerBrochureShortPath(brochureShareCode)}/profile`;
+}
+
+export type PublicOrganizerProfile = {
+  id: string;
+  name: string;
+  bio: string;
+  avatarUrl: string | null;
+  isGuide: boolean;
+  socialWebsite: string | null;
+  socialLine: string | null;
+  socialFacebook: string | null;
+  socialInstagram: string | null;
+  socialTiktok: string | null;
+  socialYoutube: string | null;
+  socialX: string | null;
+};
+
+/** โหลดข้อมูลโปรไฟล์สาธารณะจากรหัสย่อ 8 ตัว — ไม่พบรหัสหรือไม่มีผู้ใช้จะได้ `null` */
+export async function getPublicOrganizerProfileByBrochureShareCode(
+  shareCode: string,
+): Promise<PublicOrganizerProfile | null> {
+  const normalized = shareCode.trim().toLowerCase();
+  if (!/^[a-z0-9]{8}$/.test(normalized)) return null;
+
+  const user = await db.user.findFirst({
+    where: { brochureShareCode: normalized },
+    select: {
+      id: true,
+      name: true,
+      bio: true,
+      avatarUrl: true,
+      isGuide: true,
+      socialWebsite: true,
+      socialLine: true,
+      socialFacebook: true,
+      socialInstagram: true,
+      socialTiktok: true,
+      socialYoutube: true,
+      socialX: true,
+    },
+  });
+  return user ?? null;
+}
+
 /** หา organizer id จากรหัสย่อ (เฉพาะผู้จัดที่มีรหัส) */
 export async function getOrganizerIdByBrochureShareCode(shareCode: string): Promise<string | null> {
   const normalized = shareCode.trim().toLowerCase();
@@ -48,6 +95,20 @@ export async function getOrganizerBrochureHost(
     select: { id: true, name: true },
   });
   return user ? { id: user.id, name: user.name } : null;
+}
+
+/** รหัสย่อ `/o/…` ถ้ามี — ใช้สร้างลิงก์โปรไฟล์สาธารณะ */
+export async function getOrganizerBrochureShareCodeById(
+  organizerUserId: string,
+): Promise<string | null> {
+  const id = organizerUserId.trim();
+  if (!id) return null;
+  const user = await db.user.findFirst({
+    where: { id },
+    select: { brochureShareCode: true },
+  });
+  const c = user?.brochureShareCode?.trim().toLowerCase();
+  return c && /^[a-z0-9]{8}$/.test(c) ? c : null;
 }
 
 /** ทริป PUBLISHED ของผู้จัด — แสดงในหน้า /trips?o=… สำหรับผู้จอง */

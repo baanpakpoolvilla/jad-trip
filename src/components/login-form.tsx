@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 
-export function LoginForm() {
+export function LoginForm({ resetSuccess = false }: { resetSuccess?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -30,6 +31,11 @@ export function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      {resetSuccess ? (
+        <p className="rounded-lg border border-brand/25 bg-brand/5 px-3 py-2 text-sm text-fg">
+          ตั้งรหัสผ่านใหม่เรียบร้อยแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่
+        </p>
+      ) : null}
       {error ? <p className="jad-alert-error">{error}</p> : null}
       <div>
         <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
@@ -44,9 +50,17 @@ export function LoginForm() {
         />
       </div>
       <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
-          รหัสผ่าน
-        </label>
+        <div className="flex items-baseline justify-between gap-2">
+          <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
+            รหัสผ่าน
+          </label>
+          <Link
+            href="/forgot-password"
+            className="shrink-0 text-xs font-medium text-brand hover:text-brand-mid"
+          >
+            ลืมรหัสผ่าน?
+          </Link>
+        </div>
         <input
           name="password"
           type="password"

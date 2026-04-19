@@ -39,7 +39,11 @@ export default async function AdminBookingsPage() {
                 </td>
                 <td className="px-4 py-3 text-fg-muted">
                   {b.participantName}
-                  <span className="block text-xs text-fg-hint">{b.participantEmail}</span>
+                  {b.participantEmail.trim() ? (
+                    <span className="block text-xs text-fg-hint">{b.participantEmail}</span>
+                  ) : b.participantPhone.trim() ? (
+                    <span className="block text-xs text-fg-hint">{b.participantPhone.trim()}</span>
+                  ) : null}
                 </td>
                 <td className="px-4 py-3 text-fg-muted">{b.status}</td>
                 <td className="px-4 py-3 text-fg-muted">{formatBangkok(b.createdAt)}</td>

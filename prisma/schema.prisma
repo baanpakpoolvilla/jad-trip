@@ -40,6 +40,14 @@ model User {
   avatarUrl    String?
   /// แนะนำตัว / ประสบการณ์นำทริป
   bio          String   @default("")
+  /// ลิงก์โซเชียล / เว็บ (แสดงในหน้าโปรไฟล์สาธารณะเมื่อกรอก)
+  socialWebsite   String?
+  socialLine      String?
+  socialFacebook  String?
+  socialInstagram String?
+  socialTiktok    String?
+  socialYoutube   String?
+  socialX         String?
   /// เลขพร้อมเพย์ / เลขประจำตัวผู้เสียภาษี (ตัวเลขอย่างเดียวหรือมีขีด) — ใช้สร้าง QR และตรวจสลิป
   payoutPromptPayId String?
   /// รูป QR โอนเงิน (อัปโหลด) — แสดงเพิ่มในหน้าชำระของผู้จอง
@@ -58,6 +66,19 @@ model User {
   trips        Trip[]
   guidedTrips  Trip[]   @relation("TripGuide")
   notifications Notification[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+/// โทเคนรีเซ็ตรหัสผ่าน (เก็บเฉพาะ hash ของค่าที่ส่งในลิงก์อีเมล)
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Trip {
@@ -73,6 +94,14 @@ model Trip {
   shortDescription String
   description      String
   meetPoint        String
+  /// พิกัดจุดนัดพบ / เช็คอิน (WGS84) — ว่างได้ถ้าไม่เลือกจากแผนที่
+  meetPointLat     Float?
+  meetPointLng     Float?
+  /// ชื่อสถานที่จากแผนที่ (OpenStreetMap / Nominatim) — แสดงในหน้ารายละเอียด
+  destinationName  String   @default("")
+  /// พิกัดจุดหมายปลายทาง (WGS84) — ว่างได้ถ้าไม่เลือกจากแผนที่
+  destinationLat   Float?
+  destinationLng   Float?
   startAt          DateTime
   endAt            DateTime
   maxParticipants  Int

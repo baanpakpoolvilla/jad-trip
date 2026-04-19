@@ -111,6 +111,15 @@ export default async function OrganizerDashboardPage() {
         </div>
         <p className="text-[11px] leading-snug text-fg-muted">สาธารณะ · ไม่มีเมนูแดชบอร์ด · แชร์ไลน์/โพสต์ได้</p>
         <OrganizerBrochureLinkCopy brochureShortPath={brochureShortPath} appBaseUrl={appBaseUrl} />
+        <p className="text-[11px] leading-snug text-fg-muted">
+          โปรไฟล์สาธารณะ (ชื่อ รูป แนะนำตัว — ไม่มีอีเมล/เบอร์):{" "}
+          <Link
+            href={`${brochureShortPath}/profile`}
+            className="font-medium text-brand hover:text-brand-mid hover:underline"
+          >
+            เปิดหน้าโปรไฟล์ →
+          </Link>
+        </p>
       </section>
 
       <div className="grid grid-cols-3 gap-1.5 sm:gap-3">

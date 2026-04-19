@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarOff, MapPin } from "lucide-react";
+import { CalendarDays, CalendarOff, MapPin } from "lucide-react";
 import { formatBangkokTripDates } from "@/lib/datetime";
 import type { PublicOrganizerBrochureTrip } from "@/lib/trips-public";
 
@@ -52,27 +52,51 @@ export function PublicOrganizerBrochureTrips({ trips }: { trips: PublicOrganizer
               )}
             </div>
 
-            <div className="mt-2 flex min-h-0 flex-1 flex-col gap-0.5">
-              <h2 className="line-clamp-2 text-[0.8125rem] font-semibold leading-snug text-fg transition-colors group-hover:text-brand sm:text-sm">
-                {t.title}
-              </h2>
-              <p className="line-clamp-2 text-[11px] leading-snug text-fg-muted sm:text-xs">
-                {t.shortDescription}
-              </p>
-              <p className="mt-1 line-clamp-1 text-[10px] text-fg-hint sm:text-[11px]">
-                <span className="tabular-nums">{formatBangkokTripDates(t.startAt, t.endAt)}</span>
-              </p>
+            <div className="mt-3 flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+              <div className="min-w-0">
+                <h2 className="line-clamp-2 text-[0.9375rem] font-semibold leading-snug tracking-tight text-fg transition-colors group-hover:text-brand sm:text-base">
+                  {t.title}
+                </h2>
+                <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-fg-muted sm:text-[13px] sm:leading-relaxed">
+                  {t.shortDescription}
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2.5 rounded-lg border border-border/70 bg-canvas-muted/60 px-2.5 py-2 sm:gap-3 sm:px-3 sm:py-2.5">
+                <CalendarDays
+                  className="mt-0.5 size-4 shrink-0 text-brand-mid opacity-90 sm:size-4.5"
+                  strokeWidth={1.5}
+                  aria-hidden
+                />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-fg-hint sm:text-[11px]">
+                    วันทริป
+                  </p>
+                  <p className="mt-0.5 text-xs font-medium leading-snug text-fg tabular-nums sm:text-sm">
+                    {formatBangkokTripDates(t.startAt, t.endAt)}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-2 flex items-end justify-between gap-2 border-t border-border/60 pt-2">
+            <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/70 pt-3">
               <div className="min-w-0">
-                <p className="text-base font-bold tabular-nums leading-none text-brand sm:text-lg">
-                  ฿{t.pricePerPerson.toLocaleString("th-TH")}
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-fg-hint sm:text-[11px]">
+                  ราคา
                 </p>
-                <p className="mt-0.5 text-[10px] text-fg-muted">ต่อคน</p>
+                <p className="mt-0.5 text-lg font-bold tabular-nums leading-none text-brand sm:text-xl">
+                  ฿{t.pricePerPerson.toLocaleString("th-TH")}
+                  <span className="ml-1 text-xs font-medium text-fg-muted sm:text-sm">/ คน</span>
+                </p>
               </div>
-              <span className="jad-badge-success shrink-0 py-0.5 text-[10px] leading-none sm:text-xs">
-                {t.spotsLeft > 0 ? `เหลือ ${t.spotsLeft}` : "เต็ม"}
+              <span
+                className={
+                  t.spotsLeft > 0
+                    ? "jad-badge-success shrink-0 px-2.5 py-1 text-[11px] font-semibold leading-none sm:text-xs"
+                    : "jad-badge-neutral shrink-0 px-2.5 py-1 text-[11px] font-semibold leading-none sm:text-xs"
+                }
+              >
+                {t.spotsLeft > 0 ? `เหลือ ${t.spotsLeft} ที่` : "เต็ม"}
               </span>
             </div>
           </Link>
