@@ -27,6 +27,17 @@ export default async function TripsPage() {
             <li key={t.id}>
               <Link href={`/trips/${t.id}`} className="jad-card-interactive block">
                 <div className="flex items-start justify-between gap-3">
+                  {t.coverImageUrl?.trim() ? (
+                    <div className="relative hidden size-20 shrink-0 overflow-hidden rounded-lg border border-border bg-canvas sm:block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={t.coverImageUrl.trim()}
+                        alt=""
+                        className="size-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  ) : null}
                   <div className="min-w-0 flex-1">
                     <h2 className="text-lg font-semibold text-fg">{t.title}</h2>
                     <p className="mt-1 line-clamp-2 text-sm text-fg-muted">

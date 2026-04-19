@@ -39,9 +39,13 @@ async function main() {
       phone: "0812345678",
       passwordHash: await hash(orgPassword, 12),
       role: Role.ORGANIZER,
+      bio: "นำทริปเดินป่ามากกว่า 8 ปี เน้นความปลอดภัยและประสบการณ์ผู้เริ่มต้น",
+      avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
     },
     update: {
       passwordHash: await hash(orgPassword, 12),
+      bio: "นำทริปเดินป่ามากกว่า 8 ปี เน้นความปลอดภัยและประสบการณ์ผู้เริ่มต้น",
+      avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
     },
   });
 
@@ -63,7 +67,7 @@ async function main() {
         title: "ดอยอินทนนท์ 1 วัน (ตัวอย่าง)",
         shortDescription: "เดินป่าเบาๆ วิวสวย เหมาะผู้เริ่ม",
         description:
-          "รายละเอียดทริปตัวอย่าง — นำร่องกันน้ำ รองเท้าเดินป่า และเสื้อกันหนาวตามฤดูกาล",
+          "รายละเอียดทริปตัวอย่าง — นำร่องกันน้ำ รองเท้าเดินป่า และเสื้อกันหนาวตามฤดูกาล ชมทะเลหมอกยามเช้าและเส้นทางสันเขาเบาๆ",
         meetPoint: "ลานจอดรถหน้าอุทยาน ณ 05:30 น.",
         startAt: start,
         endAt: end,
@@ -73,6 +77,22 @@ async function main() {
         policyNotes:
           "ยกเลิกก่อนชำระเงินได้ในระบบ หลังชำระแล้วโปรดติดต่อผู้จัดทริปเพื่อตกลงคืนเงิน",
         status: "PUBLISHED",
+        coverImageUrl:
+          "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&h=600&fit=crop",
+        galleryImageUrls:
+          "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop\nhttps://images.unsplash.com/photo-1478131143081-80f7f84caae0?w=600&h=600&fit=crop",
+        guideDetails:
+          "ไกด์นำทริป 1 คน + ผู้ช่วย 1 คน — อธิบายเส้นทาง จุดพัก และการดูแลความปลอดภัยตลอดเส้นทาง",
+        itinerary:
+          "05:30 รวมกลุ่มที่ลานจอด\n06:00 เริ่มเดินเส้นทางหลัก\n10:00 พักรับประทานอาหารว่าง\n15:00 กลับถึงจุดรวมกลุ่ม",
+        travelNotes: "รถส่วนตัวหรือรถตู้จ้างเหมา — มีที่จอดหน้าอุทยาน (ค่าบริการตามประกาศอุทยาน)",
+        highlights:
+          "จุดชมวิวกิ่วแม่ปาน · ทะเลหมอกยามเช้า · ป่าสนสูงอายุยืนยาว · โอกาสพบนกท้องถิ่น",
+        packingList:
+          "น้ำดื่ม 1-2 ลิตร · รองเท้าเดินป่า · หมวกกันแดด · แจ็กเก็ตกันหนาว · ไม้เท้า (ถ้ามี)",
+        safetyNotes:
+          "ช่วงฝนทางลื่น — ระวังทากในป่าทึบ แนะนำถุงเท้ายาวและสเปรย์กันยุง ตามฤดูกาล",
+        guideProvides: "อาหารว่าง 1 มื้อ · น้ำดื่มกลางวัน · ชุดปฐมพยาบาลเบื้องต้น · แผนที่เส้นทาง",
       },
     });
     sampleTripId = created.id;
@@ -82,6 +102,29 @@ async function main() {
 
   if (sampleTripId) {
     await assignUniqueShareCodeForTrip(sampleTripId);
+    await prisma.trip.update({
+      where: { id: sampleTripId },
+      data: {
+        coverImageUrl:
+          "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&h=600&fit=crop",
+        galleryImageUrls:
+          "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop\nhttps://images.unsplash.com/photo-1478131143081-80f7f84caae0?w=600&h=600&fit=crop",
+        guideDetails:
+          "ไกด์นำทริป 1 คน + ผู้ช่วย 1 คน — อธิบายเส้นทาง จุดพัก และการดูแลความปลอดภัยตลอดเส้นทาง",
+        itinerary:
+          "05:30 รวมกลุ่มที่ลานจอด\n06:00 เริ่มเดินเส้นทางหลัก\n10:00 พักรับประทานอาหารว่าง\n15:00 กลับถึงจุดรวมกลุ่ม",
+        travelNotes:
+          "รถส่วนตัวหรือรถตู้จ้างเหมา — มีที่จอดหน้าอุทยาน (ค่าบริการตามประกาศอุทยาน)",
+        highlights:
+          "จุดชมวิวกิ่วแม่ปาน · ทะเลหมอกยามเช้า · ป่าสนสูงอายุยืนยาว · โอกาสพบนกท้องถิ่น",
+        packingList:
+          "น้ำดื่ม 1-2 ลิตร · รองเท้าเดินป่า · หมวกกันแดด · แจ็กเก็ตกันหนาว · ไม้เท้า (ถ้ามี)",
+        safetyNotes:
+          "ช่วงฝนทางลื่น — ระวังทากในป่าทึบ แนะนำถุงเท้ายาวและสเปรย์กันยุง ตามฤดูกาล",
+        guideProvides:
+          "อาหารว่าง 1 มื้อ · น้ำดื่มกลางวัน · ชุดปฐมพยาบาลเบื้องต้น · แผนที่เส้นทาง",
+      },
+    });
   }
 
   console.log("Seed OK — บัญชีทดสอบ (ดู docs/demo-accounts.md):");

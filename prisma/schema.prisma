@@ -34,6 +34,10 @@ model User {
   passwordHash String
   name         String
   phone        String?
+  /// แสดงในการ์ดผู้จัดบนหน้าทริป (URL รูป)
+  avatarUrl    String?
+  /// แนะนำตัว / ประสบการณ์นำทริป
+  bio          String   @default("")
   role         Role     @default(ORGANIZER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -56,6 +60,18 @@ model Trip {
   pricePerPerson   Int
   bookingClosesAt  DateTime?
   policyNotes      String      @default("")
+  /// URL รูปหน้าปก (https://…)
+  coverImageUrl    String?
+  /// URL รูปเพิ่มเติม ทีละบรรทัด
+  galleryImageUrls String      @default("")
+  guideDetails     String      @default("")
+  /// กำหนดการเดินทาง / เส้นทางโดยย่อ
+  itinerary        String      @default("")
+  travelNotes      String      @default("")
+  highlights       String      @default("")
+  packingList      String      @default("")
+  safetyNotes      String      @default("")
+  guideProvides    String      @default("")
   status           TripStatus  @default(DRAFT)
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt

@@ -1,7 +1,24 @@
 import Link from "next/link";
 import { TripForm } from "@/components/trip-form";
+import { auth } from "@/auth";
+import { db } from "@/lib/db";
 
-export default function NewTripPage() {
+export default async function NewTripPage() {
+  const session = await auth();
+  let organizerDefaults = { bio: "", avatarUrl: "" };
+  if (session?.user?.id) {
+    const u = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { bio: true, avatarUrl: true },
+    });
+    if (u) {
+      organizerDefaults = {
+        bio: u.bio ?? "",
+        avatarUrl: u.avatarUrl ?? "",
+      };
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Link
@@ -17,7 +34,7 @@ export default function NewTripPage() {
         </p>
       </div>
       <div className="jad-card">
-        <TripForm mode="create" />
+        <TripForm mode="create" organizerDefaults={organizerDefaults} />
       </div>
     </div>
   );

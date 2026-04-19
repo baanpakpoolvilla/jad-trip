@@ -9,6 +9,8 @@ import { parseBangkokDateTimeLocal } from "@/lib/datetime";
 import { countActiveSeats } from "@/lib/bookings";
 import { assignUniqueShareCodeForTrip } from "@/lib/trip-share-code";
 
+const trim = (s: unknown) => (typeof s === "string" ? s : "").trim();
+
 const tripFormSchema = z.object({
   title: z.string().min(2, "กรอกชื่อทริป"),
   shortDescription: z.string().min(1, "กรอกคำอธิบายสั้น"),
@@ -20,6 +22,17 @@ const tripFormSchema = z.object({
   pricePerPerson: z.coerce.number().int().min(0),
   bookingClosesAt: z.string().optional(),
   policyNotes: z.string().optional(),
+  coverImageUrl: z.string().optional(),
+  galleryImageUrls: z.string().optional(),
+  guideDetails: z.string().optional(),
+  itinerary: z.string().optional(),
+  travelNotes: z.string().optional(),
+  highlights: z.string().optional(),
+  packingList: z.string().optional(),
+  safetyNotes: z.string().optional(),
+  guideProvides: z.string().optional(),
+  organizerBio: z.string().optional(),
+  organizerAvatarUrl: z.string().optional(),
   intent: z.enum(["draft", "publish"]),
 });
 
@@ -35,7 +48,47 @@ function parseTripForm(formData: FormData) {
     pricePerPerson: formData.get("pricePerPerson"),
     bookingClosesAt: formData.get("bookingClosesAt")?.toString() ?? "",
     policyNotes: formData.get("policyNotes")?.toString() ?? "",
+    coverImageUrl: formData.get("coverImageUrl")?.toString() ?? "",
+    galleryImageUrls: formData.get("galleryImageUrls")?.toString() ?? "",
+    guideDetails: formData.get("guideDetails")?.toString() ?? "",
+    itinerary: formData.get("itinerary")?.toString() ?? "",
+    travelNotes: formData.get("travelNotes")?.toString() ?? "",
+    highlights: formData.get("highlights")?.toString() ?? "",
+    packingList: formData.get("packingList")?.toString() ?? "",
+    safetyNotes: formData.get("safetyNotes")?.toString() ?? "",
+    guideProvides: formData.get("guideProvides")?.toString() ?? "",
+    organizerBio: formData.get("organizerBio")?.toString() ?? "",
+    organizerAvatarUrl: formData.get("organizerAvatarUrl")?.toString() ?? "",
     intent: formData.get("intent") === "publish" ? "publish" : "draft",
+  });
+}
+
+function tripRichContentFromParsed(v: z.infer<typeof tripFormSchema>) {
+  const cover = trim(v.coverImageUrl);
+  return {
+    coverImageUrl: cover.length ? cover : null,
+    galleryImageUrls: trim(v.galleryImageUrls),
+    guideDetails: trim(v.guideDetails),
+    itinerary: trim(v.itinerary),
+    travelNotes: trim(v.travelNotes),
+    highlights: trim(v.highlights),
+    packingList: trim(v.packingList),
+    safetyNotes: trim(v.safetyNotes),
+    guideProvides: trim(v.guideProvides),
+  };
+}
+
+async function syncOrganizerFromForm(
+  userId: string,
+  v: z.infer<typeof tripFormSchema>,
+) {
+  const url = trim(v.organizerAvatarUrl);
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      bio: trim(v.organizerBio),
+      avatarUrl: url.length ? url : null,
+    },
   });
 }
 
@@ -70,6 +123,8 @@ export async function createTrip(
   const status =
     v.intent === "publish" ? TripStatus.PUBLISHED : TripStatus.DRAFT;
 
+  const rich = tripRichContentFromParsed(v);
+
   const created = await db.trip.create({
     data: {
       organizerId: session.user.id,
@@ -83,11 +138,13 @@ export async function createTrip(
       pricePerPerson: v.pricePerPerson,
       bookingClosesAt,
       policyNotes: (v.policyNotes ?? "").trim(),
+      ...rich,
       status,
     },
   });
 
   await assignUniqueShareCodeForTrip(created.id);
+  await syncOrganizerFromForm(session.user.id, v);
 
   revalidatePath("/organizer/trips");
   revalidatePath("/trips");
@@ -106,7 +163,10 @@ export async function updateTrip(
 
   const trip = await db.trip.findFirst({
     where: { id: tripId, organizerId: session.user.id },
-    include: { _count: { select: { bookings: true } } },
+    include: {
+      _count: { select: { bookings: true } },
+      organizer: { select: { bio: true, avatarUrl: true } },
+    },
   });
   if (!trip) return { error: "ไม่พบทริป" };
 
@@ -129,6 +189,7 @@ export async function updateTrip(
 
   const hasBookings = trip._count.bookings > 0;
   const isPublished = trip.status === TripStatus.PUBLISHED;
+  const rich = tripRichContentFromParsed(v);
 
   if (hasBookings && isPublished) {
     await db.trip.update({
@@ -138,6 +199,7 @@ export async function updateTrip(
         description: v.description.trim(),
         meetPoint: v.meetPoint.trim(),
         policyNotes: (v.policyNotes ?? "").trim(),
+        ...rich,
       },
     });
   } else {
@@ -156,10 +218,13 @@ export async function updateTrip(
         pricePerPerson: v.pricePerPerson,
         bookingClosesAt,
         policyNotes: (v.policyNotes ?? "").trim(),
+        ...rich,
         status: nextStatus,
       },
     });
   }
+
+  await syncOrganizerFromForm(session.user.id, v);
 
   revalidatePath("/organizer/trips");
   revalidatePath(`/organizer/trips/${tripId}`);
@@ -261,7 +326,10 @@ export async function getTripEditDefaults(tripId: string) {
 
   const trip = await db.trip.findFirst({
     where: { id: tripId, organizerId: session.user.id },
-    include: { _count: { select: { bookings: true } } },
+    include: {
+      _count: { select: { bookings: true } },
+      organizer: { select: { bio: true, avatarUrl: true } },
+    },
   });
   if (!trip) return null;
 
