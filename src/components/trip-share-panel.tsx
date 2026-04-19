@@ -35,6 +35,20 @@ export function TripSharePanel({ tripTitle, tripId, shareCode, appBaseUrl }: Pro
     };
   }, [origin, tripId, shareCode]);
 
+  const toAbsolute = useCallback(
+    (pathOrUrl: string) => {
+      if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
+        return pathOrUrl;
+      }
+      if (typeof window !== "undefined") {
+        return `${window.location.origin}${pathOrUrl.startsWith("/") ? pathOrUrl : `/${pathOrUrl}`}`;
+      }
+      const b = appBaseUrl.replace(/\/$/, "");
+      return b ? `${b}${pathOrUrl.startsWith("/") ? pathOrUrl : `/${pathOrUrl}`}` : pathOrUrl;
+    },
+    [appBaseUrl],
+  );
+
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     const t = window.setTimeout(() => setToast(null), 2200);
@@ -44,17 +58,17 @@ export function TripSharePanel({ tripTitle, tripId, shareCode, appBaseUrl }: Pro
   const copyText = useCallback(
     async (text: string, okMsg: string) => {
       try {
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(toAbsolute(text));
         showToast(okMsg);
       } catch {
         showToast("คัดลอกไม่สำเร็จ — ลองเลือกลิงก์แล้วคัดลอกเอง");
       }
     },
-    [showToast],
+    [showToast, toAbsolute],
   );
 
   const shareNative = useCallback(async () => {
-    const url = shortUrl.startsWith("http") ? shortUrl : `${window.location.origin}${shortUrl}`;
+    const url = toAbsolute(shortUrl);
     const title = tripTitle;
     try {
       if (navigator.share) {
@@ -68,9 +82,9 @@ export function TripSharePanel({ tripTitle, tripId, shareCode, appBaseUrl }: Pro
       await copyText(url, "คัดลอกลิงก์ย่อแล้ว");
     } catch (e) {
       if ((e as Error).name === "AbortError") return;
-      await copyText(url, "คัดลอกลิงก์ย่อแล้ว");
+      await copyText(shortUrl, "คัดลอกลิงก์ย่อแล้ว");
     }
-  }, [copyText, shortUrl, tripTitle]);
+  }, [copyText, shortUrl, tripTitle, toAbsolute]);
 
   return (
     <div className="jad-card space-y-3 border-brand-mid/25 bg-brand-light/40 p-4">
@@ -114,11 +128,11 @@ export function TripSharePanel({ tripTitle, tripId, shareCode, appBaseUrl }: Pro
       <dl className="space-y-2 rounded-lg bg-surface/80 px-3 py-2.5 text-xs text-fg-muted">
         <div>
           <dt className="font-medium text-fg-hint">ลิงก์ย่อ</dt>
-          <dd className="mt-0.5 break-all font-mono text-fg">{shortUrl}</dd>
+          <dd className="mt-0.5 break-all font-mono text-fg">{toAbsolute(shortUrl)}</dd>
         </div>
         <div>
           <dt className="font-medium text-fg-hint">ลิงก์เต็ม</dt>
-          <dd className="mt-0.5 break-all font-mono text-fg">{fullUrl}</dd>
+          <dd className="mt-0.5 break-all font-mono text-fg">{toAbsolute(fullUrl)}</dd>
         </div>
       </dl>
 
