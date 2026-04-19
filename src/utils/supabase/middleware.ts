@@ -1,3 +1,7 @@
+/**
+ * อัปเดตคุกกี้เซสชัน Supabase Auth — ไม่เกี่ยวกับเซสชัน NextAuth
+ * ถ้าไม่มี NEXT_PUBLIC_SUPABASE_* จะคืน NextResponse.next() ทันที
+ */
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 

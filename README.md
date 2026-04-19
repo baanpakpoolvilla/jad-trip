@@ -4,10 +4,13 @@
 
 ## รันในเครื่อง
 
-1. คัดลอก `.env.example` เป็น `.env` แล้วตั้งค่า `DATABASE_URL`, `AUTH_SECRET`, ฯลฯ  
-2. Postgres — **แนะนำ [Supabase](https://supabase.com)** ดูขั้นตอนใน [docs/database-supabase.md](docs/database-supabase.md) หรือใช้ Docker: `docker compose up -d`  
-3. `npm install` → `npm run db:push` → `npm run db:seed` (ถ้าต้องการข้อมูลทดสอบ)  
-4. `npm run dev` แล้วเปิด [http://localhost:3000](http://localhost:3000)
+1. คัดลอก `.env.example` เป็น `.env` แล้วตั้งค่า `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, ฯลฯ  
+2. (ถ้าใช้ Supabase client / middleware) ตั้ง `NEXT_PUBLIC_SUPABASE_URL` และ `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` ใน `.env` หรือ `.env.local` — ดู [docs/database-supabase.md](docs/database-supabase.md)  
+3. Postgres — **แนะนำ [Supabase](https://supabase.com)** ดูขั้นตอนใน `docs/database-supabase.md` หรือใช้ Docker: `docker compose up -d`  
+4. `npm install` → `npm run db:push` → `npm run db:seed` (ถ้าต้องการข้อมูลทดสอบ)  
+5. `npm run dev` แล้วเปิด [http://localhost:3000](http://localhost:3000)
+
+**สถาปัตย์:** ล็อกอินผู้ใช้แอปผ่าน **NextAuth** + ตาราง `User` ใน Postgres (Prisma) — `@supabase/ssr` ใน middleware ใช้รีเฟรชเซสชัน **Supabase Auth** เมื่อตั้งค่า env แล้วเท่านั้น ไม่แทนที่ NextAuth
 
 ## เอกสาร
 

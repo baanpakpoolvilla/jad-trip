@@ -1,3 +1,7 @@
+/**
+ * Supabase server client — ใช้เมื่อเรียก Auth / Storage / Realtime ฝั่งเซิร์ฟเวอร์
+ * ล็อกอินหลักของแอป: NextAuth (@/auth) + Prisma User
+ */
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 

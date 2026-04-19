@@ -50,7 +50,19 @@ npm run db:seed
 
 ถ้าเคยรันกับ Docker มาก่อน แล้วอยากย้ายมา Supabase แบบสะอาด — โปรเจกต์ Supabase ใหม่จะว่าง; `db push` จะสร้างตารางใหม่
 
-## 5) หมายเหตุ
+## 5) Supabase JS client (`@supabase/ssr`) — แยกจาก Prisma
+
+โปรเจกต์มี helper ที่ `src/utils/supabase/` และ `src/middleware.ts` สำหรับ **Supabase Auth / คุกกี้เซสชัน** ตาม [แนวทาง SSR ของ Supabase](https://supabase.com/docs/guides/auth/server-side/nextjs)
+
+| ตัวแปร | บทบาท |
+|--------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL โปรเจกต์ (Settings → API) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | publishable หรือ **anon** public key |
+
+- **ล็อกอินของแอปจัดทริป** ยังเป็น **NextAuth** + ผู้ใช้ใน Postgres ผ่าน Prisma — ไม่ซ้ำกับคีย์ด้านบนถ้าคุณยังไม่ได้ย้าย auth ไป Supabase  
+- ถ้าไม่ตั้งสองตัวแปรนี้ middleware จะไม่รีเฟรช Supabase และแอปยังทำงานได้ตามปกติ (เฉพาะฟีเจอร์ที่เรียก `createClient()` จาก `@/utils/supabase/*` จะต้องมี env)
+
+## 6) หมายเหตุ
 
 - **ไม่ต้อง**เปิด Row Level Security สำหรับตารางที่ Prisma เข้าด้วย `DATABASE_URL` แบบ `postgres` ถ้าใช้แค่ backend ของคุณ — RLS สำคัญเมื่อมี client เข้าผ่าน Supabase anon key โดยตรง  
 - ถ้า build บน Vercel ช้า/ timeout ต่อ DB ลองใช้ **pooler** เป็น `DATABASE_URL` และเก็บ **direct** เป็น `DIRECT_URL` ตามด้านบน

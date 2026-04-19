@@ -1,3 +1,4 @@
+/** Browser Supabase client — คู่กับ middleware รีเฟรชเซสชัน */
 import { createBrowserClient } from "@supabase/ssr";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
