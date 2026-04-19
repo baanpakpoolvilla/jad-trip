@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_Thai } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
@@ -17,9 +17,15 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "จัดทริป — จัดได้ ไม่ยุ่งยาก",
+  title: "Just Trip — จัดทริปแล้วลุยเลย",
   description:
-    "เครื่องมือสำหรับผู้จัดทริปกลุ่ม จองที่นั่งและติดตามการจ่ายเงินให้ง่ายขึ้น",
+    "เครื่องมือสำหรับผู้จัดกลุ่มทริป — นำเสนอทริป รับจอง ตามสถานะชำระเงิน และแชร์ลิงก์สาธารณะให้ลูกค้าได้ในที่เดียว",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

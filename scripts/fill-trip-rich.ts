@@ -7,7 +7,7 @@ import { assignUniqueShareCodeForTrip } from "../src/lib/trip-share-code";
 
 const prisma = new PrismaClient();
 
-const TRIP_ID = process.argv[2] ?? "cmo590blo0003xcmfhww9f16q";
+const TRIP_ID = process.argv[2]?.trim() ?? "";
 
 const COVER =
   "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&h=600&fit=crop";
@@ -21,6 +21,11 @@ const ORG_AVATAR =
   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop";
 
 async function main() {
+  if (!TRIP_ID) {
+    console.error("ใช้: npx tsx scripts/fill-trip-rich.ts <tripId>");
+    process.exit(1);
+  }
+
   const trip = await prisma.trip.findUnique({
     where: { id: TRIP_ID },
     select: { id: true, title: true, organizerId: true },
@@ -88,6 +93,8 @@ async function main() {
     data: {
       bio: "ผู้จัดและไกด์เดินป่า — เน้นกลุ่มเล็ก ความปลอดภัย และประสบการณ์ที่จดจำได้",
       avatarUrl: ORG_AVATAR,
+      isGuide: true,
+      payoutPromptPayId: "0812345678",
     },
   });
 

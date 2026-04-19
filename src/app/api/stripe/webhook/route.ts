@@ -31,19 +31,38 @@ export async function POST(request: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const bookingId = session.metadata?.bookingId;
     if (bookingId) {
-      const booking = await db.booking.findUnique({ where: { id: bookingId } });
+      const booking = await db.booking.findUnique({
+        where: { id: bookingId },
+        include: { trip: true },
+      });
       if (booking?.status === BookingStatus.PENDING_PAYMENT) {
-        const updated = await db.booking.update({
-          where: { id: bookingId },
-          data: {
-            status: BookingStatus.CONFIRMED,
-            paidAt: new Date(),
-          },
+        const paidAt = new Date();
+        const updated = await db.$transaction(async (tx) => {
+          const b = await tx.booking.update({
+            where: { id: bookingId },
+            data: {
+              status: BookingStatus.CONFIRMED,
+              paidAt,
+            },
+          });
+          await tx.notification.create({
+            data: {
+              userId: booking.trip.organizerId,
+              kind: "BOOKING_PAID_STRIPE",
+              title: "มีผู้จองชำระเงินแล้ว (Stripe)",
+              message: `${booking.participantName} ชำระทริป "${booking.trip.title}" เรียบร้อย`,
+              href: `/organizer/trips/${booking.tripId}`,
+            },
+          });
+          return b;
         });
         revalidatePath(`/bookings/${updated.viewToken}`);
         revalidatePath(`/trips/${updated.tripId}`);
         revalidatePath(`/organizer/trips/${updated.tripId}`);
+        revalidatePath("/organizer");
         revalidatePath("/trips");
+        revalidatePath("/organizer/notifications");
+        revalidatePath("/organizer", "layout");
       }
     }
   }

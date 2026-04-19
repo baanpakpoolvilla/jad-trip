@@ -24,7 +24,7 @@
 จากโฟลเดอร์โปรเจกต์:
 
 ```bash
-cd /path/to/jad-trip   # โฟลเดอร์หลัง clone จาก GitHub
+cd /path/to/justtrip   # โฟลเดอร์หลัง clone จาก GitHub
 env -u VERCEL_TOKEN npx vercel@latest login
 env -u VERCEL_TOKEN npx vercel@latest link
 env -u VERCEL_TOKEN npx vercel@latest deploy        # preview

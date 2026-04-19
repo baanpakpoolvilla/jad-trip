@@ -1,13 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { LoginForm } from "@/components/login-form";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await auth();
+  if (session?.user) redirect("/post-login");
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-[1.625rem] font-semibold text-fg">เข้าสู่ระบบ</h1>
-        <p className="mt-1 text-sm text-fg-muted">สำหรับผู้จัดทริปและแอดมิน</p>
-      </div>
+      <header className="jad-page-header">
+        <h1 className="jad-page-title">เข้าสู่ระบบ</h1>
+        <p className="text-sm text-fg-muted">สำหรับผู้จัดทริปและแอดมิน</p>
+      </header>
       <div className="jad-card">
         <LoginForm />
       </div>

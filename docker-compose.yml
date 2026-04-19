@@ -10,6 +10,31 @@ services:
       - "5433:5432"
     volumes:
       - dernpa_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dernpa -d dernpa"]
+      interval: 3s
+      timeout: 5s
+      retries: 15
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://dernpa:dernpa@db:5432/dernpa?schema=public
+      DIRECT_URL: postgresql://dernpa:dernpa@db:5432/dernpa?schema=public
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+      AUTH_SECRET: ${AUTH_SECRET:-docker-dev-secret-change-with-openssl-rand-base64-32}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      EASYSLIP_API_KEY: ${EASYSLIP_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   dernpa_pg:

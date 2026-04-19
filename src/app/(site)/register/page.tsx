@@ -1,15 +1,20 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { RegisterForm } from "@/components/register-form";
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  const session = await auth();
+  if (session?.user) redirect("/post-login");
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-[1.625rem] font-semibold text-fg">ลงทะเบียนผู้จัดทริป</h1>
-        <p className="mt-1 text-sm text-fg-muted">
-          สร้างบัญชีเพื่อสร้างทริปและดูรายการจอง
+      <header className="jad-page-header">
+        <h1 className="jad-page-title">ลงทะเบียนผู้จัดทริป</h1>
+        <p className="text-sm text-fg-muted">
+          สร้างบัญชี ตั้งทริป เปิดรับจอง — แล้วพร้อมพาลุยต่อได้ทันที
         </p>
-      </div>
+      </header>
       <div className="jad-card">
         <RegisterForm />
       </div>

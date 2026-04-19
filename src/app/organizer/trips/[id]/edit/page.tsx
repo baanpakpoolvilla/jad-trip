@@ -17,25 +17,22 @@ export default async function EditTripPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <Link
-        href={`/organizer/trips/${trip.id}`}
-        className="text-sm font-medium text-brand hover:text-brand-mid"
-      >
-        ← กลับหน้าทริป
+      <Link href={`/organizer/trips/${trip.id}`} className="jad-back-link">
+        ← หน้าทริป
       </Link>
-      <div>
-        <h1 className="text-[1.625rem] font-semibold text-fg">แก้ไขทริป</h1>
+      <header className="jad-page-header">
+        <h1 className="jad-page-title">แก้ไขทริป</h1>
         {locked ? (
-          <p className="mt-1 rounded-lg border border-warning/30 bg-warning-light px-3 py-2 text-sm text-warning">
-            มีผู้จองแล้ว — แก้ไม่ได้: ชื่อทริป วันเวลา จำนวนที่ ราคา · แก้ได้: รายละเอียด รูป ไกด์
-            กำหนดการ การเดินทาง จุดเด่น สิ่งเตรียม คำเตือน โปรไฟล์ผู้จัด และนโยบาย
+          <p className="rounded-lg border border-warning/30 bg-warning-light px-3 py-2 text-sm text-warning">
+            มีผู้จองแล้ว — แก้ไม่ได้: ชื่อทริป วันเวลา จำนวนที่ ราคา · แก้ได้: รายละเอียด รูป ไกด์ประจำทริป
+            กำหนดการ การเดินทาง จุดเด่น สิ่งเตรียม คำเตือน และนโยบาย (โปรไฟล์ผู้จัดแก้ที่หน้าโปรไฟล์)
           </p>
         ) : (
-          <p className="mt-1 text-sm text-fg-muted">
+          <p className="text-sm text-fg-muted">
             ปรับรายละเอียด ราคา และจำนวนที่ได้เมื่อยังไม่มีผู้จอง
           </p>
         )}
-      </div>
+      </header>
       <div className="jad-card">
         <TripForm mode="edit" tripId={trip.id} trip={trip} locked={locked} />
       </div>

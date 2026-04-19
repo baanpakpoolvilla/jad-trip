@@ -1,23 +1,32 @@
 @import "tailwindcss";
 
-/* จัดทริป (JadTrip) — design tokens → Tailwind v4 @theme */
+/* Just Trip — design tokens → Tailwind v4 @theme  (CI v2.0) */
 @theme inline {
   --font-sans: var(--font-noto-thai), var(--font-inter), ui-sans-serif, system-ui,
     sans-serif;
 
+  /* Brand — เรียงจาก dark → mid → light */
+  --color-brand-dark: #163829;
   --color-brand: #1e4d3a;
   --color-brand-mid: #2d7a57;
   --color-brand-light: #e8f5ef;
   --color-brand-active: #164030;
 
+  /* Accent (Adventure Amber) — ใช้สำหรับ hero highlight, featured label */
+  --color-accent: #c07a28;
+  --color-accent-light: #fdf6ed;
+
+  /* Text */
   --color-fg: #1a1a1a;
   --color-fg-muted: #4a4a4a;
   --color-fg-hint: #888888;
 
+  /* Surface */
   --color-border: #e0e0e0;
   --color-canvas: #f7f7f7;
   --color-surface: #ffffff;
 
+  /* Semantic */
   --color-success: #22863a;
   --color-success-light: #e6f4ea;
   --color-warning: #b45309;
@@ -29,13 +38,19 @@
 }
 
 @layer components {
-  /* Layout — spacing 4px grid (ดู docs/brand-ci-guideline.md) */
+  /* ─── Layout ─────────────────────────────────────────────── */
+
   .jad-container {
-    @apply mx-auto w-full max-w-2xl sm:max-w-3xl;
+    @apply mx-auto w-full max-w-2xl sm:max-w-3xl md:max-w-4xl;
   }
 
   .jad-page-title {
-    @apply text-[1.625rem] font-semibold leading-snug tracking-tight text-fg sm:text-[2rem] sm:leading-tight;
+    @apply text-[1.5rem] font-semibold leading-snug tracking-tight text-fg sm:text-[2rem] sm:leading-tight;
+  }
+
+  /** หัวข้อหน้า + คำอธิบายย่อย (ใช้กับ h1 หรือ h2) */
+  .jad-page-header {
+    @apply space-y-1.5 sm:space-y-2;
   }
 
   .jad-page-lead {
@@ -43,73 +58,109 @@
   }
 
   .jad-section-label {
-    @apply text-xs font-medium uppercase tracking-wide text-brand-mid;
+    @apply text-[11px] font-semibold uppercase tracking-widest text-brand-mid;
   }
 
   .jad-back-link {
-    @apply -mx-1 inline-flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-brand transition-colors;
+    @apply -mx-1 inline-flex min-h-10 min-w-10 items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-sm font-medium text-brand transition-colors sm:min-h-11 sm:min-w-11 sm:gap-2 sm:px-2 sm:py-2;
     @apply hover:bg-brand-light hover:text-brand-mid;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/35 focus-visible:ring-offset-2;
   }
 
+  /* ─── Hero ───────────────────────────────────────────────── */
+
+  /* gradient hero section — brand dark → brand → brand-mid */
+  .jad-hero {
+    @apply rounded-xl px-5 py-8 text-white sm:rounded-2xl sm:px-10 sm:py-14;
+    background: linear-gradient(135deg, #163829 0%, #1e4d3a 55%, #2d7a57 100%);
+  }
+
+  /* ─── Buttons ────────────────────────────────────────────── */
+
   .jad-btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white transition-colors;
+    @apply inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-colors sm:px-5 sm:py-2.5;
     @apply hover:bg-brand-mid active:bg-brand-active;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/40 focus-visible:ring-offset-2;
     @apply disabled:pointer-events-none disabled:opacity-45;
   }
 
   .jad-btn-secondary {
-    @apply inline-flex items-center justify-center rounded-lg border-[1.5px] border-brand bg-transparent px-5 py-2.5 text-sm font-medium text-brand transition-colors;
+    @apply inline-flex items-center justify-center rounded-lg border-[1.5px] border-brand bg-transparent px-4 py-2 text-sm font-medium text-brand transition-colors sm:px-5 sm:py-2.5;
     @apply hover:bg-brand-light;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/35 focus-visible:ring-offset-2;
   }
 
   .jad-btn-ghost {
-    @apply inline-flex items-center justify-center rounded-lg border border-border bg-transparent px-5 py-2.5 text-sm font-medium text-fg-muted transition-colors;
+    @apply inline-flex items-center justify-center rounded-lg border border-border bg-transparent px-4 py-2 text-sm font-medium text-fg-muted transition-colors sm:px-5 sm:py-2.5;
     @apply hover:bg-canvas;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg-muted/25 focus-visible:ring-offset-2;
   }
 
+  /* Buttons บน dark hero gradient */
+  .jad-btn-hero-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand shadow-sm transition-colors sm:px-5 sm:py-2.5;
+    @apply hover:bg-brand-light;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-mid;
+    @apply disabled:pointer-events-none disabled:opacity-45;
+  }
+
+  .jad-btn-hero-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors sm:px-5 sm:py-2.5;
+    @apply hover:border-white/50 hover:bg-white/20;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-mid;
+  }
+
+  /* ─── Forms ──────────────────────────────────────────────── */
+
   .jad-input {
-    @apply w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-fg outline-none transition-shadow;
+    @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg outline-none transition-shadow sm:px-3.5 sm:py-2.5;
     @apply placeholder:text-fg-hint;
     @apply focus:border-brand-mid focus:ring-[3px] focus:ring-brand-mid/15;
   }
 
+  /* ─── Cards & Surfaces ───────────────────────────────────── */
+
   .jad-card {
-    @apply rounded-xl border border-border bg-surface p-5;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    @apply rounded-xl border border-border bg-surface p-4 sm:p-5;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 0 0 0.5px rgba(0, 0, 0, 0.03);
   }
 
   .jad-card-interactive {
-    @apply rounded-xl border border-border bg-surface p-5 transition-shadow;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    @apply rounded-xl border border-border bg-surface p-4 transition-all sm:p-5;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 0 0 0.5px rgba(0, 0, 0, 0.03);
   }
 
   .jad-card-interactive:hover {
     @apply border-brand-mid;
-    box-shadow: 0 2px 8px rgba(30, 77, 58, 0.1);
+    box-shadow: 0 4px 16px rgba(30, 77, 58, 0.14);
   }
 
   .jad-card-interactive:focus-visible {
     @apply border-brand-mid outline-none ring-2 ring-brand-mid/25 ring-offset-2;
   }
 
-  /* รายการทริป — การ์ดแนวนอน */
-  .jad-trip-row {
-    @apply flex gap-4 rounded-2xl border border-border bg-surface p-4 transition-all;
-    @apply hover:border-brand-mid/50 hover:shadow-md;
+  /* รายการทริป — การ์ดแนวตั้ง (กระชับ) */
+  .jt-trip-card {
+    @apply flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface p-3 transition-all;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
-  .jad-trip-row:focus-within {
-    @apply border-brand-mid ring-2 ring-brand-mid/20 ring-offset-2;
+  .jt-trip-card:hover {
+    @apply border-brand-mid/55;
+    box-shadow: 0 3px 12px rgba(30, 77, 58, 0.12);
   }
 
-  /* เนื้อหายาว — จำกัดความกว้างบรรทัดอ่านสบาย */
+  .jt-trip-card:focus-visible {
+    @apply border-brand-mid outline-none ring-2 ring-brand-mid/22 ring-offset-2;
+  }
+
+  /* ─── Typography helpers ─────────────────────────────────── */
+
   .jad-prose-flow {
     @apply text-sm leading-[1.65] text-fg-muted sm:text-[15px] sm:leading-relaxed;
   }
+
+  /* ─── Badges ─────────────────────────────────────────────── */
 
   .jad-badge-success {
     @apply inline-flex items-center rounded-full bg-success-light px-2.5 py-1 text-xs font-medium text-success;
@@ -126,6 +177,12 @@
   .jad-badge-neutral {
     @apply inline-flex items-center rounded-full bg-canvas px-2.5 py-1 text-xs font-medium text-fg-muted;
   }
+
+  .jad-badge-accent {
+    @apply inline-flex items-center rounded-full bg-accent-light px-2.5 py-1 text-xs font-medium text-accent;
+  }
+
+  /* ─── Alerts ─────────────────────────────────────────────── */
 
   .jad-alert-error {
     @apply rounded-lg border border-danger/25 bg-danger-light px-3 py-2 text-sm text-danger;

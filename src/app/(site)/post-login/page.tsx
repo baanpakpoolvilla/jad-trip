@@ -5,5 +5,5 @@ export default async function PostLoginPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
   if (session.user.role === "ADMIN") redirect("/admin");
-  redirect("/organizer/trips");
+  redirect("/organizer");
 }

@@ -12,6 +12,21 @@ export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ id: string }> };
 
+function tripStatusLabel(status: TripStatus): string {
+  switch (status) {
+    case TripStatus.DRAFT:
+      return "ฉบับร่าง";
+    case TripStatus.PUBLISHED:
+      return "เผยแพร่แล้ว (เปิดรับจอง)";
+    case TripStatus.CLOSED:
+      return "ปิดรับจองแล้ว";
+    case TripStatus.CANCELLED:
+      return "ยกเลิกแล้ว";
+    default:
+      return status;
+  }
+}
+
 function bookingStatusBadge(s: string) {
   switch (s) {
     case "PENDING_PAYMENT":
@@ -49,22 +64,17 @@ export default async function OrganizerTripDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <Link
-        href="/organizer/trips"
-        className="text-sm font-medium text-brand hover:text-brand-mid"
-      >
-        ← กลับรายการทริป
+      <Link href="/organizer/trips" className="jad-back-link">
+        ← รายการทริป
       </Link>
 
       <div className="jad-card space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-fg-hint">
-              {trip.status}
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-fg-hint">
+              {tripStatusLabel(trip.status)}
             </p>
-            <h1 className="mt-1 text-[1.625rem] font-semibold leading-snug text-fg">
-              {trip.title}
-            </h1>
+            <h1 className="jad-page-title mt-1">{trip.title}</h1>
             <p className="mt-1 text-sm text-fg-muted">
               {formatBangkok(trip.startAt)} · ฿{trip.pricePerPerson.toLocaleString("th-TH")}{" "}
               / คน · สูงสุด {trip.maxParticipants} คน

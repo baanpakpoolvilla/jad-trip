@@ -31,8 +31,7 @@ const tripFormSchema = z.object({
   packingList: z.string().optional(),
   safetyNotes: z.string().optional(),
   guideProvides: z.string().optional(),
-  organizerBio: z.string().optional(),
-  organizerAvatarUrl: z.string().optional(),
+  guideUserId: z.string().optional(),
   intent: z.enum(["draft", "publish"]),
 });
 
@@ -57,8 +56,7 @@ function parseTripForm(formData: FormData) {
     packingList: formData.get("packingList")?.toString() ?? "",
     safetyNotes: formData.get("safetyNotes")?.toString() ?? "",
     guideProvides: formData.get("guideProvides")?.toString() ?? "",
-    organizerBio: formData.get("organizerBio")?.toString() ?? "",
-    organizerAvatarUrl: formData.get("organizerAvatarUrl")?.toString() ?? "",
+    guideUserId: formData.get("guideUserId")?.toString() ?? "",
     intent: formData.get("intent") === "publish" ? "publish" : "draft",
   });
 }
@@ -78,18 +76,28 @@ function tripRichContentFromParsed(v: z.infer<typeof tripFormSchema>) {
   };
 }
 
-async function syncOrganizerFromForm(
-  userId: string,
-  v: z.infer<typeof tripFormSchema>,
-) {
-  const url = trim(v.organizerAvatarUrl);
-  await db.user.update({
-    where: { id: userId },
-    data: {
-      bio: trim(v.organizerBio),
-      avatarUrl: url.length ? url : null,
-    },
+async function resolveGuideUserId(
+  raw: string,
+  /** เมื่อแก้ไขทริป — ยังยอมรับไกด์เดิมได้แม้ผู้ใช้ปิดโหมดไกด์ในภายหลัง */
+  grandfatheredUserId: string | null,
+): Promise<{ ok: true; id: string | null } | { ok: false; error: string }> {
+  const id = trim(raw);
+  if (!id.length) return { ok: true, id: null };
+  const u = await db.user.findFirst({
+    where: { id },
+    select: { id: true, isGuide: true },
   });
+  if (!u) {
+    return { ok: false, error: "ไม่พบผู้ใช้รหัสนี้ในระบบ" };
+  }
+  if (u.isGuide) return { ok: true, id: u.id };
+  if (grandfatheredUserId && u.id === grandfatheredUserId) {
+    return { ok: true, id: u.id };
+  }
+  return {
+    ok: false,
+    error: "ผู้ใช้นี้ยังไม่เปิดโหมดไกด์ในหน้าโปรไฟล์ — ให้ไกด์ติ๊กถูกที่ «ลงทะเบียนเป็นไกด์» ก่อน",
+  };
 }
 
 export type TripActionState = { error?: string } | { ok: true };
@@ -124,6 +132,8 @@ export async function createTrip(
     v.intent === "publish" ? TripStatus.PUBLISHED : TripStatus.DRAFT;
 
   const rich = tripRichContentFromParsed(v);
+  const guideResolved = await resolveGuideUserId(trim(v.guideUserId), null);
+  if (!guideResolved.ok) return { error: guideResolved.error };
 
   const created = await db.trip.create({
     data: {
@@ -140,13 +150,14 @@ export async function createTrip(
       policyNotes: (v.policyNotes ?? "").trim(),
       ...rich,
       status,
+      guideUserId: guideResolved.id,
     },
   });
 
   await assignUniqueShareCodeForTrip(created.id);
-  await syncOrganizerFromForm(session.user.id, v);
 
   revalidatePath("/organizer/trips");
+  revalidatePath("/organizer");
   revalidatePath("/trips");
   return { ok: true };
 }
@@ -165,7 +176,10 @@ export async function updateTrip(
     where: { id: tripId, organizerId: session.user.id },
     include: {
       _count: { select: { bookings: true } },
-      organizer: { select: { bio: true, avatarUrl: true } },
+      organizer: { select: { id: true, name: true, bio: true, avatarUrl: true } },
+      guide: {
+        select: { id: true, name: true, bio: true, avatarUrl: true, email: true },
+      },
     },
   });
   if (!trip) return { error: "ไม่พบทริป" };
@@ -187,6 +201,12 @@ export async function updateTrip(
     bookingClosesAt = b;
   }
 
+  const guideResolved = await resolveGuideUserId(
+    trim(v.guideUserId),
+    trip.guideUserId,
+  );
+  if (!guideResolved.ok) return { error: guideResolved.error };
+
   const hasBookings = trip._count.bookings > 0;
   const isPublished = trip.status === TripStatus.PUBLISHED;
   const rich = tripRichContentFromParsed(v);
@@ -200,6 +220,7 @@ export async function updateTrip(
         meetPoint: v.meetPoint.trim(),
         policyNotes: (v.policyNotes ?? "").trim(),
         ...rich,
+        guideUserId: guideResolved.id,
       },
     });
   } else {
@@ -220,13 +241,13 @@ export async function updateTrip(
         policyNotes: (v.policyNotes ?? "").trim(),
         ...rich,
         status: nextStatus,
+        guideUserId: guideResolved.id,
       },
     });
   }
 
-  await syncOrganizerFromForm(session.user.id, v);
-
   revalidatePath("/organizer/trips");
+  revalidatePath("/organizer");
   revalidatePath(`/organizer/trips/${tripId}`);
   revalidatePath("/trips");
   revalidatePath(`/trips/${tripId}`);
@@ -266,6 +287,7 @@ export async function setTripStatus(
   await assignUniqueShareCodeForTrip(tripId);
 
   revalidatePath("/organizer/trips");
+  revalidatePath("/organizer");
   revalidatePath(`/organizer/trips/${tripId}`);
   revalidatePath("/trips");
   revalidatePath(`/trips/${tripId}`);
@@ -297,6 +319,7 @@ export async function cancelBookingAsOrganizer(
   });
 
   revalidatePath(`/organizer/trips/${booking.tripId}`);
+  revalidatePath("/organizer");
   revalidatePath(`/trips/${booking.tripId}`);
   revalidatePath(`/bookings/${booking.viewToken}`);
   return { ok: true };
@@ -328,7 +351,10 @@ export async function getTripEditDefaults(tripId: string) {
     where: { id: tripId, organizerId: session.user.id },
     include: {
       _count: { select: { bookings: true } },
-      organizer: { select: { bio: true, avatarUrl: true } },
+      organizer: { select: { id: true, name: true, bio: true, avatarUrl: true } },
+      guide: {
+        select: { id: true, name: true, bio: true, avatarUrl: true, email: true },
+      },
     },
   });
   if (!trip) return null;

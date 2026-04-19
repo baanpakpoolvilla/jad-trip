@@ -3,35 +3,139 @@ import { db } from "@/lib/db";
 import { countActiveSeats, expireStaleBookingsGlobal } from "@/lib/bookings";
 import { assignUniqueShareCodeForTrip } from "@/lib/trip-share-code";
 
-export async function listPublishedTripsForPublic() {
+/** ลิงก์สาธารณะรายการทริปของผู้จัดหนึ่งคน — แชร์ให้ผู้จอง (ไม่มีแดชบอร์ด) */
+export function organizerTripsBrochurePath(organizerUserId: string) {
+  const o = encodeURIComponent(organizerUserId.trim());
+  return `/trips?o=${o}`;
+}
+
+/** ลิงก์ย่อรายการทริปผู้จัด — redirect ไป `organizerTripsBrochurePath` */
+export function organizerBrochureShortPath(brochureShareCode: string) {
+  const c = brochureShareCode.trim().toLowerCase();
+  return `/o/${c}`;
+}
+
+/** หา organizer id จากรหัสย่อ (เฉพาะผู้จัดที่มีรหัส) */
+export async function getOrganizerIdByBrochureShareCode(shareCode: string): Promise<string | null> {
+  const normalized = shareCode.trim().toLowerCase();
+  if (!/^[a-z0-9]{8}$/.test(normalized)) return null;
+
+  const user = await db.user.findFirst({
+    where: { brochureShareCode: normalized },
+    select: { id: true },
+  });
+  return user?.id ?? null;
+}
+
+/** ลิงก์แชร์รายการทริปจากข้อมูล organizer — ใช้ `/o/…` ถ้ามีรหัสย่อแล้ว */
+export function organizerPublicBrochureHrefFromOrganizer(organizer: {
+  id: string;
+  brochureShareCode: string | null;
+}): string {
+  if (organizer.brochureShareCode?.trim()) {
+    return organizerBrochureShortPath(organizer.brochureShareCode);
+  }
+  return organizerTripsBrochurePath(organizer.id);
+}
+
+export async function getOrganizerBrochureHost(
+  organizerUserId: string,
+): Promise<{ id: string; name: string } | null> {
+  const id = organizerUserId.trim();
+  if (!id) return null;
+  const user = await db.user.findFirst({
+    where: { id },
+    select: { id: true, name: true },
+  });
+  return user ? { id: user.id, name: user.name } : null;
+}
+
+/** ทริป PUBLISHED ของผู้จัด — แสดงในหน้า /trips?o=… สำหรับผู้จอง */
+export type PublicOrganizerBrochureTrip = {
+  id: string;
+  title: string;
+  shortDescription: string;
+  startAt: Date;
+  endAt: Date;
+  pricePerPerson: number;
+  coverImageUrl: string | null;
+  spotsLeft: number;
+};
+
+export async function listPublishedTripsForOrganizerBrochure(
+  organizerUserId: string,
+): Promise<PublicOrganizerBrochureTrip[]> {
   await expireStaleBookingsGlobal();
   const now = new Date();
+  const organizerId = organizerUserId.trim();
+  if (!organizerId) return [];
+
+  const host = await getOrganizerBrochureHost(organizerId);
+  if (!host) return [];
 
   const trips = await db.trip.findMany({
-    where: { status: TripStatus.PUBLISHED },
+    where: {
+      organizerId,
+      status: TripStatus.PUBLISHED,
+      OR: [{ bookingClosesAt: null }, { bookingClosesAt: { gte: now } }],
+    },
     orderBy: { startAt: "asc" },
-    include: {
-      organizer: { select: { name: true, phone: true } },
+    select: {
+      id: true,
+      title: true,
+      shortDescription: true,
+      startAt: true,
+      endAt: true,
+      pricePerPerson: true,
+      coverImageUrl: true,
+      maxParticipants: true,
     },
   });
 
-  const enriched = [];
+  const out: PublicOrganizerBrochureTrip[] = [];
   for (const t of trips) {
-    if (t.bookingClosesAt && t.bookingClosesAt < now) continue;
     const used = await countActiveSeats(t.id);
     const spotsLeft = Math.max(0, t.maxParticipants - used);
-    if (spotsLeft <= 0) continue;
-    enriched.push({ ...t, spotsLeft });
+    out.push({
+      id: t.id,
+      title: t.title,
+      shortDescription: t.shortDescription,
+      startAt: t.startAt,
+      endAt: t.endAt,
+      pricePerPerson: t.pricePerPerson,
+      coverImageUrl: t.coverImageUrl,
+      spotsLeft,
+    });
   }
-
-  return enriched;
+  return out;
 }
 
 export async function getPublishedTripById(id: string) {
   await expireStaleBookingsGlobal();
   const trip = await db.trip.findFirst({
     where: { id, status: TripStatus.PUBLISHED },
-    include: { organizer: { select: { name: true, phone: true, email: true } } },
+    include: {
+      organizer: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          email: true,
+          bio: true,
+          avatarUrl: true,
+          brochureShareCode: true,
+        },
+      },
+      guide: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          bio: true,
+          avatarUrl: true,
+        },
+      },
+    },
   });
   if (!trip) return null;
 

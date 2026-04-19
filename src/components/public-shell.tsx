@@ -1,62 +1,76 @@
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { auth } from "@/auth";
+import { PublicBrandLink } from "@/components/public-brand-link";
+import { getOrganizerPublicBrochureHref } from "@/lib/organizer-brochure-share-code";
 
 const navItemClass =
-  "inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3.5 text-sm font-medium text-white/95 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brand";
+  "inline-flex min-h-10 min-w-10 items-center justify-center gap-1 rounded-full px-2.5 text-[13px] font-medium text-white/95 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brand sm:min-h-11 sm:min-w-11 sm:gap-1.5 sm:px-3.5 sm:text-sm";
 
 export async function PublicShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
+  const organizerBrochureHref =
+    session?.user?.role === "ORGANIZER" && session.user.id
+      ? await getOrganizerPublicBrochureHref(session.user.id)
+      : null;
 
   return (
     <div className="flex min-h-full flex-col bg-canvas">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-brand shadow-[0_1px_0_rgba(0,0,0,0.06)]">
-        <div className="jad-container flex min-h-[3.25rem] items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-          <Link
-            href="/"
-            className="group flex flex-col gap-0.5 rounded-lg py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand"
-          >
-            <span className="text-lg font-bold leading-tight tracking-tight text-white sm:text-xl">
-              จัดทริป
-            </span>
-            <span className="text-[11px] font-medium leading-none text-white/80">
-              JadTrip
-            </span>
-          </Link>
+      {/* Header — gradient brand-dark → brand เพิ่ม depth */}
+      <header
+        className="sticky top-0 z-30"
+        style={{
+          background: "linear-gradient(to right, #163829, #1e4d3a)",
+          boxShadow: "0 1px 0 rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.08)",
+        }}
+      >
+        <div className="jad-container flex min-h-12 items-center gap-2 px-3 py-2 sm:min-h-13 sm:gap-3 sm:px-6 sm:py-2.5">
+          <PublicBrandLink />
           <nav
-            className="flex items-center gap-1.5 text-sm sm:gap-2"
+            className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto pb-0.5 text-sm [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-2 [&::-webkit-scrollbar]:hidden"
             aria-label="เมนูหลัก"
           >
-            <Link href="/trips" className={navItemClass}>
-              <CalendarDays className="size-4 shrink-0 opacity-90" strokeWidth={1.5} aria-hidden />
-              ทริป
-            </Link>
-            {session?.user?.role === "ORGANIZER" ? (
-              <Link
-                href="/organizer/trips"
-                className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 text-sm font-semibold text-brand shadow-sm transition-colors hover:bg-brand-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-brand"
-              >
-                จัดการ
-              </Link>
-            ) : session?.user?.role === "ADMIN" ? (
+            {session?.user?.role === "ADMIN" ? (
               <Link
                 href="/admin"
-                className="inline-flex min-h-11 items-center justify-center rounded-full bg-warning-light px-4 text-sm font-semibold text-warning transition-opacity hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brand"
+                className="inline-flex min-h-10 items-center justify-center rounded-full bg-accent-light px-3 text-[13px] font-semibold text-accent transition-opacity hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35 focus-visible:ring-offset-2 focus-visible:ring-offset-brand sm:min-h-11 sm:px-4 sm:text-sm"
               >
                 แอดมิน
               </Link>
             ) : (
-              <Link href="/login" className={navItemClass}>
-                เข้าสู่ระบบ
-              </Link>
+              <>
+                {organizerBrochureHref ? (
+                  <Link href={organizerBrochureHref} className={navItemClass}>
+                    <CalendarDays className="size-4 shrink-0 opacity-90" strokeWidth={1.5} aria-hidden />
+                    รายการทริป (แชร์)
+                  </Link>
+                ) : null}
+                {session?.user?.role === "ORGANIZER" ? (
+                  <Link
+                    href="/organizer"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 text-sm font-semibold text-brand shadow-sm transition-colors hover:bg-brand-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-brand"
+                  >
+                    จัดการ
+                  </Link>
+                ) : (
+                  <Link href="/login" className={navItemClass}>
+                    เข้าสู่ระบบ
+                  </Link>
+                )}
+              </>
             )}
           </nav>
         </div>
       </header>
-      <main className="jad-container flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
-      <footer className="mt-auto border-t border-border bg-surface/80 py-8 text-center">
-        <p className="text-sm font-medium text-fg-muted">จัดได้ ไม่ยุ่งยาก</p>
-        <p className="mt-1 text-xs text-fg-hint">จัดทริป · MVP</p>
+
+      <main className="jad-container flex-1 px-3 py-5 sm:px-6 sm:py-10">{children}</main>
+
+      {/* Footer — structured layout */}
+      <footer className="mt-auto border-t border-border bg-surface py-5 sm:py-8">
+        <div className="jad-container flex flex-col items-center gap-1 px-3 sm:flex-row sm:justify-between sm:gap-1.5 sm:px-6">
+          <p className="text-sm font-semibold text-fg-muted">Just Trip</p>
+          <p className="text-xs text-fg-hint">จัดทริปแล้วลุยเลย</p>
+        </div>
       </footer>
     </div>
   );

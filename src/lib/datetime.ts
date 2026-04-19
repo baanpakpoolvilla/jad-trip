@@ -22,6 +22,25 @@ export function formatBangkok(
   return date.toLocaleString("th-TH", { timeZone: "Asia/Bangkok", ...options });
 }
 
+/** ช่วงวันที่ทริป (ปฏิทินไทย) — ใช้ formatRange ถ้ารันไทม์รองรับ เช่น "27 ก.ค. – 1 ส.ค. 2569" */
+export function formatBangkokTripDates(start: Date, end: Date) {
+  const dtf = new Intl.DateTimeFormat("th-TH", {
+    timeZone: "Asia/Bangkok",
+    dateStyle: "medium",
+  });
+  const fr = (dtf as Intl.DateTimeFormat & { formatRange?: (a: Date, b: Date) => string }).formatRange;
+  if (typeof fr === "function") {
+    try {
+      return fr.call(dtf, start, end);
+    } catch {
+      /* fall through */
+    }
+  }
+  const a = dtf.format(start);
+  const b = dtf.format(end);
+  return a === b ? a : `${a} – ${b}`;
+}
+
 /** ค่าสำหรับ `<input type="datetime-local" />` แสดงเป็นเวลาไทย */
 export function toDatetimeLocalValueBangkok(date: Date) {
   const s = date.toLocaleString("sv-SE", {

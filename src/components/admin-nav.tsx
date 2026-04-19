@@ -7,7 +7,7 @@ import {
   CalendarCheck,
   ExternalLink,
   MapPinned,
-  Shield,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 
@@ -16,7 +16,7 @@ const items = [
   { href: "/admin/trips", label: "ทริปทั้งหมด", icon: MapPinned, match: "prefix" as const },
   { href: "/admin/users", label: "ผู้ใช้", icon: Users, match: "prefix" as const },
   { href: "/admin/bookings", label: "การจอง", icon: CalendarCheck, match: "prefix" as const },
-  { href: "/trips", label: "หน้าเว็บ", icon: ExternalLink, match: "exact" as const },
+  { href: "/", label: "หน้าเว็บ", icon: ExternalLink, match: "exact" as const },
 ];
 
 function isActive(pathname: string, href: string, match: "exact" | "prefix") {
@@ -80,8 +80,8 @@ export function AdminNav({ variant }: { variant: Variant }) {
 export function AdminBrandLink() {
   return (
     <Link href="/admin" className="flex items-center gap-2 text-white">
-      <Shield className="size-5 shrink-0" strokeWidth={1.5} aria-hidden />
-      <span className="text-lg font-bold">จัดทริป</span>
+      <ShieldCheck className="size-5 shrink-0" strokeWidth={1.5} aria-hidden />
+      <span className="text-lg font-bold">Just Trip</span>
       <span className="text-sm font-medium text-white/85">แอดมิน</span>
     </Link>
   );

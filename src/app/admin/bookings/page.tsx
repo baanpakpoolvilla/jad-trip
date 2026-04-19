@@ -14,8 +14,11 @@ export default async function AdminBookingsPage() {
   });
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-[1.625rem] font-semibold text-fg">การจองล่าสุด</h1>
+    <div className="space-y-6">
+      <header className="jad-page-header">
+        <p className="jad-section-label">แอดมิน</p>
+        <h1 className="jad-page-title">การจองล่าสุด</h1>
+      </header>
       <div className="jad-card overflow-x-auto p-0">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-border bg-canvas text-xs font-medium uppercase tracking-wide text-fg-muted">

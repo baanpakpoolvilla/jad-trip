@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { BookingForm } from "@/components/booking-form";
-import { formatBangkok } from "@/lib/datetime";
+import { formatBangkokTripDates } from "@/lib/datetime";
 import { PAYMENT_MINUTES } from "@/lib/constants";
 import { getPublishedTripById } from "@/lib/trips-public";
 
@@ -18,19 +19,20 @@ export default async function BookTripPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <Link
-        href={`/trips/${trip.id}`}
-        className="text-sm font-medium text-brand hover:text-brand-mid"
-      >
-        ← กลับรายละเอียดทริป
-      </Link>
-      <div>
-        <h1 className="text-xl font-semibold text-fg">จอง: {trip.title}</h1>
-        <p className="mt-1 text-sm text-fg-muted">
-          {formatBangkok(trip.startAt)} · ฿{trip.pricePerPerson.toLocaleString("th-TH")}{" "}
+      <nav aria-label="เส้นทางกลับ">
+        <Link href={`/trips/${trip.id}`} className="jad-back-link">
+          <ArrowLeft className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+          รายละเอียดทริป
+        </Link>
+      </nav>
+      <header className="jad-page-header">
+        <p className="jad-section-label">จองที่นั่ง</p>
+        <h1 className="jad-page-title">จอง: {trip.title}</h1>
+        <p className="text-sm text-fg-muted">
+          {formatBangkokTripDates(trip.startAt, trip.endAt)} · ฿{trip.pricePerPerson.toLocaleString("th-TH")}{" "}
           ต่อคน · ชำระเต็มภายใน {PAYMENT_MINUTES} นาทีหลังกดจอง
         </p>
-      </div>
+      </header>
       <div className="jad-card">
         <BookingForm tripId={trip.id} />
       </div>

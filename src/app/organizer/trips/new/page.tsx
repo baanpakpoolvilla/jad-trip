@@ -5,14 +5,21 @@ import { db } from "@/lib/db";
 
 export default async function NewTripPage() {
   const session = await auth();
-  let organizerDefaults = { bio: "", avatarUrl: "" };
+  let organizerProfile = {
+    userId: "",
+    name: "",
+    bio: "",
+    avatarUrl: "",
+  };
   if (session?.user?.id) {
     const u = await db.user.findUnique({
       where: { id: session.user.id },
-      select: { bio: true, avatarUrl: true },
+      select: { id: true, name: true, bio: true, avatarUrl: true },
     });
     if (u) {
-      organizerDefaults = {
+      organizerProfile = {
+        userId: u.id,
+        name: u.name,
         bio: u.bio ?? "",
         avatarUrl: u.avatarUrl ?? "",
       };
@@ -20,21 +27,18 @@ export default async function NewTripPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <Link
-        href="/organizer/trips"
-        className="text-sm font-medium text-brand hover:text-brand-mid"
-      >
-        ← กลับรายการทริป
+    <div className="space-y-4">
+      <Link href="/organizer/trips" className="jad-back-link">
+        ← รายการทริป
       </Link>
-      <div>
-        <h1 className="text-[1.625rem] font-semibold text-fg">สร้างทริป</h1>
-        <p className="mt-1 text-sm text-fg-muted">
-          กรอกครบแล้วเลือก &quot;เผยแพร่&quot; หรือบันทึกฉบับร่าง
+      <header className="jad-page-header max-w-2xl">
+        <h1 className="jad-page-title">สร้างทริปใหม่</h1>
+        <p className="text-xs text-fg-muted sm:text-sm">
+          บันทึกฉบับร่างได้ตลอด — กดเผยแพร่เมื่อพร้อมรับจอง
         </p>
-      </div>
-      <div className="jad-card">
-        <TripForm mode="create" organizerDefaults={organizerDefaults} />
+      </header>
+      <div className="jad-card p-4 sm:p-5">
+        <TripForm mode="create" organizerProfile={organizerProfile} />
       </div>
     </div>
   );

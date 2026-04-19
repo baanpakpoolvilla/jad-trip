@@ -55,21 +55,35 @@ export async function createBooking(
   const viewToken = randomBytes(24).toString("hex");
   const expiresAt = paymentDeadlineFromNow();
 
-  const booking = await db.booking.create({
-    data: {
-      tripId: trip.id,
-      participantName: parsed.data.participantName.trim(),
-      participantEmail: parsed.data.participantEmail.trim().toLowerCase(),
-      participantPhone: parsed.data.participantPhone.trim(),
-      viewToken,
-      expiresAt,
-      status: BookingStatus.PENDING_PAYMENT,
-    },
-  });
+  const [booking] = await db.$transaction([
+    db.booking.create({
+      data: {
+        tripId: trip.id,
+        participantName: parsed.data.participantName.trim(),
+        participantEmail: parsed.data.participantEmail.trim().toLowerCase(),
+        participantPhone: parsed.data.participantPhone.trim(),
+        viewToken,
+        expiresAt,
+        status: BookingStatus.PENDING_PAYMENT,
+      },
+    }),
+    db.notification.create({
+      data: {
+        userId: trip.organizerId,
+        kind: "BOOKING_CREATED",
+        title: "มีผู้จองทริปใหม่ (รอชำระเงิน)",
+        message: `${parsed.data.participantName.trim()} จองทริป "${trip.title}" — รอการชำระเงิน`,
+        href: `/organizer/trips/${trip.id}`,
+      },
+    }),
+  ]);
 
   revalidatePath("/trips");
   revalidatePath(`/trips/${trip.id}`);
   revalidatePath(`/organizer/trips/${trip.id}`);
+  revalidatePath("/organizer");
+  revalidatePath("/organizer/notifications");
+  revalidatePath("/organizer", "layout");
 
   return { ok: true, viewToken: booking.viewToken };
 }
@@ -91,6 +105,7 @@ export async function cancelBookingAsParticipant(
   revalidatePath(`/bookings/${viewToken}`);
   revalidatePath(`/trips/${booking.tripId}`);
   revalidatePath(`/organizer/trips/${booking.tripId}`);
+  revalidatePath("/organizer");
   return { ok: true, tripId: booking.tripId };
 }
 

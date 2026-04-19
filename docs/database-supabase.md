@@ -59,7 +59,7 @@ npm run db:seed
 | `NEXT_PUBLIC_SUPABASE_URL` | URL โปรเจกต์ (Settings → API) |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | publishable หรือ **anon** public key |
 
-- **ล็อกอินของแอปจัดทริป** ยังเป็น **NextAuth** + ผู้ใช้ใน Postgres ผ่าน Prisma — ไม่ซ้ำกับคีย์ด้านบนถ้าคุณยังไม่ได้ย้าย auth ไป Supabase  
+- **ล็อกอินของแอป justtrip** ยังเป็น **NextAuth** + ผู้ใช้ใน Postgres ผ่าน Prisma — ไม่ซ้ำกับคีย์ด้านบนถ้าคุณยังไม่ได้ย้าย auth ไป Supabase  
 - ถ้าไม่ตั้งสองตัวแปรนี้ middleware จะไม่รีเฟรช Supabase และแอปยังทำงานได้ตามปกติ (เฉพาะฟีเจอร์ที่เรียก `createClient()` จาก `@/utils/supabase/*` จะต้องมี env)
 
 ## 6) หมายเหตุ

@@ -41,3 +41,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# รูปทริปที่อัปโหลดจากเครื่อง (เก็บโฟลเดอร์ใน repo)
+/public/uploads/trips/*
+!/public/uploads/trips/.gitkeep

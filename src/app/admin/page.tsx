@@ -13,10 +13,11 @@ export default async function AdminHomePage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-[1.625rem] font-semibold text-fg">ภาพรวม</h1>
-        <p className="mt-1 text-sm text-fg-muted">ข้อมูลรวมในระบบ</p>
-      </div>
+      <header className="jad-page-header">
+        <p className="jad-section-label">แอดมิน</p>
+        <h1 className="jad-page-title">ภาพรวม</h1>
+        <p className="text-sm text-fg-muted">ข้อมูลรวมในระบบ</p>
+      </header>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: "ผู้ใช้", value: users, href: "/admin/users" },
