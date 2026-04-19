@@ -30,8 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — อย่า commit ค่าจริง; อนุญาตแค่ตัวอย่าง
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
