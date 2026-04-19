@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ORGANIZER
+}
+
+enum TripStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         Role     @default(ORGANIZER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  trips        Trip[]
+}
+
+model Trip {
+  id               String      @id @default(cuid())
+  organizerId      String
+  organizer        User        @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  title            String
+  shortDescription String
+  description      String
+  meetPoint        String
+  startAt          DateTime
+  endAt            DateTime
+  maxParticipants  Int
+  pricePerPerson   Int
+  bookingClosesAt  DateTime?
+  policyNotes      String      @default("")
+  status           TripStatus  @default(DRAFT)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  bookings         Booking[]
+
+  @@index([organizerId])
+  @@index([status, startAt])
+}
+
+model Booking {
+  id                 String         @id @default(cuid())
+  tripId             String
+  trip               Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  participantName    String
+  participantEmail   String
+  participantPhone   String
+  status             BookingStatus  @default(PENDING_PAYMENT)
+  viewToken          String         @unique
+  expiresAt          DateTime
+  stripeSessionId    String?        @unique
+  paidAt             DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([tripId])
+  @@index([tripId, status])
+}
