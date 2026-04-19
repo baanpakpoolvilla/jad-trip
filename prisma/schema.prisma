@@ -3,8 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // ใช้ pooler (6543 + pgbouncer) บน serverless ได้ — ต้องมี DIRECT_URL แบบ direct สำหรับ migrate/db push
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
