@@ -11,6 +11,7 @@
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:sync": "prisma generate && prisma db push",
+    "trip:fill-demo": "npx tsx scripts/fill-trip-rich.ts",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "vercel:login": "env -u VERCEL_TOKEN npx vercel@latest login",
