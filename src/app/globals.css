@@ -29,20 +29,46 @@
 }
 
 @layer components {
+  /* Layout — spacing 4px grid (ดู docs/brand-ci-guideline.md) */
+  .jad-container {
+    @apply mx-auto w-full max-w-2xl sm:max-w-3xl;
+  }
+
+  .jad-page-title {
+    @apply text-[1.625rem] font-semibold leading-snug tracking-tight text-fg sm:text-[2rem] sm:leading-tight;
+  }
+
+  .jad-page-lead {
+    @apply mt-3 text-base leading-[1.7] text-fg-muted;
+  }
+
+  .jad-section-label {
+    @apply text-xs font-medium uppercase tracking-wide text-brand-mid;
+  }
+
+  .jad-back-link {
+    @apply -mx-1 inline-flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-brand transition-colors;
+    @apply hover:bg-brand-light hover:text-brand-mid;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/35 focus-visible:ring-offset-2;
+  }
+
   .jad-btn-primary {
     @apply inline-flex items-center justify-center rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white transition-colors;
     @apply hover:bg-brand-mid active:bg-brand-active;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/40 focus-visible:ring-offset-2;
     @apply disabled:pointer-events-none disabled:opacity-45;
   }
 
   .jad-btn-secondary {
     @apply inline-flex items-center justify-center rounded-lg border-[1.5px] border-brand bg-transparent px-5 py-2.5 text-sm font-medium text-brand transition-colors;
     @apply hover:bg-brand-light;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/35 focus-visible:ring-offset-2;
   }
 
   .jad-btn-ghost {
     @apply inline-flex items-center justify-center rounded-lg border border-border bg-transparent px-5 py-2.5 text-sm font-medium text-fg-muted transition-colors;
     @apply hover:bg-canvas;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg-muted/25 focus-visible:ring-offset-2;
   }
 
   .jad-input {
@@ -64,6 +90,25 @@
   .jad-card-interactive:hover {
     @apply border-brand-mid;
     box-shadow: 0 2px 8px rgba(30, 77, 58, 0.1);
+  }
+
+  .jad-card-interactive:focus-visible {
+    @apply border-brand-mid outline-none ring-2 ring-brand-mid/25 ring-offset-2;
+  }
+
+  /* รายการทริป — การ์ดแนวนอน */
+  .jad-trip-row {
+    @apply flex gap-4 rounded-2xl border border-border bg-surface p-4 transition-all;
+    @apply hover:border-brand-mid/50 hover:shadow-md;
+  }
+
+  .jad-trip-row:focus-within {
+    @apply border-brand-mid ring-2 ring-brand-mid/20 ring-offset-2;
+  }
+
+  /* เนื้อหายาว — จำกัดความกว้างบรรทัดอ่านสบาย */
+  .jad-prose-flow {
+    @apply text-sm leading-[1.65] text-fg-muted sm:text-[15px] sm:leading-relaxed;
   }
 
   .jad-badge-success {

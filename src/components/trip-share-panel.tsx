@@ -9,9 +9,11 @@ type Props = {
   shareCode: string;
   /** จาก NEXT_PUBLIC_APP_URL — ถ้าว่างจะใช้ origin หลัง hydrate (ไม่ให้ SSR กับ client คนละค่าในรอบแรก) */
   appBaseUrl: string;
+  /** ไม่ใส่กรอบการ์ด — ใช้เมื่อห่อด้วยแถบยุบ/ขยาย (details) */
+  bare?: boolean;
 };
 
-export function TripSharePanel({ tripTitle, tripId, shareCode, appBaseUrl }: Props) {
+export function TripSharePanel({ tripTitle, tripId, shareCode, appBaseUrl, bare }: Props) {
   const [clientReady, setClientReady] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -88,13 +90,17 @@ export function TripSharePanel({ tripTitle, tripId, shareCode, appBaseUrl }: Pro
     }
   }, [copyText, shortUrl, tripTitle, toAbsolute]);
 
+  const shell = bare
+    ? "space-y-4"
+    : "jad-card space-y-4 border-brand-mid/20 bg-brand-light/50 p-4 sm:p-5";
+
   return (
-    <div className="jad-card space-y-3 border-brand-mid/25 bg-brand-light/40 p-4">
-      <div className="flex items-start gap-2">
-        <Link2 className="mt-0.5 size-4 shrink-0 text-brand" strokeWidth={1.5} aria-hidden />
+    <div className={shell}>
+      <div className="flex items-start gap-3">
+        <Link2 className="mt-0.5 size-4 shrink-0 text-brand sm:size-[1.125rem]" strokeWidth={1.5} aria-hidden />
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-fg">แชร์ทริป</h2>
-          <p className="mt-1 text-xs leading-relaxed text-fg-muted">
+          <h2 className="text-sm font-semibold text-fg sm:text-base">แชร์ทริป</h2>
+          <p className="mt-1 text-xs leading-relaxed text-fg-muted sm:text-sm">
             ลิงก์ย่อเหมาะโพสต์โซเชียล — ลิงก์เต็มใช้ส่งตรงหรือเก็บอ้างอิง
           </p>
         </div>
@@ -127,7 +133,7 @@ export function TripSharePanel({ tripTitle, tripId, shareCode, appBaseUrl }: Pro
         </button>
       </div>
 
-      <dl className="space-y-2 rounded-lg bg-surface/80 px-3 py-2.5 text-xs text-fg-muted">
+      <dl className="space-y-2 rounded-xl border border-border/60 bg-surface/90 px-3 py-3 text-xs text-fg-muted sm:text-[13px]">
         <div>
           <dt className="font-medium text-fg-hint">ลิงก์ย่อ</dt>
           <dd className="mt-0.5 break-all font-mono text-fg">{toAbsolute(shortUrl)}</dd>
