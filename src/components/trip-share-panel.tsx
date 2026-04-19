@@ -7,22 +7,24 @@ type Props = {
   tripTitle: string;
   tripId: string;
   shareCode: string;
-  /** จาก NEXT_PUBLIC_APP_URL — ถ้าว่างจะใช้ origin ของหน้าตอนโหลดบน client */
+  /** จาก NEXT_PUBLIC_APP_URL — ถ้าว่างจะใช้ origin หลัง hydrate (ไม่ให้ SSR กับ client คนละค่าในรอบแรก) */
   appBaseUrl: string;
 };
 
 export function TripSharePanel({ tripTitle, tripId, shareCode, appBaseUrl }: Props) {
-  const [origin, setOrigin] = useState(() => appBaseUrl.replace(/\/$/, ""));
+  const [clientReady, setClientReady] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!origin && typeof window !== "undefined") {
-      setOrigin(window.location.origin);
-    }
-  }, [origin]);
+    const id = requestAnimationFrame(() => setClientReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const { fullUrl, shortUrl } = useMemo(() => {
-    const base = origin || "";
+    const envBase = appBaseUrl.replace(/\/$/, "");
+    const base =
+      envBase ||
+      (clientReady && typeof window !== "undefined" ? window.location.origin : "");
     if (!base) {
       return {
         fullUrl: `/trips/${tripId}`,
@@ -33,7 +35,7 @@ export function TripSharePanel({ tripTitle, tripId, shareCode, appBaseUrl }: Pro
       fullUrl: `${base}/trips/${tripId}`,
       shortUrl: `${base}/t/${shareCode}`,
     };
-  }, [origin, tripId, shareCode]);
+  }, [appBaseUrl, clientReady, tripId, shareCode]);
 
   const toAbsolute = useCallback(
     (pathOrUrl: string) => {
