@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Shield } from "lucide-react";
 import { auth } from "@/auth";
+import { AdminBrandLink, AdminNav } from "@/components/admin-nav";
 import { SignOutButton } from "@/components/sign-out-button";
 
 export default async function AdminLayout({
@@ -14,41 +13,34 @@ export default async function AdminLayout({
   if (session.user.role !== "ADMIN") redirect("/organizer/trips");
 
   return (
-    <div className="min-h-full bg-canvas">
-      <header className="sticky top-0 z-10 border-b border-brand-active/30 bg-brand shadow-sm">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <Link href="/admin" className="flex items-center gap-2 text-white">
-            <Shield className="size-5 shrink-0" strokeWidth={1.5} aria-hidden />
-            <span className="text-lg font-bold">จัดทริป</span>
-            <span className="text-sm font-medium text-white/85">แอดมิน</span>
-          </Link>
-          <nav className="flex flex-wrap items-center gap-2 text-sm">
-            <Link
-              href="/admin/trips"
-              className="rounded-full px-3 py-1.5 font-medium text-white/95 hover:bg-white/10"
-            >
-              ทริปทั้งหมด
-            </Link>
-            <Link
-              href="/admin/users"
-              className="rounded-full px-3 py-1.5 font-medium text-white/95 hover:bg-white/10"
-            >
-              ผู้ใช้
-            </Link>
-            <Link
-              href="/admin/bookings"
-              className="rounded-full px-3 py-1.5 font-medium text-white/95 hover:bg-white/10"
-            >
-              การจอง
-            </Link>
-            <Link href="/trips" className="rounded-full px-3 py-1.5 font-medium text-white/95 hover:bg-white/10">
-              หน้าเว็บ
-            </Link>
-            <SignOutButton variant="onBrand" />
-          </nav>
+    <div className="flex min-h-full bg-canvas">
+      <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 bg-brand text-white md:flex">
+        <div className="border-b border-white/10 px-4 py-4">
+          <AdminBrandLink />
         </div>
-      </header>
-      <div className="mx-auto max-w-4xl px-4 py-6 sm:py-8">{children}</div>
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3" aria-label="เมนูหลักแอดมิน">
+          <AdminNav variant="sidebar" />
+        </nav>
+        <div className="border-t border-white/10 p-3">
+          <SignOutButton variant="onBrand" className="w-full justify-center" />
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-10 border-b border-brand-active/30 bg-brand shadow-sm md:hidden">
+          <div className="flex flex-col gap-3 px-3 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <AdminBrandLink />
+              <SignOutButton variant="onBrand" />
+            </div>
+            <AdminNav variant="mobile" />
+          </div>
+        </header>
+
+        <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">
+          <div className="mx-auto max-w-5xl">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }
