@@ -16,6 +16,7 @@
 
 - [แบรนด์ & CI](docs/brand-ci-guideline.md)  
 - [ดีพลอย Vercel (อ้างอิง)](docs/deployment-vercel.md)  
-- [ฐานข้อมูล Supabase](docs/database-supabase.md)
+- [ฐานข้อมูล Supabase](docs/database-supabase.md)  
+- [บัญชีทดสอบ (demo)](docs/demo-accounts.md)
 
 Repository: [github.com/baanpakpoolvilla/jad-trip](https://github.com/baanpakpoolvilla/jad-trip)

@@ -3,14 +3,18 @@ import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+/** ค่าเริ่มต้นให้ตรงกับ docs/demo-accounts.md */
+const DEFAULT_ADMIN_PASSWORD = "DemoJad_Admin_2026";
+const DEFAULT_ORG_PASSWORD = "DemoJad_Organizer_2026";
+
+const adminEmail = "demo-admin@jad-trip.local";
+const orgEmail = "demo-organizer@jad-trip.local";
+
 async function main() {
   const adminPassword =
-    process.env.SEED_ADMIN_PASSWORD ?? "change-me-admin-123";
+    process.env.SEED_ADMIN_PASSWORD ?? DEFAULT_ADMIN_PASSWORD;
   const orgPassword =
-    process.env.SEED_ORGANIZER_PASSWORD ?? "change-me-org-123";
-
-  const adminEmail = "admin@dernpa.local";
-  const orgEmail = "organizer@dernpa.local";
+    process.env.SEED_ORGANIZER_PASSWORD ?? DEFAULT_ORG_PASSWORD;
 
   await prisma.user.upsert({
     where: { email: adminEmail },
@@ -71,9 +75,9 @@ async function main() {
     });
   }
 
-  console.log("Seed OK — บัญชีทดสอบ:");
-  console.log(`  แอดมิน: ${adminEmail} / (ตั้งใน SEED_ADMIN_PASSWORD หรือค่าเริ่มต้นใน seed)`);
-  console.log(`  ผู้จัด: ${orgEmail} / (ตั้งใน SEED_ORGANIZER_PASSWORD หรือค่าเริ่มต้นใน seed)`);
+  console.log("Seed OK — บัญชีทดสอบ (ดู docs/demo-accounts.md):");
+  console.log(`  แอดมิน: ${adminEmail}`);
+  console.log(`  ผู้จัด: ${orgEmail}`);
 }
 
 main()
