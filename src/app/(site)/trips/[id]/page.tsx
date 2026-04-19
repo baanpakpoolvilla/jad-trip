@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin } from "lucide-react";
+import { TripSharePanel } from "@/components/trip-share-panel";
 import { formatBangkok } from "@/lib/datetime";
 import { getPublishedTripById } from "@/lib/trips-public";
 
@@ -15,6 +16,9 @@ export default async function TripDetailPage({ params }: Props) {
 
   const { trip, spotsLeft } = data;
   const canBook = spotsLeft > 0;
+  const shareCode = trip.shareCode;
+  const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
+  if (!shareCode) notFound();
 
   return (
     <div className="space-y-6">
@@ -24,6 +28,13 @@ export default async function TripDetailPage({ params }: Props) {
       >
         ← กลับรายการทริป
       </Link>
+
+      <TripSharePanel
+        tripTitle={trip.title}
+        tripId={trip.id}
+        shareCode={shareCode}
+        appBaseUrl={appBaseUrl}
+      />
 
       <article className="jad-card space-y-4">
         <h1 className="text-[1.625rem] font-semibold leading-snug text-fg">{trip.title}</h1>

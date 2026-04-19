@@ -42,6 +42,8 @@ model User {
 
 model Trip {
   id               String      @id @default(cuid())
+  /// ลิงก์ย่อสาธารณะ เช่น /t/{shareCode} → รายละเอียดทริป (ไม่เปลี่ยนหลังสร้าง)
+  shareCode        String?     @unique
   organizerId      String
   organizer        User        @relation(fields: [organizerId], references: [id], onDelete: Cascade)
   title            String

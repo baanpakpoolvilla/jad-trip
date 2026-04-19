@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { parseBangkokDateTimeLocal } from "@/lib/datetime";
 import { countActiveSeats } from "@/lib/bookings";
+import { assignUniqueShareCodeForTrip } from "@/lib/trip-share-code";
 
 const tripFormSchema = z.object({
   title: z.string().min(2, "กรอกชื่อทริป"),
@@ -69,7 +70,7 @@ export async function createTrip(
   const status =
     v.intent === "publish" ? TripStatus.PUBLISHED : TripStatus.DRAFT;
 
-  await db.trip.create({
+  const created = await db.trip.create({
     data: {
       organizerId: session.user.id,
       title: v.title.trim(),
@@ -85,6 +86,8 @@ export async function createTrip(
       status,
     },
   });
+
+  await assignUniqueShareCodeForTrip(created.id);
 
   revalidatePath("/organizer/trips");
   revalidatePath("/trips");
@@ -162,6 +165,9 @@ export async function updateTrip(
   revalidatePath(`/organizer/trips/${tripId}`);
   revalidatePath("/trips");
   revalidatePath(`/trips/${tripId}`);
+  if (!trip.shareCode) {
+    await assignUniqueShareCodeForTrip(tripId);
+  }
   return { ok: true };
 }
 
@@ -191,6 +197,8 @@ export async function setTripStatus(
     where: { id: tripId },
     data: { status },
   });
+
+  await assignUniqueShareCodeForTrip(tripId);
 
   revalidatePath("/organizer/trips");
   revalidatePath(`/organizer/trips/${tripId}`);

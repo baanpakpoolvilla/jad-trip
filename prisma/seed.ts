@@ -1,5 +1,6 @@
 import { PrismaClient, Role } from "@prisma/client";
 import { hash } from "bcryptjs";
+import { assignUniqueShareCodeForTrip } from "../src/lib/trip-share-code";
 
 const prisma = new PrismaClient();
 
@@ -48,6 +49,7 @@ async function main() {
     where: { organizerId: organizer.id, title: "ดอยอินทนนท์ 1 วัน (ตัวอย่าง)" },
   });
 
+  let sampleTripId: string | null = null;
   if (!existing) {
     const start = new Date();
     start.setDate(start.getDate() + 14);
@@ -55,7 +57,7 @@ async function main() {
     const end = new Date(start);
     end.setHours(18, 0, 0, 0);
 
-    await prisma.trip.create({
+    const created = await prisma.trip.create({
       data: {
         organizerId: organizer.id,
         title: "ดอยอินทนนท์ 1 วัน (ตัวอย่าง)",
@@ -73,6 +75,13 @@ async function main() {
         status: "PUBLISHED",
       },
     });
+    sampleTripId = created.id;
+  } else {
+    sampleTripId = existing.id;
+  }
+
+  if (sampleTripId) {
+    await assignUniqueShareCodeForTrip(sampleTripId);
   }
 
   console.log("Seed OK — บัญชีทดสอบ (ดู docs/demo-accounts.md):");
