@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MapPin, Phone } from "lucide-react";
+import { ArrowLeft, ExternalLink, MapPin, Phone } from "lucide-react";
 import { TripStatus } from "@prisma/client";
 import {
   cancelBookingAsOrganizerForm,
@@ -8,6 +8,8 @@ import {
   setTripStatus,
 } from "@/app/actions/trips";
 import { formatBangkok } from "@/lib/datetime";
+import { ConfirmForm } from "@/components/confirm-form";
+import { CopyBookingsButton } from "@/components/copy-bookings-button";
 
 export const dynamic = "force-dynamic";
 
@@ -70,11 +72,17 @@ export default async function OrganizerTripDetailPage({ params }: Props) {
     await setTripStatus(id, TripStatus.PUBLISHED);
   }
 
+  const confirmedCount = trip.bookings.filter((b) => b.status === "CONFIRMED").length;
+  const pendingCount = trip.bookings.filter((b) => b.status === "PENDING_PAYMENT").length;
+
   return (
     <div className="space-y-6">
-      <Link href="/organizer/trips" className="jad-back-link">
-        ← รายการทริป
-      </Link>
+      <nav aria-label="เส้นทางกลับ">
+        <Link href="/organizer/trips" className="jad-back-link">
+          <ArrowLeft className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+          รายการทริป
+        </Link>
+      </nav>
 
       <div className="jad-card space-y-4">
         <div className="relative aspect-5/3 w-full overflow-hidden rounded-lg bg-brand-light/35">
@@ -89,15 +97,15 @@ export default async function OrganizerTripDetailPage({ params }: Props) {
                 decoding="async"
               />
               <div
-                className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent"
+                className="absolute inset-0 bg-linear-to-t from-black/55 via-black/10 to-transparent"
                 aria-hidden
               />
-              <h1 className="jad-page-title absolute bottom-2 left-2 right-2 z-[1] mt-0 text-base leading-snug text-white drop-shadow-sm sm:bottom-3 sm:left-3 sm:right-3 sm:text-xl">
+              <h1 className="jad-page-title absolute bottom-2 left-2 right-2 z-1 mt-0 text-base leading-snug text-white drop-shadow-sm sm:bottom-3 sm:left-3 sm:right-3 sm:text-xl">
                 {trip.title}
               </h1>
             </>
           ) : (
-            <div className="flex h-full min-h-[7.5rem] flex-col items-center justify-center gap-2 px-4 text-center sm:min-h-[8.5rem]">
+            <div className="flex h-full min-h-30 flex-col items-center justify-center gap-2 px-4 text-center sm:min-h-34">
               <MapPin className="size-9 text-brand/40" strokeWidth={1.5} aria-hidden />
               <p className="text-xs text-fg-muted">ยังไม่มีรูปปกทริป</p>
               <Link
@@ -121,30 +129,51 @@ export default async function OrganizerTripDetailPage({ params }: Props) {
               / คน · สูงสุด {trip.maxParticipants} คน
             </p>
           </div>
-          <Link href={`/organizer/trips/${trip.id}/edit`} className="jad-btn-secondary shrink-0 text-sm">
-            แก้ไขทริป
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/organizer/trips/${trip.id}/edit`} className="jad-btn-secondary shrink-0 text-sm">
+              แก้ไขทริป
+            </Link>
+            {trip.shareCode ? (
+              <Link
+                href={`/trips/${trip.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 jad-btn-ghost shrink-0 text-sm"
+              >
+                <ExternalLink className="size-3.5" strokeWidth={1.5} aria-hidden />
+                หน้าลูกค้า
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         {trip.status === TripStatus.DRAFT ? (
-          <form action={publishTrip}>
+          <ConfirmForm
+            action={publishTrip}
+            message="เผยแพร่ทริปนี้ เพื่อเปิดรับจองหรือไม่?"
+          >
             <button type="submit" className="jad-btn-primary w-full sm:w-auto">
               เผยแพร่ทริป (เปิดรับจอง)
             </button>
-          </form>
+          </ConfirmForm>
         ) : null}
 
         {(trip.status === TripStatus.PUBLISHED || trip.status === TripStatus.DRAFT) && (
           <div className="grid grid-cols-2 gap-2">
             {trip.status === TripStatus.PUBLISHED ? (
-              <form action={closeTrip} className="min-w-0">
+              <ConfirmForm
+                action={closeTrip}
+                message="ปิดรับจองทริปนี้หรือไม่?\n\nผู้จองใหม่จะไม่สามารถจองได้อีก แต่การจองที่มีอยู่แล้วยังคงอยู่"
+                className="min-w-0"
+              >
                 <button type="submit" className="jad-btn-secondary w-full border-warning text-warning hover:bg-warning-light">
                   ปิดรับจอง
                 </button>
-              </form>
+              </ConfirmForm>
             ) : null}
-            <form
+            <ConfirmForm
               action={cancelTrip}
+              message={`ยกเลิกทริป "${trip.title}" หรือไม่?\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`}
               className={trip.status === TripStatus.DRAFT ? "col-span-2 min-w-0" : "min-w-0"}
             >
               <button
@@ -153,18 +182,32 @@ export default async function OrganizerTripDetailPage({ params }: Props) {
               >
                 ยกเลิกทริป
               </button>
-            </form>
+            </ConfirmForm>
           </div>
         )}
       </div>
 
       <section className="space-y-3">
-        <div>
-          <h2 className="text-lg font-semibold text-fg">ผู้จอง</h2>
-          <p className="mt-0.5 text-xs text-fg-muted">เฉพาะที่ชำระเงินแล้ว (จองแล้ว)</p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-fg">ผู้จอง</h2>
+            <p className="mt-0.5 text-xs text-fg-muted">
+              จองแล้ว {confirmedCount} คน
+              {pendingCount > 0 ? ` · รอชำระ ${pendingCount} คน` : ""}
+              {" · "}สูงสุด {trip.maxParticipants} คน
+            </p>
+          </div>
+          <CopyBookingsButton
+            bookings={trip.bookings.map((b) => ({
+              name: b.participantName,
+              phone: b.participantPhone,
+              status: b.status,
+            }))}
+            tripTitle={trip.title}
+          />
         </div>
         {trip.bookings.length === 0 ? (
-          <p className="text-sm text-fg-muted">ยังไม่มีผู้จองที่ชำระเงินสำเร็จ</p>
+          <p className="text-sm text-fg-muted">ยังไม่มีผู้จอง</p>
         ) : (
           <ul className="space-y-1.5">
             {trip.bookings.map((b) => {
@@ -205,15 +248,19 @@ export default async function OrganizerTripDetailPage({ params }: Props) {
                     >
                       ลิงก์ผู้จอง
                     </Link>
-                    <form action={cancelBookingAsOrganizerForm} className="inline">
+                    <ConfirmForm
+                      action={cancelBookingAsOrganizerForm}
+                      message={`ยกเลิกการจองของ "${b.participantName}" หรือไม่?`}
+                      className="inline"
+                    >
                       <input type="hidden" name="bookingId" value={b.id} />
                       <button
                         type="submit"
                         className="inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium text-danger hover:bg-danger-light"
                       >
-                        ยกเลิกการจอง
+                        ยกเลิก
                       </button>
-                    </form>
+                    </ConfirmForm>
                   </div>
                 </li>
               );

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BookingPayPanel } from "@/components/booking-pay-panel";
+import { BookingSteps } from "@/components/booking-steps";
 import { getBookingByToken } from "@/app/actions/bookings";
 import { formatBangkok } from "@/lib/datetime";
 import { buildPromptPayQrDataUrl } from "@/lib/promptpay-qr";
@@ -56,6 +57,7 @@ export default async function BookingPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
+      {booking.status === "PENDING_PAYMENT" ? <BookingSteps current="pay" /> : null}
       <header className="jad-page-header">
         <h1 className="jad-page-title">การจองของคุณ</h1>
       </header>
@@ -87,6 +89,7 @@ export default async function BookingPage({ params }: Props) {
         <div className="border-t border-border pt-4">
           <BookingPayPanel
             viewToken={booking.viewToken}
+            tripId={trip.id}
             status={booking.status}
             expiresAtIso={booking.expiresAt.toISOString()}
             price={trip.pricePerPerson}

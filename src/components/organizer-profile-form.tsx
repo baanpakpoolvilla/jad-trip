@@ -129,7 +129,12 @@ export function OrganizerProfileForm({ defaults }: { defaults: Defaults }) {
       </div>
 
       <div className="jad-card space-y-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-brand">บัญชี</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-brand">บัญชี</p>
+          <span className="rounded-full border border-border bg-canvas px-2 py-0.5 text-[10px] font-medium text-fg-hint">
+            🔒 ส่วนตัว
+          </span>
+        </div>
         <div>
           <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
             อีเมล (แก้ไขไม่ได้)
@@ -139,7 +144,15 @@ export function OrganizerProfileForm({ defaults }: { defaults: Defaults }) {
       </div>
 
       <div className="jad-card space-y-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-brand">ข้อมูลที่แสดงบนทริป</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-brand">ข้อมูลที่แสดงบนทริป</p>
+          <span className="rounded-full border border-brand/25 bg-brand-light px-2 py-0.5 text-[10px] font-medium text-brand">
+            🌐 สาธารณะ
+          </span>
+        </div>
+        <p className="text-[11px] leading-relaxed text-fg-hint">
+          ข้อมูลในส่วนนี้จะแสดงบนหน้าทริปสาธารณะ, การ์ดผู้จัด, และหน้าโปรไฟล์สาธารณะ — ไม่มีอีเมลและไม่มีเบอร์โทรในหน้าสาธารณะ
+        </p>
         <div>
           <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
             ชื่อที่แสดง
@@ -154,7 +167,8 @@ export function OrganizerProfileForm({ defaults }: { defaults: Defaults }) {
         </div>
         <div>
           <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
-            เบอร์โทร (ไม่บังคับ)
+            เบอร์โทร{" "}
+            <span className="ml-1 font-normal text-fg-hint">(ไม่บังคับ — แสดงเฉพาะในหน้าการจองแก่ผู้จอง ไม่ใช่หน้าสาธารณะ)</span>
           </label>
           <input
             name="phone"
@@ -198,7 +212,12 @@ export function OrganizerProfileForm({ defaults }: { defaults: Defaults }) {
       </div>
 
       <div className="jad-card space-y-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-brand">โซเชียลมีเดีย</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-brand">โซเชียลมีเดีย</p>
+          <span className="rounded-full border border-brand/25 bg-brand-light px-2 py-0.5 text-[10px] font-medium text-brand">
+            🌐 สาธารณะ
+          </span>
+        </div>
         <p className="text-[11px] leading-relaxed text-fg-muted sm:text-xs">
           ไม่บังคับ — วาง URL เต็ม (เช่น <span className="font-mono text-fg-hint">https://…</span>) จะแสดงในหน้าโปรไฟล์สาธารณะของคุณเท่านั้น
         </p>

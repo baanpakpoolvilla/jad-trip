@@ -175,8 +175,8 @@ export function OrganizerAppShell({
             href="/organizer"
             className="flex min-w-0 flex-1 items-center gap-1.5 rounded-lg py-0.5 text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/30 focus-visible:ring-offset-2 sm:gap-2 sm:py-1"
           >
-            <Compass className="size-[1.125rem] shrink-0 sm:size-5" strokeWidth={1.5} aria-hidden />
-            <span className="truncate text-[15px] font-bold sm:text-base">Just Trip</span>
+            <Compass className="size-4.5 shrink-0 sm:size-5" strokeWidth={1.5} aria-hidden />
+            <span className="truncate text-[15px] font-bold sm:text-base">Say Hi Trip</span>
           </Link>
           <button
             type="button"
@@ -254,7 +254,7 @@ export function OrganizerAppShell({
           >
             <Compass className="size-7 shrink-0" strokeWidth={1.5} aria-hidden />
             <div className="leading-tight">
-              <span className="block text-lg font-bold tracking-tight">Just Trip</span>
+              <span className="block text-lg font-bold tracking-tight">Say Hi Trip</span>
               <span className="text-xs font-medium text-white/75">ผู้จัดทริป</span>
             </div>
           </Link>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { formatBangkok } from "@/lib/datetime";
@@ -29,7 +30,8 @@ export default async function OrganizerNotificationsPage() {
   return (
     <div className="space-y-8">
       <Link href="/organizer" className="jad-back-link">
-        ← แดชบอร์ด
+        <ArrowLeft className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+        แดชบอร์ด
       </Link>
 
       <header className="jad-page-header">

@@ -414,8 +414,8 @@ export async function getTripForOrganizer(tripId: string) {
     where: { id: tripId, organizerId: session.user.id },
     include: {
       bookings: {
-        where: { status: "CONFIRMED" },
-        orderBy: { createdAt: "desc" },
+        where: { status: { in: ["CONFIRMED", "PENDING_PAYMENT"] } },
+        orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       },
     },
   });

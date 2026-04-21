@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { BookingForm } from "@/components/booking-form";
+import { BookingSteps } from "@/components/booking-steps";
 import { formatBangkokTripDates } from "@/lib/datetime";
 import { PAYMENT_MINUTES } from "@/lib/constants";
 import { getPublishedTripById } from "@/lib/trips-public";
@@ -25,6 +26,8 @@ export default async function BookTripPage({ params }: Props) {
           รายละเอียดทริป
         </Link>
       </nav>
+      <BookingSteps current="book" />
+
       <header className="jad-page-header">
         <p className="jad-section-label">จองที่นั่ง</p>
         <h1 className="jad-page-title">จอง: {trip.title}</h1>
@@ -34,7 +37,12 @@ export default async function BookTripPage({ params }: Props) {
         </p>
       </header>
       <div className="jad-card">
-        <BookingForm tripId={trip.id} />
+        <BookingForm
+          tripId={trip.id}
+          pricePerPerson={trip.pricePerPerson}
+          policyNotes={trip.policyNotes ?? null}
+          tripPageHref={`/trips/${trip.id}`}
+        />
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { TripForm } from "@/components/trip-form";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
@@ -45,7 +46,8 @@ export default async function NewTripPage() {
   return (
     <div className="space-y-4">
       <Link href="/organizer/trips" className="jad-back-link">
-        ← รายการทริป
+        <ArrowLeft className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+        รายการทริป
       </Link>
       <header className="jad-page-header max-w-2xl">
         <h1 className="jad-page-title">สร้างทริปใหม่</h1>

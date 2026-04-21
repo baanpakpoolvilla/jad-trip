@@ -63,7 +63,7 @@ export default async function OrganizerDashboardPage() {
         _count: {
           select: {
             bookings: {
-              where: { status: BookingStatus.CONFIRMED },
+              where: { status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_PAYMENT] } },
             },
           },
         },
@@ -194,15 +194,21 @@ export default async function OrganizerDashboardPage() {
                 <li key={t.id} className="min-w-0">
                   <Link
                     href={`/organizer/trips/${t.id}`}
-                    className="jad-card-interactive flex h-full min-h-[6.5rem] flex-col gap-2 lg:min-h-0 lg:flex-row lg:items-center lg:justify-between"
+                    className="jad-card-interactive flex h-full min-h-26 flex-col gap-2 lg:min-h-0 lg:flex-row lg:items-center lg:justify-between"
                   >
                     <div className="min-w-0">
                       <p className="line-clamp-2 text-sm font-semibold leading-snug text-fg lg:text-base">
                         {t.title}
                       </p>
                       <p className="mt-1 text-[11px] leading-snug text-fg-hint lg:text-xs">
-                        {formatBangkok(t.startAt)} · จองแล้ว {t._count.bookings} / {t.maxParticipants}{" "}
-                        คน
+                        {formatBangkok(t.startAt)} · ผู้จอง {t._count.bookings} / {t.maxParticipants} คน
+                        {t.maxParticipants - t._count.bookings > 0 ? (
+                          <span className="ml-1 text-success">
+                            (ว่าง {t.maxParticipants - t._count.bookings})
+                          </span>
+                        ) : (
+                          <span className="ml-1 text-warning">(เต็ม)</span>
+                        )}
                       </p>
                     </div>
                     <div className="mt-auto shrink-0 lg:mt-0">{tripStatusBadge(t.status)}</div>
@@ -228,7 +234,7 @@ export default async function OrganizerDashboardPage() {
                 <li key={t.id} className="min-w-0">
                   <Link
                     href={`/organizer/trips/${t.id}`}
-                    className="jad-card-interactive flex h-full min-h-[6.5rem] flex-col gap-2 lg:min-h-0 lg:flex-row lg:items-center lg:justify-between"
+                    className="jad-card-interactive flex h-full min-h-26 flex-col gap-2 lg:min-h-0 lg:flex-row lg:items-center lg:justify-between"
                   >
                     <div className="min-w-0">
                       <p className="line-clamp-2 text-sm font-medium leading-snug text-fg lg:text-base">

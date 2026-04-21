@@ -126,17 +126,27 @@ export function OrganizerPaymentForm({ defaults }: { defaults: OrganizerPaymentF
         <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
           เลขพร้อมเพย์ / เลขประจำตัวผู้เสียภาษี (รับโอน)
         </label>
-        <p className="mt-2 rounded-lg border border-warning/30 bg-warning-light px-3 py-2 text-xs text-warning sm:text-sm">
-          ระบบจะสร้าง QR Code พร้อมเพย์ให้อัตโนมัติจากเลขที่กรอก — แสดงให้ผู้จองในหน้าชำระเงินตามยอดทริป
-        </p>
+        <div className="mt-2 space-y-2 rounded-lg border border-brand/20 bg-brand-light/50 px-3 py-2.5 text-xs text-fg-muted">
+          <p>
+            <span className="font-semibold text-brand">สำคัญ:</span>{" "}
+            เลขนี้ใช้สร้าง QR Code พร้อมเพย์อัตโนมัติตามยอดทริป และใช้ตรวจสลิปอัตโนมัติผ่าน EasySlip —
+            หากไม่กรอก ลูกค้าจะอัปโหลดสลิปได้แต่ <span className="font-medium text-warning">ระบบตรวจไม่ได้อัตโนมัติ</span>
+          </p>
+          <p className="text-fg-hint">
+            รูปแบบ: เบอร์มือถือ 10 หลัก (เช่น 0812345678) หรือเลขนิติบุคคล 13 หลัก
+          </p>
+        </div>
         <input
           name="payoutPromptPayId"
           required
           minLength={9}
+          maxLength={20}
+          pattern="[\d\-\s]{9,20}"
           defaultValue={defaults.payoutPromptPayId}
           placeholder="เช่น 0812345678 หรือ 0105558012341"
-          className="jad-input mt-1"
+          className="jad-input mt-2"
           autoComplete="off"
+          inputMode="numeric"
         />
       </div>
 

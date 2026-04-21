@@ -6,6 +6,7 @@ import { cancelBookingAsParticipant } from "@/app/actions/bookings";
 
 type Props = {
   viewToken: string;
+  tripId: string;
   status: "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED";
   expiresAtIso: string;
   price: number;
@@ -52,6 +53,7 @@ function fileToBase64(file: File): Promise<string> {
 
 export function BookingPayPanel({
   viewToken,
+  tripId,
   status,
   expiresAtIso,
   price,
@@ -67,6 +69,7 @@ export function BookingPayPanel({
   const router = useRouter();
   const [slipError, setSlipError] = useState<string | null>(null);
   const [slipBusy, setSlipBusy] = useState(false);
+  const [slipPreviewUrl, setSlipPreviewUrl] = useState<string | null>(null);
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [stripeBusy, setStripeBusy] = useState(false);
   const [cancelErr, setCancelErr] = useState<string | null>(null);
@@ -121,6 +124,7 @@ export function BookingPayPanel({
     setSlipBusy(true);
     try {
       const base64 = await fileToBase64(file);
+      setSlipPreviewUrl(base64);
       const res = await fetch("/api/bookings/verify-slip", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -140,6 +144,10 @@ export function BookingPayPanel({
   }
 
   async function cancel() {
+    const confirmed = window.confirm(
+      "ยืนยันยกเลิกการจองนี้หรือไม่?\n\nหากยกเลิกแล้วอาจต้องจองใหม่ และที่นั่งไม่รับประกันว่าจะว่างอยู่",
+    );
+    if (!confirmed) return;
     setCancelErr(null);
     setCancelling(true);
     const r = await cancelBookingAsParticipant(viewToken);
@@ -324,23 +332,35 @@ export function BookingPayPanel({
             </label>
             <input
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
+              accept="image/jpeg,image/png,image/webp"
               disabled={slipBusy}
               className="jad-input mt-2 file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-brand-mid"
               onChange={async (e) => {
                 const f = e.target.files?.[0];
                 e.target.value = "";
                 if (!f) return;
+                setSlipPreviewUrl(null);
                 await verifySlip(f);
               }}
             />
+            {slipPreviewUrl && !slipBusy ? (
+              <div className="mt-3 flex flex-col items-start gap-1">
+                <p className="text-[11px] font-medium text-fg-muted">ตัวอย่างสลิปที่อัปโหลด</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={slipPreviewUrl}
+                  alt="ตัวอย่างสลิป"
+                  className="max-h-48 rounded-lg border border-border object-contain shadow-sm"
+                />
+              </div>
+            ) : null}
             {!organizerHasPromptPay ? (
               <p className="mt-2 text-xs text-fg-hint">
                 การตรวจสลิปอัตโนมัติต้องมีเลขพร้อมเพย์ของผู้จัด — หากยังไม่มี ให้ส่งสลิปให้ผู้จัดยืนยันด้วยตนเอง
               </p>
             ) : null}
             {slipBusy ? (
-              <p className="mt-2 text-xs text-fg-muted">กำลังตรวจสลิป…</p>
+              <p className="mt-2 text-xs text-fg-muted">กำลังตรวจสลิป — อาจใช้เวลาสักครู่…</p>
             ) : null}
           </div>
         </div>
@@ -367,12 +387,30 @@ export function BookingPayPanel({
         </div>
       ) : null}
 
-      {status === "EXPIRED" || status === "CANCELLED" ? (
-        <p className="text-center text-sm text-fg-muted">
-          {status === "EXPIRED"
-            ? "หมดเวลาชำระเงิน — ที่นั่งถูกปล่อยแล้ว"
-            : "การจองนี้ถูกยกเลิกแล้ว"}
-        </p>
+      {status === "EXPIRED" ? (
+        <div className="space-y-3">
+          <p className="text-center text-sm text-fg-muted">
+            หมดเวลาชำระเงิน — ที่นั่งถูกปล่อยแล้ว
+          </p>
+          <a
+            href={`/trips/${tripId}/book`}
+            className="jad-btn-primary flex h-11 w-full items-center justify-center text-sm"
+          >
+            จองที่นั่งใหม่
+          </a>
+        </div>
+      ) : null}
+
+      {status === "CANCELLED" ? (
+        <div className="space-y-3">
+          <p className="text-center text-sm text-fg-muted">การจองนี้ถูกยกเลิกแล้ว</p>
+          <a
+            href={`/trips/${tripId}`}
+            className="jad-btn-ghost flex h-11 w-full items-center justify-center text-sm"
+          >
+            กลับไปดูทริป
+          </a>
+        </div>
       ) : null}
     </div>
   );

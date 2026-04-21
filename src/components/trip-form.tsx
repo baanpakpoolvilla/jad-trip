@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useId, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { Lock } from "lucide-react";
 import type { Trip } from "@prisma/client";
 import {
   createTrip,
@@ -304,6 +305,7 @@ export function TripForm(props: Props) {
   const [imageUploadError, setImageUploadError] = useState<string | null>(
     null,
   );
+  const isDirtyRef = useRef(false);
 
   const action =
     props.mode === "create"
@@ -320,6 +322,7 @@ export function TripForm(props: Props) {
 
   useEffect(() => {
     if (state && "ok" in state && state.ok) {
+      isDirtyRef.current = false;
       router.push(
         props.mode === "create" ? "/organizer/trips" : `/organizer/trips/${props.tripId}`,
       );
@@ -327,12 +330,35 @@ export function TripForm(props: Props) {
     }
   }, [state, router, props]);
 
+  useEffect(() => {
+    if (locked) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirtyRef.current) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [locked]);
+
   return (
     <form
       action={formAction}
       className={`${dense ? "space-y-5" : "space-y-8"} ${!locked ? "pb-[calc(6rem+env(safe-area-inset-bottom,0px))] sm:pb-0" : ""}`}
       aria-busy={pending}
+      onInput={() => { isDirtyRef.current = true; }}
+      onChange={() => { isDirtyRef.current = true; }}
     >
+      {locked ? (
+        <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning-light px-4 py-3 text-sm text-warning">
+          <Lock className="mt-0.5 size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+          <p>
+            <span className="font-semibold">ทริปนี้เผยแพร่แล้วและมีผู้จอง</span>{" "}
+            — ข้อมูลหลัก (ชื่อ วันที่ ราคา ที่นั่ง จุดนัดพบ) ถูกล็อก
+            แก้ได้เฉพาะรายละเอียด รูปภาพ และนโยบาย
+          </p>
+        </div>
+      ) : null}
       {state && "error" in state && state.error ? (
         <p className="jad-alert-error" role="alert">
           {state.error}
@@ -845,8 +871,13 @@ export function TripForm(props: Props) {
               ไกด์ต้องเปิด «ลงทะเบียนเป็นไกด์» ในโปรไฟล์ก่อน — ค้นจากชื่อหรืออีเมล แล้วเลือกจากรายการ
             </p>
           ) : (
-            <p className="text-[11px] leading-snug text-fg-muted">
-              ค้นชื่อหรืออีเมล — ไกด์ต้องเปิดโหมดไกด์ในโปรไฟล์
+            <p className="rounded-md border border-brand/20 bg-brand-light/50 px-2.5 py-2 text-[11px] leading-snug text-fg-muted">
+              <span className="font-semibold text-brand">ขั้นตอน:</span>{" "}
+              ให้ไกด์เปิด «ลงทะเบียนเป็นไกด์» ที่หน้า{" "}
+              <Link href="/organizer/profile" className="font-medium text-brand underline-offset-2 hover:underline">
+                โปรไฟล์
+              </Link>{" "}
+              ก่อน จากนั้นค้นด้วยชื่อหรืออีเมลด้านล่าง
             </p>
           )}
           <TripGuidePicker

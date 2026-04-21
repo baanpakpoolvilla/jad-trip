@@ -159,8 +159,9 @@ export function TripItineraryBuilder({
                     : "rounded-lg border border-border/70 bg-surface/90 p-3 sm:p-3.5"
                 }
               >
-                <div className={`flex flex-wrap items-end gap-2 ${dense ? "gap-x-2 gap-y-1.5" : ""}`}>
-                  <div className="min-w-28 shrink-0 sm:min-w-32">
+                {/* mobile: [เวลา][ลบ] / [รายละเอียด] — desktop: [เวลา][รายละเอียด][ลบ] */}
+                <div className={`grid grid-cols-[1fr_auto] items-end gap-x-2 gap-y-2 sm:flex sm:flex-wrap sm:items-end ${dense ? "sm:gap-x-2 sm:gap-y-1.5" : "sm:gap-2"}`}>
+                  <div className="min-w-0 sm:min-w-32 sm:shrink-0">
                     <label className={`mb-1 block ${labelSlot}`} htmlFor={`${formInputId}-t-${dayIndex}-${slotIndex}`}>
                       เวลา
                     </label>
@@ -176,7 +177,15 @@ export function TripItineraryBuilder({
                       autoComplete="off"
                     />
                   </div>
-                  <div className="min-w-0 flex-1 basis-48">
+                  <button
+                    type="button"
+                    className={`${btnGhost} self-end shrink-0 sm:order-last`}
+                    onClick={() => removeSlot(dayIndex, slotIndex)}
+                    aria-label="ลบช่วงเวลานี้"
+                  >
+                    <Trash2 className="size-3.5" strokeWidth={1.5} aria-hidden />
+                  </button>
+                  <div className="col-span-2 min-w-0 sm:flex-1 sm:basis-48">
                     <label className={`mb-1 block ${labelSlot}`} htmlFor={`${formInputId}-d-${dayIndex}-${slotIndex}`}>
                       รายละเอียด
                     </label>
@@ -189,14 +198,6 @@ export function TripItineraryBuilder({
                       className={`jad-input resize-y ${dense ? "min-h-[52px] text-sm" : "min-h-[72px]"}`}
                     />
                   </div>
-                  <button
-                    type="button"
-                    className={`${btnGhost} self-end shrink-0`}
-                    onClick={() => removeSlot(dayIndex, slotIndex)}
-                    aria-label="ลบช่วงเวลานี้"
-                  >
-                    <Trash2 className="size-3.5" strokeWidth={1.5} aria-hidden />
-                  </button>
                 </div>
               </div>
             ))}

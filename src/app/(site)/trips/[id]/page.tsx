@@ -11,6 +11,7 @@ import {
   TripHero,
   TripRichBlock,
 } from "@/components/trip-public-parts";
+import { TripShareButton } from "@/components/trip-share-button";
 import {
   getPublishedTripById,
   organizerPublicBrochureHrefFromOrganizer,
@@ -82,13 +83,19 @@ export default async function TripDetailPage({ params }: Props) {
 
   return (
     <article className="space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] sm:space-y-6 sm:pb-[calc(8rem+env(safe-area-inset-bottom,0px))]">
-      {/* Back navigation */}
-      <nav aria-label="เส้นทางกลับ">
-        <Link href={backHref} className="jad-back-link">
-          <ArrowLeft className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
-          {backLabel}
-        </Link>
-      </nav>
+      {/* Back navigation + share */}
+      <div className="flex items-center justify-between gap-3">
+        <nav aria-label="เส้นทางกลับ">
+          <Link href={backHref} className="jad-back-link">
+            <ArrowLeft className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+            {backLabel}
+          </Link>
+        </nav>
+        <TripShareButton
+          url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/trips/${trip.id}`}
+          tripTitle={trip.title}
+        />
+      </div>
 
       {/* Hero — cover image overlay or brand gradient */}
       <TripHero

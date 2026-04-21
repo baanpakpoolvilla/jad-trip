@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { signIn } from "next-auth/react";
+import { Eye, EyeOff } from "lucide-react";
 
 export function RegisterForm() {
+  const id = useId();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -67,16 +70,29 @@ export function RegisterForm() {
     <form onSubmit={onSubmit} className="space-y-4">
       {error ? <p className="jad-alert-error">{error}</p> : null}
       <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
+        <label
+          htmlFor={`${id}-name`}
+          className="block text-xs font-medium uppercase tracking-wide text-fg-muted"
+        >
           ชื่อ
         </label>
-        <input name="name" required autoComplete="name" className="jad-input mt-1" />
+        <input
+          id={`${id}-name`}
+          name="name"
+          required
+          autoComplete="name"
+          className="jad-input mt-1"
+        />
       </div>
       <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
+        <label
+          htmlFor={`${id}-email`}
+          className="block text-xs font-medium uppercase tracking-wide text-fg-muted"
+        >
           อีเมล
         </label>
         <input
+          id={`${id}-email`}
           name="email"
           type="email"
           required
@@ -85,17 +101,35 @@ export function RegisterForm() {
         />
       </div>
       <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
+        <label
+          htmlFor={`${id}-password`}
+          className="block text-xs font-medium uppercase tracking-wide text-fg-muted"
+        >
           รหัสผ่าน (อย่างน้อย 8 ตัว)
         </label>
-        <input
-          name="password"
-          type="password"
-          required
-          minLength={8}
-          autoComplete="new-password"
-          className="jad-input mt-1"
-        />
+        <div className="relative mt-1">
+          <input
+            id={`${id}-password`}
+            name="password"
+            type={showPassword ? "text" : "password"}
+            required
+            minLength={8}
+            autoComplete="new-password"
+            className="jad-input pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-fg-muted hover:text-fg focus-visible:outline-none"
+            aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+          >
+            {showPassword ? (
+              <EyeOff className="size-4" strokeWidth={1.5} aria-hidden />
+            ) : (
+              <Eye className="size-4" strokeWidth={1.5} aria-hidden />
+            )}
+          </button>
+        </div>
       </div>
       <button type="submit" disabled={pending} className="jad-btn-primary h-12 w-full text-base">
         {pending ? "กำลังสร้างบัญชี…" : "ลงทะเบียนผู้จัดทริป"}

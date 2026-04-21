@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { signIn } from "next-auth/react";
+import { Eye, EyeOff } from "lucide-react";
 
 export function LoginForm({ resetSuccess = false }: { resetSuccess?: boolean }) {
+  const id = useId();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [googlePending, setGooglePending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -61,10 +64,14 @@ export function LoginForm({ resetSuccess = false }: { resetSuccess?: boolean }) 
         ) : null}
         {error ? <p className="jad-alert-error">{error}</p> : null}
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
+          <label
+            htmlFor={`${id}-email`}
+            className="block text-xs font-medium uppercase tracking-wide text-fg-muted"
+          >
             อีเมล
           </label>
           <input
+            id={`${id}-email`}
             name="email"
             type="email"
             required
@@ -74,7 +81,10 @@ export function LoginForm({ resetSuccess = false }: { resetSuccess?: boolean }) 
         </div>
         <div>
           <div className="flex items-baseline justify-between gap-2">
-            <label className="block text-xs font-medium uppercase tracking-wide text-fg-muted">
+            <label
+              htmlFor={`${id}-password`}
+              className="block text-xs font-medium uppercase tracking-wide text-fg-muted"
+            >
               รหัสผ่าน
             </label>
             <Link
@@ -84,13 +94,28 @@ export function LoginForm({ resetSuccess = false }: { resetSuccess?: boolean }) 
               ลืมรหัสผ่าน?
             </Link>
           </div>
-          <input
-            name="password"
-            type="password"
-            required
-            autoComplete="current-password"
-            className="jad-input mt-1"
-          />
+          <div className="relative mt-1">
+            <input
+              id={`${id}-password`}
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              autoComplete="current-password"
+              className="jad-input pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-fg-muted hover:text-fg focus-visible:outline-none"
+              aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+            >
+              {showPassword ? (
+                <EyeOff className="size-4" strokeWidth={1.5} aria-hidden />
+              ) : (
+                <Eye className="size-4" strokeWidth={1.5} aria-hidden />
+              )}
+            </button>
+          </div>
         </div>
         <button type="submit" disabled={pending || googlePending} className="jad-btn-primary h-12 w-full text-base">
           {pending ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
