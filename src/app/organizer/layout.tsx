@@ -15,11 +15,10 @@ export default async function OrganizerLayout({
     redirect(session.user.role === "ADMIN" ? "/admin" : "/");
   }
 
-  const unreadNotifications = await db.notification.count({
-    where: { userId: session.user.id, readAt: null },
-  });
-
-  const publicBrochureHref = await getOrganizerPublicBrochureHref(session.user.id);
+  const [unreadNotifications, publicBrochureHref] = await Promise.all([
+    db.notification.count({ where: { userId: session.user.id, readAt: null } }),
+    getOrganizerPublicBrochureHref(session.user.id),
+  ]);
 
   return (
     <OrganizerAppShell

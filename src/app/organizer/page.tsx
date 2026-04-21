@@ -6,7 +6,6 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { formatBangkok } from "@/lib/datetime";
 import { OrganizerBrochureLinkCopy } from "@/components/organizer-brochure-link-copy";
-import { ensureOrganizerBrochureShareCode } from "@/lib/organizer-brochure-share-code";
 import { organizerBrochureShortPath } from "@/lib/trips-public";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +39,7 @@ export default async function OrganizerDashboardPage() {
   const organizerId = session.user.id;
   const now = new Date();
 
-  const [tripGroups, bookingGroups, upcomingTrips, recentTrips] = await Promise.all([
+  const [tripGroups, bookingGroups, upcomingTrips, recentTrips, userRow] = await Promise.all([
     db.trip.groupBy({
       by: ["status"],
       where: { organizerId },
@@ -75,6 +74,10 @@ export default async function OrganizerDashboardPage() {
       take: 5,
       include: { _count: { select: { bookings: true } } },
     }),
+    db.user.findUnique({
+      where: { id: organizerId },
+      select: { brochureShareCode: true },
+    }),
   ]);
 
   const totalTrips = tripGroups.reduce((s, g) => s + g._count._all, 0);
@@ -85,7 +88,7 @@ export default async function OrganizerDashboardPage() {
   const confirmed = countByStatus(bookingGroups, BookingStatus.CONFIRMED);
 
   const displayName = session.user.name?.trim() || "ผู้จัด";
-  const brochureShareCode = await ensureOrganizerBrochureShareCode(organizerId);
+  const brochureShareCode = userRow?.brochureShareCode ?? "";
   const brochureShortPath = organizerBrochureShortPath(brochureShareCode);
   const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 

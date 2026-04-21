@@ -239,13 +239,7 @@ export async function updateTrip(
 
   const trip = await db.trip.findFirst({
     where: { id: tripId, organizerId: session.user.id },
-    include: {
-      _count: { select: { bookings: true } },
-      organizer: { select: { id: true, name: true, bio: true, avatarUrl: true } },
-      guide: {
-        select: { id: true, name: true, bio: true, avatarUrl: true, email: true },
-      },
-    },
+    include: { _count: { select: { bookings: true } } },
   });
   if (!trip) return { error: "ไม่พบทริป" };
 
@@ -365,7 +359,9 @@ export async function setTripStatus(
     data: { status },
   });
 
-  await assignUniqueShareCodeForTrip(tripId);
+  if (!trip.shareCode) {
+    await assignUniqueShareCodeForTrip(tripId);
+  }
 
   revalidatePath("/organizer/trips");
   revalidatePath("/organizer");

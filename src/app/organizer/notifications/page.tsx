@@ -17,15 +17,15 @@ export default async function OrganizerNotificationsPage() {
 
   const userId = session.user.id;
 
-  const [items, unreadCount, totalCount] = await Promise.all([
+  const [items, totalCount] = await Promise.all([
     db.notification.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
       take: 80,
     }),
-    db.notification.count({ where: { userId, readAt: null } }),
     db.notification.count({ where: { userId } }),
   ]);
+  const unreadCount = items.filter((n) => !n.readAt).length;
 
   return (
     <div className="space-y-8">

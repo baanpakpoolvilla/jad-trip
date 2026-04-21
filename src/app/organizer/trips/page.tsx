@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { getOrganizerPublicBrochureHref } from "@/lib/organizer-brochure-share-code";
+import { organizerBrochureShortPath } from "@/lib/trips-public";
 import { formatBangkok } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
@@ -26,15 +26,19 @@ export default async function OrganizerTripsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const brochureHref = await getOrganizerPublicBrochureHref(session.user.id);
+  const [trips, userRow] = await Promise.all([
+    db.trip.findMany({
+      where: { organizerId: session.user.id },
+      orderBy: { startAt: "desc" },
+      include: { _count: { select: { bookings: true } } },
+    }),
+    db.user.findUnique({
+      where: { id: session.user.id },
+      select: { brochureShareCode: true },
+    }),
+  ]);
 
-  const trips = await db.trip.findMany({
-    where: { organizerId: session.user.id },
-    orderBy: { startAt: "desc" },
-    include: {
-      _count: { select: { bookings: true } },
-    },
-  });
+  const brochureHref = organizerBrochureShortPath(userRow?.brochureShareCode ?? "");
 
   return (
     <div className="space-y-6">
