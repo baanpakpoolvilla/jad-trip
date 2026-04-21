@@ -3,12 +3,13 @@ import { CalendarDays } from "lucide-react";
 import { auth } from "@/auth";
 import { PublicBrandLink } from "@/components/public-brand-link";
 import { getOrganizerPublicBrochureHref } from "@/lib/organizer-brochure-share-code";
+import { getSiteSettings } from "@/lib/site-settings";
 
 const navItemClass =
   "inline-flex min-h-10 min-w-10 items-center justify-center gap-1 rounded-full px-2.5 text-[13px] font-medium text-white/95 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brand sm:min-h-11 sm:min-w-11 sm:gap-1.5 sm:px-3.5 sm:text-sm";
 
 export async function PublicShell({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  const [session, siteSettings] = await Promise.all([auth(), getSiteSettings()]);
   const dashboardHref =
     session?.user?.role === "ADMIN"
       ? "/admin"
@@ -31,7 +32,12 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
         }}
       >
         <div className="jad-container flex min-h-12 items-center gap-2 px-3 py-2 sm:min-h-13 sm:gap-3 sm:px-6 sm:py-2.5">
-          <PublicBrandLink dashboardHref={dashboardHref} />
+          <PublicBrandLink
+            dashboardHref={dashboardHref}
+            siteName={siteSettings.siteName}
+            siteTagline={siteSettings.siteTagline}
+            logoUrl={siteSettings.logoUrl}
+          />
           <nav
             className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto pb-0.5 text-sm [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-2 [&::-webkit-scrollbar]:hidden"
             aria-label="เมนูหลัก"
@@ -74,8 +80,8 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
       {/* Footer — structured layout */}
       <footer className="mt-auto border-t border-border bg-surface py-5 sm:py-8">
         <div className="jad-container flex flex-col items-center gap-1 px-3 sm:flex-row sm:justify-between sm:gap-1.5 sm:px-6">
-          <p className="text-sm font-semibold text-fg-muted">Say Hi Trip</p>
-          <p className="text-xs text-fg-hint">ส่ง Trip ให้ทุกคน</p>
+          <p className="text-sm font-semibold text-fg-muted">{siteSettings.siteName}</p>
+          <p className="text-xs text-fg-hint">{siteSettings.siteTagline}</p>
         </div>
       </footer>
     </div>

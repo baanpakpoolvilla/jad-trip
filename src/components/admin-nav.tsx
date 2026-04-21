@@ -9,6 +9,7 @@ import {
   ExternalLink,
   MapPinned,
   Menu,
+  Settings2,
   ShieldCheck,
   Users,
   X,
@@ -20,6 +21,7 @@ const items = [
   { href: "/admin/trips", label: "ทริปทั้งหมด", icon: MapPinned, match: "prefix" as const },
   { href: "/admin/users", label: "ผู้ใช้", icon: Users, match: "prefix" as const },
   { href: "/admin/bookings", label: "การจอง", icon: CalendarCheck, match: "prefix" as const },
+  { href: "/admin/settings", label: "ตั้งค่าเว็บไซต์", icon: Settings2, match: "prefix" as const },
   { href: "/", label: "หน้าเว็บ", icon: ExternalLink, match: "exact" as const },
 ];
 
@@ -46,7 +48,7 @@ function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
                   : "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/90 transition-colors hover:bg-white/10"
               }
             >
-              <Icon className="size-[1.125rem] shrink-0 opacity-90" strokeWidth={1.5} aria-hidden />
+              <Icon className="size-4.5 shrink-0 opacity-90" strokeWidth={1.5} aria-hidden />
               {label}
             </Link>
           </li>

@@ -156,6 +156,19 @@ model Booking {
   @@index([tripId, status])
 }
 
+/// การตั้งค่าเว็บไซต์ (singleton — id = "1" เสมอ)
+model SiteSettings {
+  id              String   @id @default("1")
+  siteName        String   @default("Say Hi Trip")
+  siteTagline     String   @default("ส่ง Trip ให้ทุกคน")
+  siteDescription String   @default("แพลตฟอร์มจัดทริปกลุ่มแบบอบอุ่น — นำเสนอทริป รับจอง ตามสถานะชำระเงิน และส่งลิงก์ให้เพื่อนหรือลูกค้าได้ในที่เดียว")
+  /// URL รูปโลโก้ (https://…) — แสดงในเฮดเดอร์และ Open Graph
+  logoUrl         String?
+  /// URL favicon (https://…) — ใช้ใน <head>
+  faviconUrl      String?
+  updatedAt       DateTime @updatedAt
+}
+
 model Notification {
   id        String    @id @default(cuid())
   userId    String
