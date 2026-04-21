@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { verifyBankSlipBase64 } from "@/lib/easyslip";
+import { uploadSlipToPrivateBucket } from "@/lib/slip-storage";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
   viewToken: z.string().min(16),
@@ -11,6 +13,16 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: Request) {
+  // Rate limit: 10 ครั้ง / IP / นาที — ป้องกัน EasySlip quota หมด
+  const ip = getClientIp(request);
+  const rl = rateLimit(`verify-slip:${ip}`, 10, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: `ส่งคำขอบ่อยเกินไป กรุณารอ ${rl.retryAfterSec} วินาที` },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
+  }
+
   const json = await request.json().catch(() => ({}));
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
@@ -121,6 +133,9 @@ export async function POST(request: Request) {
 
   const paidAt = new Date();
 
+  // อัปโหลดสลิปไปยัง private bucket — เก็บแค่ path ไม่ใช่ public URL
+  const slipImageUrl = await uploadSlipToPrivateBucket(base64, booking.id);
+
   await db.$transaction([
     db.booking.update({
       where: { id: booking.id },
@@ -129,6 +144,7 @@ export async function POST(request: Request) {
         paidAt,
         slipTransRef: raw.transRef,
         slipVerifiedAt: paidAt,
+        ...(slipImageUrl ? { slipImageUrl } : {}),
       },
     }),
     db.notification.create({

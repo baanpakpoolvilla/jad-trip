@@ -5,7 +5,16 @@ import { compare } from "bcryptjs";
 import type { Role } from "@prisma/client";
 import { db } from "@/lib/db";
 
+// ALLOWED_EMAIL_DOMAINS: ถ้าตั้งค่า จะจำกัด Google sign-in เฉพาะโดเมนที่ระบุ
+// เช่น ALLOWED_EMAIL_DOMAINS="company.com,partner.org"
+// ถ้าไม่ตั้ง — เปิดรับ Google account ทั้งหมด (สาธารณะ)
+const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS
+  ? process.env.ALLOWED_EMAIL_DOMAINS.split(",").map((d) => d.trim().toLowerCase()).filter(Boolean)
+  : null;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // trustHost: true — จำเป็นสำหรับ Vercel preview deployments ที่ hostname เปลี่ยนทุก deploy
+  // ลด risk: ตั้ง AUTH_URL สำหรับ production เพื่อ lock canonical URL (ดู next.config.ts)
   trustHost: true,
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   providers: [
@@ -52,6 +61,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         if (!user.email) return false;
+
+        // ถ้าตั้ง ALLOWED_EMAIL_DOMAINS ไว้ — ตรวจโดเมนก่อน
+        if (allowedDomains) {
+          const domain = user.email.split("@")[1]?.toLowerCase();
+          if (!domain || !allowedDomains.includes(domain)) return false;
+        }
+
         const existing = await db.user.findUnique({
           where: { email: user.email },
         });

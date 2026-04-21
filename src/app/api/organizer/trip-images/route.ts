@@ -12,6 +12,22 @@ const ALLOWED = new Map<string, string>([
 const MAX_BYTES = 5 * 1024 * 1024;
 const BUCKET = process.env.SUPABASE_TRIP_IMAGES_BUCKET ?? "trip-images";
 
+/** ตรวจ magic bytes ป้องกัน file.type ปลอม */
+function detectMimeFromBytes(buf: Buffer): string | null {
+  if (buf.length < 12) return null;
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  if (
+    buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47 &&
+    buf[4] === 0x0d && buf[5] === 0x0a && buf[6] === 0x1a && buf[7] === 0x0a
+  ) return "image/png";
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) return "image/gif";
+  if (
+    buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+    buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50
+  ) return "image/webp";
+  return null;
+}
+
 /** Supabase admin client — ใช้ service role key ข้าม RLS สำหรับ storage upload */
 function createStorageAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -88,8 +104,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "ไม่พบไฟล์" }, { status: 400 });
   }
 
-  const ext = ALLOWED.get(file.type);
-  if (!ext) {
+  if (!ALLOWED.has(file.type)) {
     return Response.json(
       { error: "รองรับเฉพาะ JPEG, PNG, WebP หรือ GIF" },
       { status: 400 },
@@ -105,6 +120,13 @@ export async function POST(req: Request) {
     return Response.json({ error: "ไฟล์ต้องไม่เกิน 5 MB" }, { status: 400 });
   }
 
+  // ตรวจ magic bytes — ป้องกัน file.type ปลอม
+  const actualMime = detectMimeFromBytes(buf);
+  if (!actualMime || !ALLOWED.has(actualMime)) {
+    return Response.json({ error: "เนื้อหาไฟล์ไม่ตรงกับประเภทที่ระบุ" }, { status: 400 });
+  }
+
+  const ext = ALLOWED.get(actualMime)!;
   const fileName = `${Date.now()}-${randomBytes(8).toString("hex")}${ext}`;
   const storagePath = `trips/${fileName}`;
 

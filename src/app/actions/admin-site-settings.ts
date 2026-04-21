@@ -38,7 +38,7 @@ export async function saveSiteSettings(
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? "ข้อมูลไม่ถูกต้อง" };
+    return { error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" };
   }
 
   const { siteName, siteTagline, siteDescription, logoUrl, faviconUrl } = parsed.data;
@@ -49,6 +49,6 @@ export async function saveSiteSettings(
     create: { id: "1", siteName, siteTagline, siteDescription, logoUrl, faviconUrl },
   });
 
-  revalidateTag(SITE_SETTINGS_TAG);
+  revalidateTag(SITE_SETTINGS_TAG, "default");
   return { ok: true };
 }

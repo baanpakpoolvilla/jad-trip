@@ -129,7 +129,7 @@ export function OrganizerPaymentForm({ defaults }: { defaults: OrganizerPaymentF
         <div className="mt-2 space-y-2 rounded-lg border border-brand/20 bg-brand-light/50 px-3 py-2.5 text-xs text-fg-muted">
           <p>
             <span className="font-semibold text-brand">สำคัญ:</span>{" "}
-            เลขนี้ใช้สร้าง QR Code พร้อมเพย์อัตโนมัติตามยอดทริป และใช้ตรวจสลิปอัตโนมัติผ่าน EasySlip —
+            เลขนี้ใช้สร้าง QR Code พร้อมเพย์อัตโนมัติตามยอดทริป และใช้ตรวจสอบสลิปอัตโนมัติ —
             หากไม่กรอก ลูกค้าจะอัปโหลดสลิปได้แต่ <span className="font-medium text-warning">ระบบตรวจไม่ได้อัตโนมัติ</span>
           </p>
           <p className="text-fg-hint">

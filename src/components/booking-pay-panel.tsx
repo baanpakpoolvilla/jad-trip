@@ -312,7 +312,7 @@ export function BookingPayPanel({
             ) : null}
             {!organizerHasPromptPay ? (
               <p className="mt-2 text-xs text-fg-hint">
-                ระบบจะตรวจสลิปผ่าน EasySlip (ความถูกต้องของสลิปและจำนวนเงิน) — ผู้จัดจะได้รับแจ้งเตือนโดยอัตโนมัติ
+                ระบบจะตรวจสอบความถูกต้องของสลิปและจำนวนเงินโดยอัตโนมัติ — ผู้จัดจะได้รับแจ้งเตือนทันที
               </p>
             ) : null}
             {slipBusy ? (

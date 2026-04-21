@@ -48,7 +48,7 @@ export function OnboardingPaymentForm({ defaults }: { defaults: Defaults }) {
         <div className="rounded-lg border border-brand/20 bg-brand-light/50 px-3 py-3 text-xs text-fg-muted space-y-1.5">
           <p>
             <span className="font-semibold text-brand">สำคัญ:</span>{" "}
-            เลขพร้อมเพย์ใช้สร้าง QR Code อัตโนมัติตามยอดทริป และตรวจสลิปอัตโนมัติผ่าน EasySlip —
+            เลขพร้อมเพย์ใช้สร้าง QR Code อัตโนมัติตามยอดทริป และตรวจสอบสลิปอัตโนมัติ —
             หากไม่กรอก ระบบ<span className="font-medium text-warning">ตรวจสลิปไม่ได้</span>
           </p>
           <p className="text-fg-hint">รูปแบบ: เบอร์มือถือ 10 หลัก หรือเลขนิติบุคคล 13 หลัก</p>

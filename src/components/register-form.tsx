@@ -39,7 +39,7 @@ export function RegisterForm() {
         setError(
           data.error ??
             (res.status === 500
-              ? "เซิร์ฟเวอร์ตอบ 500 — ตรวจสอบการเชื่อมต่อฐานข้อมูลบน Vercel และว่าได้รัน prisma db push กับ Supabase แล้ว"
+              ? "เซิร์ฟเวอร์เกิดข้อผิดพลาด — กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ"
               : "ลงทะเบียนไม่สำเร็จ"),
         );
         return;
@@ -58,7 +58,7 @@ export function RegisterForm() {
         window.location.href = "/post-login";
       } catch {
         setError(
-          "ลงทะเบียนแล้ว แต่เข้าสู่ระบบไม่สำเร็จ — ตรวจสอบ AUTH_SECRET และ AUTH_URL บน Vercel แล้วลองล็อกอิน",
+          "ลงทะเบียนแล้ว แต่เข้าสู่ระบบไม่สำเร็จ — กรุณาลองเข้าสู่ระบบด้วยตนเอง",
         );
       }
     } finally {

@@ -132,8 +132,12 @@ export async function saveOnboardingPayment(
   }
 
   const qrUrl = parsed.data.payoutQrImageUrl ?? null;
-  if (qrUrl && !/^\/uploads\/trips\/[a-zA-Z0-9._-]+$/.test(qrUrl)) {
-    return { error: "ลิงก์รูป QR ไม่ถูกต้อง" };
+  if (qrUrl) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const qrUrlOk =
+      !!supabaseUrl &&
+      qrUrl.startsWith(`${supabaseUrl}/storage/v1/object/public/`);
+    if (!qrUrlOk) return { error: "ลิงก์รูป QR ไม่ถูกต้อง" };
   }
 
   const bankNum = parsed.data.payoutBankAccountNumber;

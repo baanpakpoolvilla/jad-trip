@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, ExternalLink, MapPin, Phone, Receipt } from "lucide-react";
 import { TripStatus } from "@prisma/client";
 import {
   cancelBookingAsOrganizerForm,
@@ -10,6 +10,7 @@ import {
 import { formatBangkok } from "@/lib/datetime";
 import { ConfirmForm } from "@/components/confirm-form";
 import { CopyBookingsButton } from "@/components/copy-bookings-button";
+import { resolveSlipUrls } from "@/lib/slip-storage";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,11 @@ export default async function OrganizerTripDetailPage({ params }: Props) {
   const { id } = await params;
   const trip = await getTripForOrganizer(id);
   if (!trip) notFound();
+
+  // Generate short-lived signed URLs for slip images — organizer-only access
+  const slipUrls = await resolveSlipUrls(
+    trip.bookings.map((b) => ({ id: b.id, slipImageUrl: b.slipImageUrl ?? null })),
+  );
 
   async function closeTrip() {
     "use server";
@@ -240,6 +246,18 @@ export default async function OrganizerTripDetailPage({ params }: Props) {
                       >
                         <Phone className="size-3.5 shrink-0 text-brand" strokeWidth={1.75} aria-hidden />
                         โทร
+                      </a>
+                    ) : null}
+                    {slipUrls[b.id] ? (
+                      <a
+                        href={slipUrls[b.id]!}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`ดูสลิปของ ${b.participantName}`}
+                        className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-success/35 bg-success-light px-2.5 text-xs font-medium text-success shadow-sm transition-colors hover:border-success/60 hover:bg-success-light/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30 focus-visible:ring-offset-2"
+                      >
+                        <Receipt className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+                        ดูสลิป
                       </a>
                     ) : null}
                     <Link

@@ -3,6 +3,7 @@ import { hash } from "bcryptjs";
 import { Prisma, Role } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -31,6 +32,16 @@ function prismaFriendlyMessage(err: unknown): string | undefined {
 }
 
 export async function POST(request: Request) {
+  // Rate limit: 5 บัญชี / IP / ชั่วโมง — ป้องกัน account spam
+  const ip = getClientIp(request);
+  const rl = rateLimit(`register:${ip}`, 5, 60 * 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: `สร้างบัญชีบ่อยเกินไป กรุณารอ ${rl.retryAfterSec} วินาทีแล้วลองใหม่` },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
+  }
+
   try {
     const json = await request.json().catch(() => null);
     const parsed = schema.safeParse(json);

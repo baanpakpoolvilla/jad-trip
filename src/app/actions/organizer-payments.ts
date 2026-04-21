@@ -38,8 +38,13 @@ const payoutSchema = z.object({
     .transform((s) => (s === "" ? undefined : s)),
 });
 
-const qrPathOk = (url: string) =>
-  /^\/uploads\/trips\/[a-zA-Z0-9._-]+$/.test(url);
+const qrUrlOk = (url: string) => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return (
+    !!supabaseUrl &&
+    url.startsWith(`${supabaseUrl}/storage/v1/object/public/`)
+  );
+};
 
 export type OrganizerPaymentActionState = { error?: string } | { ok: true };
 
@@ -72,7 +77,7 @@ export async function updateOrganizerPaymentSettings(
 
   let payoutQrImageUrl: string | null = null;
   if (parsed.data.payoutQrImageUrl) {
-    if (!qrPathOk(parsed.data.payoutQrImageUrl)) {
+    if (!qrUrlOk(parsed.data.payoutQrImageUrl)) {
       return { error: "ลิงก์รูป QR ไม่ถูกต้อง" };
     }
     payoutQrImageUrl = parsed.data.payoutQrImageUrl;
