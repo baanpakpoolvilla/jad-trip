@@ -1,6 +1,6 @@
-import { TripStatus } from "@prisma/client";
+import { BookingStatus, TripStatus } from "@prisma/client";
 import { db } from "@/lib/db";
-import { countActiveSeats, expireStaleBookingsGlobal } from "@/lib/bookings";
+import { countActiveSeatsNoExpire, expireStaleBookingsGlobal } from "@/lib/bookings";
 import { assignUniqueShareCodeForTrip } from "@/lib/trip-share-code";
 
 /** ลิงก์สาธารณะรายการทริปของผู้จัดหนึ่งคน — แชร์ให้ผู้จอง (ไม่มีแดชบอร์ด) */
@@ -131,44 +131,57 @@ export async function listPublishedTripsForOrganizerBrochure(
   const organizerId = organizerUserId.trim();
   if (!organizerId) return [];
 
-  const host = await getOrganizerBrochureHost(organizerId);
-  if (!host) return [];
+  const [host, trips] = await Promise.all([
+    getOrganizerBrochureHost(organizerId),
+    db.trip.findMany({
+      where: {
+        organizerId,
+        status: TripStatus.PUBLISHED,
+        OR: [{ bookingClosesAt: null }, { bookingClosesAt: { gte: now } }],
+      },
+      orderBy: { startAt: "asc" },
+      select: {
+        id: true,
+        title: true,
+        shortDescription: true,
+        startAt: true,
+        endAt: true,
+        pricePerPerson: true,
+        coverImageUrl: true,
+        maxParticipants: true,
+      },
+    }),
+  ]);
 
-  const trips = await db.trip.findMany({
+  if (!host || trips.length === 0) return [];
+
+  const tripIds = trips.map((t) => t.id);
+
+  // 1 aggregated query แทน N sequential countActiveSeats calls
+  const bookingCounts = await db.booking.groupBy({
+    by: ["tripId"],
     where: {
-      organizerId,
-      status: TripStatus.PUBLISHED,
-      OR: [{ bookingClosesAt: null }, { bookingClosesAt: { gte: now } }],
+      tripId: { in: tripIds },
+      OR: [
+        { status: BookingStatus.CONFIRMED },
+        { status: BookingStatus.PENDING_PAYMENT, expiresAt: { gte: now } },
+      ],
     },
-    orderBy: { startAt: "asc" },
-    select: {
-      id: true,
-      title: true,
-      shortDescription: true,
-      startAt: true,
-      endAt: true,
-      pricePerPerson: true,
-      coverImageUrl: true,
-      maxParticipants: true,
-    },
+    _count: { _all: true },
   });
 
-  const out: PublicOrganizerBrochureTrip[] = [];
-  for (const t of trips) {
-    const used = await countActiveSeats(t.id);
-    const spotsLeft = Math.max(0, t.maxParticipants - used);
-    out.push({
-      id: t.id,
-      title: t.title,
-      shortDescription: t.shortDescription,
-      startAt: t.startAt,
-      endAt: t.endAt,
-      pricePerPerson: t.pricePerPerson,
-      coverImageUrl: t.coverImageUrl,
-      spotsLeft,
-    });
-  }
-  return out;
+  const usedMap = new Map(bookingCounts.map((b) => [b.tripId, b._count._all]));
+
+  return trips.map((t) => ({
+    id: t.id,
+    title: t.title,
+    shortDescription: t.shortDescription,
+    startAt: t.startAt,
+    endAt: t.endAt,
+    pricePerPerson: t.pricePerPerson,
+    coverImageUrl: t.coverImageUrl,
+    spotsLeft: Math.max(0, t.maxParticipants - (usedMap.get(t.id) ?? 0)),
+  }));
 }
 
 export async function getPublishedTripById(id: string) {
@@ -203,7 +216,8 @@ export async function getPublishedTripById(id: string) {
   const now = new Date();
   if (trip.bookingClosesAt && trip.bookingClosesAt < now) return null;
 
-  const used = await countActiveSeats(trip.id);
+  // expireStaleBookingsGlobal ทำงานแล้วข้างต้น — ใช้ NoExpire version เพื่อไม่ซ้ำ
+  const used = await countActiveSeatsNoExpire(trip.id, now);
   const spotsLeft = Math.max(0, trip.maxParticipants - used);
 
   const shareCode =

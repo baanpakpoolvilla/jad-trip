@@ -18,18 +18,28 @@ export async function expireStaleBookingsForTrip(tripId: string) {
   });
 }
 
+/**
+ * Expire bookings globally — throttled to at most once per 60 s per process instance.
+ * ป้องกัน write query ซ้ำซ้อนเมื่อหลาย request เข้าพร้อมกัน
+ */
+let _lastGlobalExpire = 0;
+const GLOBAL_EXPIRE_INTERVAL_MS = 60_000;
+
 export async function expireStaleBookingsGlobal() {
-  const now = new Date();
+  const now = Date.now();
+  if (now - _lastGlobalExpire < GLOBAL_EXPIRE_INTERVAL_MS) return;
+  _lastGlobalExpire = now;
+
   await db.booking.updateMany({
     where: {
       status: BookingStatus.PENDING_PAYMENT,
-      expiresAt: { lt: now },
+      expiresAt: { lt: new Date(now) },
     },
     data: { status: BookingStatus.EXPIRED },
   });
 }
 
-/** นับที่ถูกจองแล้ว (รอชำระที่ยังไม่หมดเวลา + ชำระแล้ว) */
+/** นับที่นั่งที่ใช้งานอยู่ (รอชำระที่ยังไม่หมดเวลา + ชำระแล้ว) พร้อม expire per-trip */
 export async function countActiveSeats(tripId: string) {
   await expireStaleBookingsForTrip(tripId);
   const now = new Date();
@@ -38,10 +48,23 @@ export async function countActiveSeats(tripId: string) {
       tripId,
       OR: [
         { status: BookingStatus.CONFIRMED },
-        {
-          status: BookingStatus.PENDING_PAYMENT,
-          expiresAt: { gte: now },
-        },
+        { status: BookingStatus.PENDING_PAYMENT, expiresAt: { gte: now } },
+      ],
+    },
+  });
+}
+
+/**
+ * นับที่นั่งโดยไม่ expire (ใช้หลังจาก expireStaleBookingsGlobal ทำงานแล้ว)
+ * ลด DB call ใน batch operations
+ */
+export async function countActiveSeatsNoExpire(tripId: string, now: Date) {
+  return db.booking.count({
+    where: {
+      tripId,
+      OR: [
+        { status: BookingStatus.CONFIRMED },
+        { status: BookingStatus.PENDING_PAYMENT, expiresAt: { gte: now } },
       ],
     },
   });
