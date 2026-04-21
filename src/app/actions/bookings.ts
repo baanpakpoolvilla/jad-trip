@@ -50,38 +50,50 @@ export async function createBooking(
   const left = await spotsLeft(trip);
   if (left <= 0) return { error: "ที่นั่งเต็มแล้ว" };
 
+  const normalizedPhone = parsed.data.participantPhone.trim().replace(/[\s\-().]/g, "");
+  const normalizedName = parsed.data.participantName.trim().toLowerCase();
+
+  const duplicate = await db.booking.findFirst({
+    where: {
+      tripId: trip.id,
+      status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_PAYMENT] },
+      expiresAt: { gt: new Date() },
+      OR: [
+        { participantPhone: { equals: normalizedPhone, mode: "insensitive" } },
+        { participantName: { equals: normalizedName, mode: "insensitive" } },
+      ],
+    },
+    select: { participantName: true, participantPhone: true, status: true },
+  });
+
+  if (duplicate) {
+    const byPhone =
+      duplicate.participantPhone.replace(/[\s\-().]/g, "") === normalizedPhone;
+    if (byPhone) {
+      return { error: `เบอร์โทรนี้มีการจองทริปนี้อยู่แล้ว (สถานะ: ${duplicate.status === BookingStatus.CONFIRMED ? "ยืนยันแล้ว" : "รอชำระเงิน"})` };
+    }
+    return { error: `ชื่อนี้มีการจองทริปนี้อยู่แล้ว (สถานะ: ${duplicate.status === BookingStatus.CONFIRMED ? "ยืนยันแล้ว" : "รอชำระเงิน"})` };
+  }
+
   const viewToken = randomBytes(24).toString("hex");
   const expiresAt = paymentDeadlineFromNow();
 
-  const [booking] = await db.$transaction([
-    db.booking.create({
-      data: {
-        tripId: trip.id,
-        participantName: parsed.data.participantName.trim(),
-        participantEmail: "",
-        participantPhone: parsed.data.participantPhone.trim(),
-        viewToken,
-        expiresAt,
-        status: BookingStatus.PENDING_PAYMENT,
-      },
-    }),
-    db.notification.create({
-      data: {
-        userId: trip.organizerId,
-        kind: "BOOKING_CREATED",
-        title: "มีผู้จองทริปใหม่ (รอชำระเงิน)",
-        message: `${parsed.data.participantName.trim()} จองทริป "${trip.title}" — รอการชำระเงิน`,
-        href: `/organizer/trips/${trip.id}`,
-      },
-    }),
-  ]);
+  const booking = await db.booking.create({
+    data: {
+      tripId: trip.id,
+      participantName: parsed.data.participantName.trim(),
+      participantEmail: "",
+      participantPhone: parsed.data.participantPhone.trim(),
+      viewToken,
+      expiresAt,
+      status: BookingStatus.PENDING_PAYMENT,
+    },
+  });
 
   revalidatePath("/trips");
   revalidatePath(`/trips/${trip.id}`);
   revalidatePath(`/organizer/trips/${trip.id}`);
   revalidatePath("/organizer");
-  revalidatePath("/organizer/notifications");
-  revalidatePath("/organizer", "layout");
 
   return { ok: true, viewToken: booking.viewToken };
 }

@@ -11,8 +11,6 @@ type Props = {
   expiresAtIso: string;
   price: number;
   tripTitle: string;
-  /** ตั้ง `STRIPE_SECRET_KEY` บนเซิร์ฟเวอร์ — แสดงปุ่มไป Stripe Checkout */
-  stripeCheckoutAvailable: boolean;
   /** data URL ของ QR พร้อมเพย์ — สร้างฝั่งเซิร์ฟเวอร์ */
   promptPayQrDataUrl: string | null;
   /** มีเลขพร้อมเพย์ — ใช้สร้าง QR และตรวจสลิปอัตโนมัติ */
@@ -58,7 +56,6 @@ export function BookingPayPanel({
   expiresAtIso,
   price,
   tripTitle,
-  stripeCheckoutAvailable,
   promptPayQrDataUrl,
   organizerHasPromptPay,
   payoutQrImageUrl,
@@ -70,10 +67,15 @@ export function BookingPayPanel({
   const [slipError, setSlipError] = useState<string | null>(null);
   const [slipBusy, setSlipBusy] = useState(false);
   const [slipPreviewUrl, setSlipPreviewUrl] = useState<string | null>(null);
-  const [stripeError, setStripeError] = useState<string | null>(null);
-  const [stripeBusy, setStripeBusy] = useState(false);
   const [cancelErr, setCancelErr] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [copiedAccount, setCopiedAccount] = useState(false);
+
+  async function copyAccountNumber(text: string) {
+    await navigator.clipboard.writeText(text);
+    setCopiedAccount(true);
+    setTimeout(() => setCopiedAccount(false), 2000);
+  }
 
   const hasTransferExtras = Boolean(
     payoutQrImageUrl?.trim() ||
@@ -92,28 +94,6 @@ export function BookingPayPanel({
       router.refresh();
     }
   }, [secondsLeft, status, router]);
-
-  async function startStripeCheckout() {
-    setStripeError(null);
-    setStripeBusy(true);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ viewToken }),
-      });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok || !data.url) {
-        setStripeError(data.error ?? "สร้างลิงก์ชำระเงินไม่สำเร็จ");
-        setStripeBusy(false);
-        return;
-      }
-      window.location.href = data.url;
-    } catch {
-      setStripeError("เครือข่ายผิดพลาด");
-      setStripeBusy(false);
-    }
-  }
 
   async function verifySlip(file: File) {
     setSlipError(null);
@@ -172,7 +152,7 @@ export function BookingPayPanel({
           {secondsLeft > 0 ? (
             <>
               เหลือเวลาชำระ{" "}
-              <span className="font-mono text-base font-semibold tabular-nums">
+              <span className="font-mono text-base font-semibold tabular-nums" suppressHydrationWarning>
                 {fmt(secondsLeft)}
               </span>
             </>
@@ -195,52 +175,9 @@ export function BookingPayPanel({
               ยอดที่ต้องชำระ ฿{price.toLocaleString("th-TH")}
             </p>
             <p className="mt-1 text-xs text-fg-hint">
-              สแกน QR หรือโอนตามข้อมูลด้านล่าง จากนั้นอัปโหลดสลิป — ระบบตรวจอัตโนมัติผ่าน{" "}
-              <a
-                href="https://document.easyslip.com/th/"
-                className="text-brand hover:text-brand-mid"
-                target="_blank"
-                rel="noreferrer"
-              >
-                EasySlip
-              </a>{" "}
-              เมื่อมีเลขพร้อมเพย์ของผู้จัด
-              {stripeCheckoutAvailable
-                ? " หรือชำระด้วยบัตรผ่าน Stripe ด้านล่าง"
-                : ""}
+              สแกน QR หรือโอนตามข้อมูลด้านล่าง จากนั้นอัปโหลดสลิป
             </p>
           </div>
-
-          {stripeCheckoutAvailable ? (
-            <div className="space-y-2 rounded-lg border border-border bg-surface px-3 py-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-fg-muted">
-                ชำระด้วยบัตร / Apple Pay
-              </p>
-              {stripeError ? <p className="jad-alert-error text-sm">{stripeError}</p> : null}
-              <button
-                type="button"
-                onClick={() => void startStripeCheckout()}
-                disabled={stripeBusy}
-                className="jad-btn-primary h-11 w-full text-sm disabled:opacity-45"
-              >
-                {stripeBusy ? "กำลังเปิด Stripe…" : `ไปชำระ ฿${price.toLocaleString("th-TH")} ด้วย Stripe`}
-              </button>
-              <p className="text-center text-xs text-fg-hint">
-                ค่าธรรมเนียมตาม Stripe · กลับมาหน้านี้หลังชำระเพื่อดูสถานะ
-              </p>
-            </div>
-          ) : null}
-
-          {stripeCheckoutAvailable ? (
-            <div className="relative py-1">
-              <div className="absolute inset-0 flex items-center" aria-hidden>
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-canvas-muted/40 px-2 text-fg-muted">หรือโอนในประเทศ</span>
-              </div>
-            </div>
-          ) : null}
 
           {!hasAnyPaymentChannel ? (
             <p className="rounded-lg border border-warning/30 bg-warning-light px-3 py-2 text-sm text-warning">
@@ -274,10 +211,29 @@ export function BookingPayPanel({
                   </div>
                 ) : null}
                 {payoutBankAccountNumber?.trim() ? (
-                  <div className="flex justify-between gap-4">
+                  <div className="flex items-center justify-between gap-4">
                     <dt className="text-fg-muted">เลขบัญชี</dt>
-                    <dd className="text-right font-mono font-medium tabular-nums text-fg">
-                      {payoutBankAccountNumber.trim()}
+                    <dd className="flex items-center gap-2">
+                      <span className="font-mono font-medium tabular-nums text-fg">
+                        {payoutBankAccountNumber.trim()}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void copyAccountNumber(payoutBankAccountNumber.trim())}
+                        className="shrink-0 rounded-md p-1 text-fg-hint transition-colors hover:bg-canvas hover:text-fg"
+                        aria-label="คัดลอกเลขบัญชี"
+                      >
+                        {copiedAccount ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="size-3.5 text-success" aria-hidden>
+                            <path d="M20 6 9 17l-5-5"/>
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5" aria-hidden>
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                          </svg>
+                        )}
+                      </button>
                     </dd>
                   </div>
                 ) : null}
@@ -356,7 +312,7 @@ export function BookingPayPanel({
             ) : null}
             {!organizerHasPromptPay ? (
               <p className="mt-2 text-xs text-fg-hint">
-                การตรวจสลิปอัตโนมัติต้องมีเลขพร้อมเพย์ของผู้จัด — หากยังไม่มี ให้ส่งสลิปให้ผู้จัดยืนยันด้วยตนเอง
+                ระบบจะตรวจสลิปผ่าน EasySlip (ความถูกต้องของสลิปและจำนวนเงิน) — ผู้จัดจะได้รับแจ้งเตือนโดยอัตโนมัติ
               </p>
             ) : null}
             {slipBusy ? (

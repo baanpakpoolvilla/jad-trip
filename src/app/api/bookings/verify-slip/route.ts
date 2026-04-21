@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { verifyBankSlipBase64 } from "@/lib/easyslip";
-import { slipReceiverMatchesPromptPayId } from "@/lib/slip-receiver-match";
 
 const bodySchema = z.object({
   viewToken: z.string().min(16),
@@ -44,10 +43,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "หมดเวลาชำระเงินแล้ว" }, { status: 400 });
   }
 
-  const payoutId = booking.trip.organizer.payoutPromptPayId?.trim();
-  if (!payoutId) {
+  const organizer = booking.trip.organizer;
+  const hasAnyPayoutChannel =
+    organizer.payoutPromptPayId?.trim() ||
+    organizer.payoutBankAccountNumber?.trim() ||
+    organizer.payoutQrImageUrl?.trim();
+
+  if (!hasAnyPayoutChannel) {
     return NextResponse.json(
-      { error: "ผู้จัดยังไม่ตั้งเลขรับเงินพร้อมเพย์ — โปรดติดต่อผู้จัด" },
+      { error: "ผู้จัดยังไม่ตั้งช่องทางรับเงิน — โปรดติดต่อผู้จัด" },
       { status: 503 },
     );
   }
@@ -96,16 +100,6 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: `จำนวนเงินในสลิปไม่ตรงกับยอดจอง (ต้อง ฿${expectedAmount.toLocaleString("th-TH")})`,
-      },
-      { status: 400 },
-    );
-  }
-
-  if (!slipReceiverMatchesPromptPayId(raw, payoutId)) {
-    return NextResponse.json(
-      {
-        error:
-          "บัญชีผู้รับในสลิปไม่ตรงกับเลขพร้อมเพย์ที่ผู้จัดตั้งไว้ — ตรวจสอบว่าโอนเข้าเลขที่ถูกต้อง",
       },
       { status: 400 },
     );

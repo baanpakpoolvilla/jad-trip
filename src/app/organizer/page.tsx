@@ -83,9 +83,9 @@ export default async function OrganizerDashboardPage() {
   const totalTrips = tripGroups.reduce((s, g) => s + g._count._all, 0);
   const published = countByStatus(tripGroups, TripStatus.PUBLISHED);
   const drafts = countByStatus(tripGroups, TripStatus.DRAFT);
-  const totalBookings = bookingGroups.reduce((s, g) => s + g._count._all, 0);
-  const pendingPay = countByStatus(bookingGroups, BookingStatus.PENDING_PAYMENT);
   const confirmed = countByStatus(bookingGroups, BookingStatus.CONFIRMED);
+  const pendingPay = countByStatus(bookingGroups, BookingStatus.PENDING_PAYMENT);
+  const activeBookings = pendingPay + confirmed;
 
   const displayName = session.user.name?.trim() || "ผู้จัด";
   const brochureShareCode = userRow?.brochureShareCode ?? "";
@@ -125,24 +125,41 @@ export default async function OrganizerDashboardPage() {
         </p>
       </section>
 
-      <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
-        {[
-          { label: "ทริปทั้งหมด", value: totalTrips, href: "/organizer/trips" },
-          { label: "เปิดรับจอง", value: published, href: "/organizer/trips" },
-          { label: "ร่าง", value: drafts, href: "/organizer/trips" },
-          { label: "การจองทั้งหมด", value: totalBookings, href: "/organizer/trips" },
-          { label: "รอชำระเงิน", value: pendingPay, href: "/organizer/trips" },
-          { label: "ชำระแล้ว / จองแล้ว", value: confirmed, href: "/organizer/trips" },
-        ].map((c) => (
-          <Link
-            key={c.label}
-            href={c.href}
-            className="jad-card-interactive block transition-colors"
-          >
-            <p className="text-xs text-fg-muted sm:text-sm">{c.label}</p>
-            <p className="mt-1.5 text-2xl font-semibold tabular-nums text-fg sm:mt-2 sm:text-3xl">{c.value}</p>
-          </Link>
-        ))}
+      <div className="space-y-1.5 sm:space-y-2">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
+          {[
+            { label: "ทริปทั้งหมด", value: totalTrips, href: "/organizer/trips" },
+            { label: "เปิดรับจอง", value: published, href: "/organizer/trips" },
+            { label: "ร่าง", value: drafts, href: "/organizer/trips" },
+          ].map((c) => (
+            <Link
+              key={c.label}
+              href={c.href}
+              className="jad-card-interactive block transition-colors"
+            >
+              <p className="text-xs text-fg-muted sm:text-sm">{c.label}</p>
+              <p className="mt-1.5 text-2xl font-semibold tabular-nums text-fg sm:mt-2 sm:text-3xl">{c.value}</p>
+            </Link>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
+          {[
+            { label: "จองที่ active", value: activeBookings, href: "/organizer/trips", highlight: activeBookings > 0 },
+            { label: "ยืนยันแล้ว", value: confirmed, href: "/organizer/trips", highlight: false },
+          ].map((c) => (
+            <Link
+              key={c.label}
+              href={c.href}
+              className="jad-card-interactive block transition-colors"
+            >
+              <p className="text-xs text-fg-muted sm:text-sm">{c.label}</p>
+              <p className={`mt-1.5 text-2xl font-semibold tabular-nums sm:mt-2 sm:text-3xl ${c.highlight ? "text-brand" : "text-fg"}`}>
+                {c.value}
+              </p>
+            </Link>
+          ))}
+        </div>
+        <p className="text-[11px] text-fg-hint">"จองที่ active" = รอชำระ + ยืนยันแล้ว</p>
       </div>
 
       <section className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">

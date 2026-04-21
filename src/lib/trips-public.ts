@@ -121,6 +121,8 @@ export type PublicOrganizerBrochureTrip = {
   pricePerPerson: number;
   coverImageUrl: string | null;
   spotsLeft: number;
+  destinationName: string;
+  meetPoint: string;
 };
 
 export async function listPublishedTripsForOrganizerBrochure(
@@ -149,6 +151,8 @@ export async function listPublishedTripsForOrganizerBrochure(
         pricePerPerson: true,
         coverImageUrl: true,
         maxParticipants: true,
+        destinationName: true,
+        meetPoint: true,
       },
     }),
   ]);
@@ -181,6 +185,8 @@ export async function listPublishedTripsForOrganizerBrochure(
     pricePerPerson: t.pricePerPerson,
     coverImageUrl: t.coverImageUrl,
     spotsLeft: Math.max(0, t.maxParticipants - (usedMap.get(t.id) ?? 0)),
+    destinationName: t.destinationName,
+    meetPoint: t.meetPoint,
   }));
 }
 
@@ -224,6 +230,68 @@ export async function getPublishedTripById(id: string) {
     trip.shareCode ?? (await assignUniqueShareCodeForTrip(trip.id));
 
   return { trip: { ...trip, shareCode }, spotsLeft };
+}
+
+/** ทริปที่จบแล้วของผู้จัด — แสดงเป็นพอร์ตฟอลิโอในหน้าโปรไฟล์สาธารณะ */
+export type PublicOrganizerPortfolioTrip = {
+  id: string;
+  title: string;
+  shortDescription: string;
+  startAt: Date;
+  endAt: Date;
+  pricePerPerson: number;
+  coverImageUrl: string | null;
+  destinationName: string;
+  meetPoint: string;
+  confirmedCount: number;
+};
+
+export async function listPastTripsForOrganizerPortfolio(
+  organizerUserId: string,
+): Promise<PublicOrganizerPortfolioTrip[]> {
+  const now = new Date();
+  const organizerId = organizerUserId.trim();
+  if (!organizerId) return [];
+
+  const trips = await db.trip.findMany({
+    where: {
+      organizerId,
+      status: { in: [TripStatus.PUBLISHED, TripStatus.CLOSED] },
+      endAt: { lt: now },
+    },
+    orderBy: { endAt: "desc" },
+    take: 12,
+    select: {
+      id: true,
+      title: true,
+      shortDescription: true,
+      startAt: true,
+      endAt: true,
+      pricePerPerson: true,
+      coverImageUrl: true,
+      destinationName: true,
+      meetPoint: true,
+    },
+  });
+
+  if (trips.length === 0) return [];
+
+  const tripIds = trips.map((t) => t.id);
+  const confirmedCounts = await db.booking.groupBy({
+    by: ["tripId"],
+    where: {
+      tripId: { in: tripIds },
+      status: BookingStatus.CONFIRMED,
+    },
+    _count: { _all: true },
+  });
+
+  const countMap = new Map(confirmedCounts.map((b) => [b.tripId, b._count._all]));
+
+  return trips.map((t) => ({
+    ...t,
+    confirmedCount: countMap.get(t.id) ?? 0,
+  }));
 }
 
 /** หา id ทริปจากลิงก์ย่อ (ทริปเผยแพร่ + ยังไม่ปิดรับจองตามเวลา — แสดงหน้ารายละเอียดได้แม้ที่นั่งเต็ม) */

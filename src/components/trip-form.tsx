@@ -255,6 +255,7 @@ export function TripForm(props: Props) {
           pricePerPerson: 1500,
           bookingClosesAt: "",
           policyNotes: "",
+          groupUrl: "",
           ...(demoRest ?? {}),
         }
       : {
@@ -284,6 +285,7 @@ export function TripForm(props: Props) {
             ? toDatetimeLocalValueBangkok(props.trip.bookingClosesAt)
             : "",
           policyNotes: props.trip.policyNotes ?? "",
+          groupUrl: props.trip.groupUrl ?? "",
         };
 
   const locked = props.mode === "edit" && props.locked;
@@ -1015,6 +1017,21 @@ export function TripForm(props: Props) {
             placeholder="เขียนให้ผู้จองอ่านแล้วเข้าใจสิทธิของตน"
             defaultValue={defaults.policyNotes}
             className="jad-input min-h-[88px] resize-y"
+          />
+        </FieldRow>
+        <FieldRow
+          label="ลิงก์กลุ่มทริป"
+          hint="แสดงให้ผู้จองที่ชำระเงินแล้วเท่านั้น — เช่น LINE กลุ่ม หรือ Facebook Group"
+          optional
+          controlId={`${fid}-group-url`}
+        >
+          <input
+            id={`${fid}-group-url`}
+            type="url"
+            name="groupUrl"
+            placeholder="https://line.me/ti/g/..."
+            defaultValue={defaults.groupUrl}
+            className="jad-input"
           />
         </FieldRow>
       </FormSection>

@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { UserRound } from "lucide-react";
 import { OrganizerPublicSocialLinks } from "@/components/organizer-public-social-links";
+import { PublicOrganizerPortfolioTrips } from "@/components/public-organizer-portfolio-trips";
 import {
   getPublicOrganizerProfileByBrochureShareCode,
+  listPastTripsForOrganizerPortfolio,
   organizerTripsBrochurePath,
 } from "@/lib/trips-public";
 
@@ -17,6 +19,7 @@ export default async function PublicOrganizerProfilePage({ params }: Props) {
   if (!profile) notFound();
 
   const tripsHref = organizerTripsBrochurePath(profile.id);
+  const pastTrips = await listPastTripsForOrganizerPortfolio(profile.id);
   const initial = profile.name.trim().charAt(0) || "?";
 
   return (
@@ -79,6 +82,12 @@ export default async function PublicOrganizerProfilePage({ params }: Props) {
           รายการทริปทั้งหมด
         </Link>
       </div>
+
+      {pastTrips.length > 0 ? (
+        <div className="mx-auto w-full max-w-2xl">
+          <PublicOrganizerPortfolioTrips trips={pastTrips} />
+        </div>
+      ) : null}
 
       <p className="text-center text-xs text-fg-hint">
         หน้านี้เป็นข้อมูลสาธารณะเท่านั้น — ไม่แสดงอีเมลหรือเบอร์โทร

@@ -1,7 +1,22 @@
+export type EasyslipPartyAccount = {
+  name?: { th?: string; en?: string };
+  bank?: { type?: string; account?: string | null };
+  /** EasySlip masks this value in responses — do not use for direct comparison */
+  proxy?: { type?: string; account?: string | null };
+};
+
+export type EasyslipParty = {
+  bank?: { id?: string; name?: string; short?: string };
+  account?: EasyslipPartyAccount;
+};
+
 export type EasyslipRawSlip = {
   transRef?: string;
-  amount?: { amount?: number };
-  receiver?: unknown;
+  date?: string;
+  amount?: { amount?: number; local?: { amount?: number; currency?: string } };
+  fee?: number;
+  sender?: EasyslipParty;
+  receiver?: EasyslipParty & { merchantId?: string | null };
 };
 
 export type EasyslipVerifyData = {

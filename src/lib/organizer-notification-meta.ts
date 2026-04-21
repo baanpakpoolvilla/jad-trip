@@ -4,12 +4,8 @@ export function notificationKindMeta(kind: string): {
   shortHint: string;
 } {
   switch (kind) {
-    case "BOOKING_CREATED":
-      return { label: "การจองใหม่", shortHint: "รอชำระเงิน" };
     case "BOOKING_PAID":
       return { label: "ชำระผ่านสลิป", shortHint: "ตรวจสลิปอัตโนมัติ" };
-    case "BOOKING_PAID_STRIPE":
-      return { label: "ชำระผ่าน Stripe", shortHint: "บัตร / Apple Pay ฯลฯ" };
     default:
       return { label: "แจ้งเตือน", shortHint: kind };
   }

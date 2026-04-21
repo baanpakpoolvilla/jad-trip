@@ -110,6 +110,8 @@ model Trip {
   pricePerPerson   Int
   bookingClosesAt  DateTime?
   policyNotes      String      @default("")
+  /// ลิงก์กลุ่ม (LINE, Facebook Group ฯลฯ) สำหรับผู้จองที่ยืนยันแล้ว
+  groupUrl         String?
   /// URL รูปหน้าปก (https://…)
   coverImageUrl    String?
   /// URL รูปเพิ่มเติม ทีละบรรทัด

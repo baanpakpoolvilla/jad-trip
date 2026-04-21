@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, CalendarOff, MapPin } from "lucide-react";
+import { ArrowRight, CalendarDays, CalendarOff, MapPin, Navigation2 } from "lucide-react";
 import { formatBangkokTripDates } from "@/lib/datetime";
 import type { PublicOrganizerBrochureTrip } from "@/lib/trips-public";
 
@@ -53,50 +53,56 @@ export function PublicOrganizerBrochureTrips({ trips }: { trips: PublicOrganizer
             </div>
 
             <div className="mt-3 flex min-h-0 min-w-0 flex-1 flex-col gap-2">
-              <div className="min-w-0">
+              <div className="flex items-start justify-between gap-2">
                 <h2 className="line-clamp-2 text-[0.9375rem] font-semibold leading-snug tracking-tight text-fg transition-colors group-hover:text-brand sm:text-base">
                   {t.title}
                 </h2>
-                <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-fg-muted sm:text-[13px] sm:leading-relaxed">
-                  {t.shortDescription}
-                </p>
+                <span
+                  className={
+                    t.spotsLeft > 0
+                      ? "jad-badge-success mt-0.5 shrink-0 px-2 py-0.5 text-[11px] font-semibold leading-none"
+                      : "jad-badge-neutral mt-0.5 shrink-0 px-2 py-0.5 text-[11px] font-semibold leading-none"
+                  }
+                >
+                  {t.spotsLeft > 0 ? `เหลือ ${t.spotsLeft} ที่` : "เต็ม"}
+                </span>
               </div>
 
-              <div className="flex items-start gap-2.5 rounded-lg border border-border/70 bg-canvas-muted/60 px-2.5 py-2 sm:gap-3 sm:px-3 sm:py-2.5">
-                <CalendarDays
-                  className="mt-0.5 size-4 shrink-0 text-brand-mid opacity-90 sm:size-4.5"
-                  strokeWidth={1.5}
-                  aria-hidden
-                />
-                <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-fg-hint sm:text-[11px]">
-                    วันทริป
-                  </p>
-                  <p className="mt-0.5 text-xs font-medium leading-snug text-fg tabular-nums sm:text-sm">
-                    {formatBangkokTripDates(t.startAt, t.endAt)}
-                  </p>
-                </div>
+              <p className="line-clamp-2 text-xs leading-relaxed text-fg-muted sm:text-[13px] sm:leading-relaxed">
+                {t.shortDescription}
+              </p>
+
+              {/* meta row: date · location */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-muted">
+                <span className="flex items-center gap-1">
+                  <CalendarDays className="size-3.5 shrink-0 text-brand-mid/70" strokeWidth={1.5} aria-hidden />
+                  <span className="tabular-nums">{formatBangkokTripDates(t.startAt, t.endAt)}</span>
+                </span>
+                {(t.destinationName?.trim() || t.meetPoint?.trim()) ? (
+                  <>
+                    <span className="text-border" aria-hidden>·</span>
+                    <span className="flex min-w-0 items-center gap-1">
+                      <Navigation2 className="size-3.5 shrink-0 text-brand-mid/70" strokeWidth={1.5} aria-hidden />
+                      <span className="line-clamp-1">
+                        {t.destinationName?.trim() ||
+                          (t.meetPoint?.trim().split(/\s*[—–-]\s*/)[0]?.trim() ?? "")}
+                      </span>
+                    </span>
+                  </>
+                ) : null}
               </div>
             </div>
 
-            <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/70 pt-3">
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-fg-hint sm:text-[11px]">
-                  ราคา
-                </p>
-                <p className="mt-0.5 text-lg font-bold tabular-nums leading-none text-brand sm:text-xl">
+            {/* price footer */}
+            <div className="mt-auto flex items-center justify-between gap-2 border-t border-border/70 pt-3">
+              <p className="tabular-nums leading-none">
+                <span className="text-xl font-bold text-brand sm:text-2xl">
                   ฿{t.pricePerPerson.toLocaleString("th-TH")}
-                  <span className="ml-1 text-xs font-medium text-fg-muted sm:text-sm">/ คน</span>
-                </p>
-              </div>
-              <span
-                className={
-                  t.spotsLeft > 0
-                    ? "jad-badge-success shrink-0 px-2.5 py-1 text-[11px] font-semibold leading-none sm:text-xs"
-                    : "jad-badge-neutral shrink-0 px-2.5 py-1 text-[11px] font-semibold leading-none sm:text-xs"
-                }
-              >
-                {t.spotsLeft > 0 ? `เหลือ ${t.spotsLeft} ที่` : "เต็ม"}
+                </span>
+                <span className="ml-1 text-xs font-medium text-fg-muted">/ คน</span>
+              </p>
+              <span className="flex items-center gap-1 text-xs font-medium text-brand opacity-0 transition-opacity group-hover:opacity-100">
+                จองเลย <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden />
               </span>
             </div>
           </Link>

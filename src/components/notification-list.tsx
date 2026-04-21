@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Banknote, Bell, CreditCard, Sparkles } from "lucide-react";
+import { Banknote, Bell, Sparkles } from "lucide-react";
 import {
   markAllNotificationsRead,
   markNotificationRead,
@@ -40,8 +40,6 @@ function relativePastTh(iso: string): string | null {
 
 function KindIcon({ kind }: { kind: string }) {
   switch (kind) {
-    case "BOOKING_PAID_STRIPE":
-      return <CreditCard className="size-5 shrink-0 text-brand" strokeWidth={1.5} aria-hidden />;
     case "BOOKING_PAID":
       return <Banknote className="size-5 shrink-0 text-brand" strokeWidth={1.5} aria-hidden />;
     default:
@@ -124,7 +122,7 @@ export function NotificationList({
           <div className="space-y-2">
             <p className="font-medium text-fg">ยังไม่มีการแจ้งเตือน</p>
             <p className="mx-auto max-w-md text-sm leading-relaxed text-fg-muted">
-              เมื่อมีผู้จองชำระเงินสำเร็จ (ผ่านสลิป PromptPay หรือ Stripe) ระบบจะสร้างรายการที่นี่
+              เมื่อมีผู้จองชำระเงินสำเร็จ (ผ่านสลิป PromptPay) ระบบจะสร้างรายการที่นี่
               และแสดงจำนวนยังไม่อ่านบนเมนูด้านข้าง
             </p>
           </div>
