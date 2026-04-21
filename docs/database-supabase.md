@@ -34,10 +34,18 @@ postgresql://postgres:<PASSWORD>@db.<PROJECT-REF>.supabase.co:5432/postgres?sche
 
 ดูตัวอย่างใน `.env.example` — ขั้นต่ำต้องมีทั้งสองตัวแปร:
 
-| ตัวแปร | บทบาท |
-|--------|--------|
-| `DATABASE_URL` | แอปรันต่อ DB (local ใช้ direct ก็ได้) |
-| `DIRECT_URL` | **ต้องเป็น direct** เสมอ — ใช้ตอน `prisma db push` / migrate |
+### ถ้าเชื่อม Supabase ผ่าน Vercel (ได้ตัวแปร `POSTGRES_*` อัตโนมัติ)
+
+การติดตั้งแบบนี้มักสร้าง `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING` ฯลฯ แต่ **Prisma ใน repo นี้อ่านเฉพาะ `DATABASE_URL` และ `DIRECT_URL`** (ตาม `prisma/schema.prisma`) ดังนั้นต้องเพิ่มบน Vercel อีกสองตัว (หรือแก้ชื่อให้ตรง — แนะนำ **เพิ่ม** เพื่อไม่กระทบ integration):
+
+| ตัวแปรที่ต้องมีในแอป (Prisma) | แหล่งค่าที่ใช้บ่อยจาก integration |
+|------------------------------|-------------------------------------|
+| **`DATABASE_URL`** | ค่าเดียวกับ **pooler / transaction** (มักตรงกับ `POSTGRES_PRISMA_URL` — พอร์ต **6543**, มี `pgbouncer=true`) |
+| **`DIRECT_URL`** | **URI แบบ Direct** จาก Supabase Dashboard → Database → Connection string → โฮสต์ **`db.<project-ref>.supabase.co`** พอร์ต **5432** (ไม่ใช่แค่ชื่อตัวแปร `POSTGRES_*` ถ้ามันยังชี้ pooler อย่างเดียว) |
+
+รหัสผ่านใน URI ถ้ามีอักขระพิเศษ (เช่น `@`) ต้อง **เข้ารหัสแบบ URL** เป็น `%40` ในสตริง
+
+หลังตั้งค่าแล้ว จากเครื่อง local ให้รัน `npx prisma db push` โดยตั้ง `DATABASE_URL` และ `DIRECT_URL` ชี้ไปโปรเจกต์เดียวกัน จนกว่าตารางจะครบ แล้วค่อยทดสอบลงทะเบียนบน production
 
 **Local ใช้แค่ direct:** ให้ `DATABASE_URL` กับ `DIRECT_URL` **เป็นสตริงเดียวกัน** (แบบ direct 5432) ก็พอ
 

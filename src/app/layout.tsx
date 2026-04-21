@@ -16,10 +16,35 @@ const inter = Inter({
   display: "swap",
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://sayhitrip.com";
+const SITE_NAME = "Say Hi Trip";
+const DEFAULT_DESCRIPTION =
+  "แพลตฟอร์มจัดทริปกลุ่มแบบอบอุ่น — นำเสนอทริป รับจอง ตามสถานะชำระเงิน และส่งลิงก์ให้เพื่อนหรือลูกค้าได้ในที่เดียว";
+
 export const metadata: Metadata = {
-  title: "Just Trip — จัดทริปแล้วลุยเลย",
-  description:
-    "เครื่องมือสำหรับผู้จัดกลุ่มทริป — นำเสนอทริป รับจอง ตามสถานะชำระเงิน และแชร์ลิงก์สาธารณะให้ลูกค้าได้ในที่เดียว",
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: `${SITE_NAME} — ส่ง Trip ให้ทุกทริป`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: DEFAULT_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    locale: "th_TH",
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — ส่ง Trip ให้ทุกทริป`,
+    description: DEFAULT_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — ส่ง Trip ให้ทุกทริป`,
+    description: DEFAULT_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export const viewport: Viewport = {

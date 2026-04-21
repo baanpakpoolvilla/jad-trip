@@ -15,31 +15,31 @@ export const dynamic = "force-dynamic";
 
 const benefits = [
   {
-    title: "แบรนด์คุณ ลิงก์คุณ",
-    body: "ลิงก์ไปหน้ารวมทริปของคุณหรือทริปแต่ละเที่ยว — ลูกค้าเห็นเฉพาะคุณ ไม่ไปปะปนกับทริปของคนอื่นในตลาดกลาง",
+    title: "ทริปของคุณ ลิงก์ของคุณ",
+    body: "ส่งลิงก์ตรงถึงกลุ่มเพื่อนหรือลูกค้า — ทุกคนเห็นแค่ทริปของคุณ ไม่ปะปนกับทริปของคนอื่นในตลาดกลาง",
     icon: Megaphone,
   },
   {
-    title: "จอง ชำระ อัปเดต ในที่เดียว",
-    body: "ตั้งราคา เปิดรับจอง รองรับ QR / แนบสลิป หรือช่องทางที่คุณใช้อยู่ — ลดงานไล่ตามทีละเคส",
+    title: "จอง ชำระ อัปเดต ครบในที่เดียว",
+    body: "ตั้งราคา เปิดรับจอง รองรับ QR / แนบสลิป หรือช่องทางที่คุณใช้อยู่ — ไม่ต้องไล่ตามทีละแชต",
     icon: CreditCard,
   },
   {
-    title: "แจ้งเตือนชัดเจน",
-    body: "สถานะการจองและการชำระอยู่ในที่เดียวสำหรับคุณ — ลดความคลาดเคลื่อนก่อนวันเดินทาง",
+    title: "ทุกคนรู้สถานะชัดเจน",
+    body: "สถานะการจองและการชำระรวมอยู่ในที่เดียว — ลดข้อสงสัย ลดความวุ่นวาย ก่อนวันออกเดินทาง",
     icon: Bell,
   },
   {
-    title: "พร้อมนำไปโปรโมต",
-    body: "คัดลอกลิงก์ไปใช้บน Facebook LINE หรือใบปลิว — หน้าลูกค้าโฟกัสที่ทริป อ่านสบายบนมือถือ",
+    title: "แชร์ได้ทันที ดูสวยทุกหน้าจอ",
+    body: "คัดลอกลิงก์ไปแปะบน Facebook LINE หรือในกลุ่มแชต — หน้าทริปโฟกัสเนื้อหา อ่านง่ายบนมือถือ",
     icon: Share2,
   },
 ] as const;
 
 const steps = [
-  { n: "1", title: "สมัครเป็นผู้จัด", body: "สร้างบัญชีแล้วเข้าแดชบอร์ดเพื่อจัดการทริปของคุณ" },
+  { n: "1", title: "สมัครเป็นผู้จัด", body: "สร้างบัญชีแล้ว Say Hi กับแดชบอร์ดจัดการทริปของคุณได้เลย" },
   { n: "2", title: "สร้างทริปและเปิดรับจอง", body: "กรอกรายละเอียด รูป และช่องทางชำระตามที่คุณใช้จริง" },
-  { n: "3", title: "ส่งลิงก์ให้ลูกค้า", body: "ลูกค้าเปิดดูและจองได้โดยไม่ต้องล็อกอิน ตามการตั้งค่าที่คุณเปิดไว้" },
+  { n: "3", title: "ส่ง Trip ให้ทุกคนในกลุ่ม", body: "แชร์ลิงก์ให้เพื่อนหรือลูกค้า — เปิดดูและจองได้ทันทีโดยไม่ต้องล็อกอิน" },
 ] as const;
 
 export default async function HomePage() {
@@ -55,30 +55,30 @@ export default async function HomePage() {
         <div className="flex flex-wrap items-center gap-2">
           <span className="jad-badge-accent text-[11px] font-semibold tracking-wide">สำหรับผู้จัดกลุ่มทริป</span>
           <span className="text-[11px] font-medium tracking-widest text-white/55">
-            Just Trip
+            Say Hi Trip
           </span>
         </div>
         <h1
           id="hero-heading"
           className="mt-4 text-[2rem] font-bold leading-tight tracking-tight text-white sm:text-[2.75rem] sm:leading-[1.12]"
         >
-          หนึ่งลิงก์สำหรับ{" "}
-          <span className="text-accent">รับจองทริป</span>
+          ส่ง Trip ให้กลุ่มเพื่อน{" "}
+          <span className="text-accent">พร้อมรับจอง</span>
           <br className="hidden sm:block" />
-          นำไปโปรโมตได้ทันที
+          ได้ในลิงก์เดียว
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-[1.75] text-white/85 sm:text-[1.0625rem]">
-          Just Trip ช่วยให้คุณนำเสนอทริป รับจอง และตามสถานะการชำระเป็นระบบ — ใช้กับโพสต์ ใบปลิว
-          หรือแชตได้เลย โดยลูกค้าเห็นแบรนด์และทริปของคุณเป็นหลัก
+          Say Hi Trip ช่วยให้คุณนำเสนอทริป เปิดรับจอง และติดตามสถานะชำระเป็นระบบ — แชร์ลิงก์ในโพสต์
+          ใบปลิว หรือกลุ่มแชตได้ทันที ลูกค้าเห็นทริปของคุณชัดเจน ไม่ปะปนกับใคร
         </p>
         <ul className="mt-6 flex max-w-2xl flex-col gap-2.5 text-sm text-white/90 sm:text-[15px]">
           <li className="flex gap-2.5">
             <Sparkles className="mt-0.5 size-4 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
-            <span>ไม่ใช่ตลาดรวมทริป — คุณส่งลิงก์ของคุณเองไปหากลุ่มเป้าหมายโดยตรง</span>
+            <span>ไม่ใช่ตลาดรวมทริป — คุณส่งลิงก์ของคุณตรงถึงกลุ่มเป้าหมายเอง</span>
           </li>
           <li className="flex gap-2.5">
             <BadgeCheck className="mt-0.5 size-4 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
-            <span>หน้าสำหรับลูกค้าเน้นอ่านทริป ไม่โชว์เมนูจัดการหลังบ้าน</span>
+            <span>หน้าลูกค้าโฟกัสทริป ไม่มีเมนูจัดการ อ่านง่าย ตัดสินใจไว</span>
           </li>
         </ul>
         <div className="mt-8 flex max-w-xl flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -93,8 +93,8 @@ export default async function HomePage() {
 
       <section aria-labelledby="pitch-heading" className="jad-card border-brand-mid/15 bg-linear-to-br from-brand-light/80 to-surface py-6 sm:p-7">
         <p id="pitch-heading" className="text-center text-sm font-semibold leading-relaxed text-fg sm:text-base">
-          โฟกัสกลุ่มลูกค้าของคุณเอง — สร้างความน่าเชื่อถือด้วยหน้าทริปที่อ่านแล้วเข้าใจ
-          และลดคำถามซ้ำในแชทก่อนวันออกเดินทาง
+          ส่งลิงก์ทริปให้เพื่อนหรือลูกค้า — ทุกคน Say Hi กับทริปของคุณได้ทันที
+          และลดคำถามซ้ำในกลุ่มแชตก่อนวันออกเดินทาง
         </p>
       </section>
 
@@ -102,10 +102,10 @@ export default async function HomePage() {
         <header className="jad-page-header text-center sm:text-left">
           <p className="jad-section-label">เหมาะกับงานจัดกลุ่ม</p>
           <h2 id="benefits-heading" className="jad-page-title">
-            สิ่งที่ช่วยให้ลูกค้าตัดสินใจเร็วขึ้น
+            ทำไมกลุ่มถึงชอบ Say Hi Trip
           </h2>
           <p className="mx-auto max-w-2xl text-sm leading-relaxed text-fg-muted sm:mx-0 sm:text-base">
-            ไม่จำเป็นต้องมีเว็บไซต์ใหญ่ — มีลิงก์เดียวก็พร้อมรับจองและนำไปโปรโมตได้
+            ไม่ต้องมีเว็บไซต์ใหญ่ — มีลิงก์เดียวก็พร้อมรับจอง ส่งต่อ และโปรโมตทริปได้เลย
           </p>
         </header>
         <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
@@ -129,7 +129,7 @@ export default async function HomePage() {
         <header className="jad-page-header">
           <p className="jad-section-label">เริ่มใน 3 ขั้น</p>
           <h2 id="steps-heading" className="jad-page-title">
-            จากไอเดียทริป ถึงลิงก์พร้อมใช้งาน
+            จากไอเดียทริป ถึงลิงก์พร้อม Say Hi
           </h2>
         </header>
         <ol className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
@@ -152,7 +152,7 @@ export default async function HomePage() {
         <header className="jad-page-header">
           <p className="jad-section-label">ลิงก์สาธารณะ</p>
           <h2 id="link-heading" className="jad-page-title">
-            ส่งต่อแล้วลูกค้าเข้าใจทันที
+            Say Hi แล้วลูกค้าเข้าใจทันที
           </h2>
           <p className="max-w-xl text-sm leading-relaxed text-fg-muted sm:text-base">
             ลิงก์รายการทริปของคุณมีได้ทั้งแบบสั้น{" "}
@@ -192,10 +192,10 @@ export default async function HomePage() {
         className="rounded-2xl border border-brand-mid/20 bg-linear-to-br from-brand via-brand-mid to-brand-dark px-6 py-10 text-white sm:px-10 sm:py-12"
       >
         <h2 id="cta-heading" className="text-xl font-bold tracking-tight sm:text-2xl">
-          ให้ทริปถัดไปของคุณโดดเด่นบนฟีด
+          พร้อม Say Hi ให้ทริปถัดไปหรือยัง?
         </h2>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
-          สมัครเป็นผู้จัด สร้างทริปแรก แล้วคัดลอกลิงก์ไปใช้ในโพสต์หรือแคมเปญได้ทันที
+          สมัครเป็นผู้จัด สร้างทริปแรก แล้วส่ง Trip ให้เพื่อนหรือลูกค้าของคุณได้เลยวันนี้
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link

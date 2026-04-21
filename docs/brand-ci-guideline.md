@@ -1,4 +1,4 @@
-# justtrip — Brand & CI Guideline
+# Say Hi Trip — Brand & CI Guideline
 
 > สำหรับใช้เป็น reference ในการออกแบบ UI, เว็บ, และสื่อต่างๆ
 
@@ -6,11 +6,12 @@
 
 ## 1. Brand Concept
 
-**ชื่อ:** justtrip  
-**Tagline:** จัดทริปแล้วลุยเลย  
-**Positioning:** แพลตฟอร์มจัดทริปกลุ่มแบบรวดเร็ว — ตั้งทริป เปิดรับจอง เก็บเงิน และอัปเดตสถานะให้ครบในที่เดียว แล้วออกเดินทางได้จริง  
-**Tone of voice:** ตรง กระชับ กล้าเคลื่อนไหว ไม่โฆษณาเกินจริง เหมือนเพื่อนที่ชวนไปทริปแล้วลงมือทำเลย  
-**Brand personality:** Ready-to-go trip buddy — มั่นใจ กระฉับ รู้ว่าคนจัดทริปต้องการความเร็วแค่ไหน
+**ชื่อ:** Say Hi Trip  
+**โดเมน:** sayhitrip.com  
+**Tagline:** ส่ง Trip ให้ทุกทริป  
+**Positioning:** แพลตฟอร์มจัดทริปกลุ่มแบบอบอุ่นและเป็นมิตร — ตั้งทริป เปิดรับจอง เก็บเงิน ส่งลิงก์ให้เพื่อนหรือลูกค้าในทีเดียว แล้วออกเดินทางพร้อมกัน  
+**Tone of voice:** อบอุ่น ทักทายง่าย ใกล้ชิด ไม่ทางการ เหมือนชวนเพื่อนไปเที่ยวแบบที่วางแผนมาดีแล้ว  
+**Brand personality:** Friendly Trip Host — อบอุ่น กระตือรือร้น รู้ว่าการจัดทริปกลุ่มต้องการความไว้ใจ ความง่าย และการสื่อสารที่ชัดเจน
 
 ---
 
@@ -358,7 +359,7 @@ Icon Container — Accent
 ## 12. Logo Usage
 
 ```
-Logo text: justtrip (ใช้ตัวพิมพ์เล็กตามชื่อแบรนด์; บรรทัดรองเป็น tagline ภาษาไทยได้)
+Logo text: Say Hi Trip (ใช้ตัวพิมพ์แบบ Title Case ตามชื่อแบรนด์; บรรทัดรองเป็น tagline ภาษาไทยได้)
 Font:      Noto Sans Thai, weight 700
 Color (light bg): #1E4D3A
 Color (dark bg):  #FFFFFF
@@ -459,5 +460,5 @@ Clear space: 1x logo height รอบทุกด้าน
 
 ---
 
-*justtrip Brand CI v2.0 — อัปเดตล่าสุด เมษายน 2569*  
-*เปลี่ยนแปลงจาก v1.0: เพิ่ม accent color, gradient system, hero spec, shadow system, icon pairing guide*
+*Say Hi Trip Brand CI v2.1 — อัปเดตล่าสุด เมษายน 2569*  
+*เปลี่ยนแปลงจาก v2.0: รีแบรนด์เป็น Say Hi Trip, โดเมน sayhitrip.com, Tagline ใหม่ "ส่ง Trip ให้ทุกทริป"*

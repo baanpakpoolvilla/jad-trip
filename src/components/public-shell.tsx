@@ -74,8 +74,8 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
       {/* Footer — structured layout */}
       <footer className="mt-auto border-t border-border bg-surface py-5 sm:py-8">
         <div className="jad-container flex flex-col items-center gap-1 px-3 sm:flex-row sm:justify-between sm:gap-1.5 sm:px-6">
-          <p className="text-sm font-semibold text-fg-muted">Just Trip</p>
-          <p className="text-xs text-fg-hint">จัดทริปแล้วลุยเลย</p>
+          <p className="text-sm font-semibold text-fg-muted">Say Hi Trip</p>
+          <p className="text-xs text-fg-hint">ส่ง Trip ให้ทุกคน</p>
         </div>
       </footer>
     </div>

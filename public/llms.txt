@@ -1,0 +1,82 @@
+# Say Hi Trip
+
+> แพลตฟอร์มจัดทริปกลุ่มแบบอบอุ่น สำหรับผู้จัดทริปที่ต้องการตั้งทริป เปิดรับจอง เก็บเงิน และส่งลิงก์ให้เพื่อนหรือลูกค้าได้ในที่เดียว
+> Domain: sayhitrip.com | Tagline: ส่ง Trip ให้ทุกทริป
+
+## What this project does
+
+Say Hi Trip is a **group trip organizer platform** — NOT a trip marketplace. Organizers publish their own trips and share private links directly with their own audience. The platform handles bookings, payments, and status tracking end-to-end.
+
+Three user roles:
+
+- **Organizer** — Creates/manages trips, sets pricing and capacity, manages bookings, tracks payments
+- **Booker (public)** — Views a shared trip link, reserves seats, pays via QR/bank transfer slip or Stripe card
+- **Admin** — Full platform management (users, trips, bookings)
+
+## Tech stack
+
+- **Framework**: Next.js 16 App Router (TypeScript, React 19)
+- **Database**: PostgreSQL via Prisma ORM (Supabase recommended, Docker supported)
+- **Auth**: NextAuth (Auth.js) v5 beta — email/password sessions
+- **Payments**: Stripe (checkout sessions) + EasySlip (Thai bank transfer slip verification)
+- **Storage**: Supabase Storage for trip images (optional)
+- **Email**: SMTP (password reset)
+- **Deployment**: Vercel (recommended), Docker
+
+## Public routes (no login required)
+
+- `GET /` — Marketing landing page
+- `GET /register` — Organizer sign-up
+- `GET /trips?o={organizerId}` — Public trip listing for a specific organizer
+- `GET /o/{shareCode}` — Short link → redirects to organizer trip listing (`/trips?o=…`)
+- `GET /o/{shareCode}/profile` — Organizer public profile (bio, social links)
+- `GET /trips/{id}` — Trip detail (title, description, dates, price, capacity, gallery, meet point, itinerary, booking CTA)
+- `GET /t/{shareCode}` — Short trip link → redirects to `/trips/{id}`
+- `GET /trips/{id}/book` — Booking form (name, email, phone, seat selection, payment method)
+- `GET /bookings/{token}` — Booking status page (for bookers)
+
+## Authenticated routes
+
+- `GET /organizer` — Organizer dashboard (trip list, booking management, payment tracking)
+- `GET /organizer/trips/new` — Create new trip
+- `GET /organizer/trips/{id}/edit` — Edit trip
+- `GET /organizer/profile` — Organizer public profile settings
+- `GET /organizer/payments` — Payment/payout overview
+- `GET /admin` — Admin panel (all users, all trips, all bookings)
+
+## Key environment variables
+
+- `DATABASE_URL` — PostgreSQL connection string (pooled)
+- `DIRECT_URL` — PostgreSQL direct connection (for Prisma migrations)
+- `AUTH_SECRET` — NextAuth secret (generate with `openssl rand -base64 32`)
+- `NEXT_PUBLIC_APP_URL` — Public URL e.g. `https://sayhitrip.com`
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — Stripe payments
+- `EASYSLIP_API_KEY` — Thai bank transfer slip verification
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — Optional Supabase auth/storage
+
+## Project documentation
+
+- Brand & CI: docs/brand-ci-guideline.md
+- Vercel deployment: docs/deployment-vercel.md
+- Supabase database setup: docs/database-supabase.md
+- Demo accounts for testing: docs/demo-accounts.md
+
+## Source layout
+
+```
+src/
+  app/
+    (site)/         — Public-facing pages (layout uses PublicShell)
+      page.tsx      — Landing page
+      login/        — Auth pages
+      register/
+      trips/[id]/   — Trip detail (public)
+      o/[shareCode]/ — Organizer short link
+      t/[shareCode]/ — Trip short link
+    organizer/      — Organizer dashboard (auth required)
+    admin/          — Admin panel (auth required)
+    api/            — API routes (auth, checkout, stripe webhook, etc.)
+  components/       — Shared UI components
+  lib/              — Domain logic (trips, bookings, payments, mail, etc.)
+  utils/supabase/   — Supabase SSR helpers
+```

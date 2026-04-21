@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { LoginForm } from "@/components/login-form";
+
+export const metadata: Metadata = {
+  title: "เข้าสู่ระบบ",
+  robots: { index: false, follow: false },
+};
 
 type Props = { searchParams: Promise<{ reset?: string | string[] }> };
 

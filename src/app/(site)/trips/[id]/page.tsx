@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin } from "lucide-react";
 import {
@@ -23,9 +25,43 @@ export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ id: string }> };
 
+const fetchTripData = cache(getPublishedTripById);
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const data = await fetchTripData(id);
+  if (!data) return {};
+
+  const { trip } = data;
+  const title = trip.title;
+  const description =
+    trip.shortDescription?.trim() ||
+    (trip.description?.replace(/<[^>]*>/g, "").slice(0, 155) ?? "");
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      ...(trip.coverImageUrl ? { images: [{ url: trip.coverImageUrl, alt: title }] } : {}),
+    },
+    twitter: {
+      card: trip.coverImageUrl ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(trip.coverImageUrl ? { images: [trip.coverImageUrl] } : {}),
+    },
+    alternates: {
+      canonical: `/trips/${id}`,
+    },
+  };
+}
+
 export default async function TripDetailPage({ params }: Props) {
   const { id } = await params;
-  const data = await getPublishedTripById(id);
+  const data = await fetchTripData(id);
   if (!data) notFound();
 
   const { trip, spotsLeft } = data;

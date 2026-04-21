@@ -11,35 +11,56 @@ export function RegisterForm() {
     e.preventDefault();
     setError(null);
     setPending(true);
-    const form = e.currentTarget;
-    const name = (form.elements.namedItem("name") as HTMLInputElement).value;
-    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-    const password = (form.elements.namedItem("password") as HTMLInputElement)
-      .value;
+    try {
+      const form = e.currentTarget;
+      const name = (form.elements.namedItem("name") as HTMLInputElement).value;
+      const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+      const password = (form.elements.namedItem("password") as HTMLInputElement)
+        .value;
 
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
-    const data = (await res.json()) as { error?: string };
-    if (!res.ok) {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const raw = await res.text();
+      let data: { error?: string } = {};
+      if (raw) {
+        try {
+          data = JSON.parse(raw) as { error?: string };
+        } catch {
+          data = {};
+        }
+      }
+      if (!res.ok) {
+        setError(
+          data.error ??
+            (res.status === 500
+              ? "เซิร์ฟเวอร์ตอบ 500 — ตรวจสอบการเชื่อมต่อฐานข้อมูลบน Vercel และว่าได้รัน prisma db push กับ Supabase แล้ว"
+              : "ลงทะเบียนไม่สำเร็จ"),
+        );
+        return;
+      }
+
+      try {
+        const sign = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
+        if (sign?.error) {
+          setError("ลงทะเบียนแล้ว แต่เข้าสู่ระบบไม่สำเร็จ โปรดลองล็อกอิน");
+          return;
+        }
+        window.location.href = "/post-login";
+      } catch {
+        setError(
+          "ลงทะเบียนแล้ว แต่เข้าสู่ระบบไม่สำเร็จ — ตรวจสอบ AUTH_SECRET และ AUTH_URL บน Vercel แล้วลองล็อกอิน",
+        );
+      }
+    } finally {
       setPending(false);
-      setError(data.error ?? "ลงทะเบียนไม่สำเร็จ");
-      return;
     }
-
-    const sign = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-    setPending(false);
-    if (sign?.error) {
-      setError("ลงทะเบียนแล้ว แต่เข้าสู่ระบบไม่สำเร็จ โปรดลองล็อกอิน");
-      return;
-    }
-    window.location.href = "/post-login";
   }
 
   return (

@@ -1,12 +1,14 @@
 /**
  * อัปเดตคุกกี้เซสชัน Supabase Auth — ไม่เกี่ยวกับเซสชัน NextAuth
- * ถ้าไม่มี NEXT_PUBLIC_SUPABASE_* จะคืน NextResponse.next() ทันที
+ * ถ้าไม่มี NEXT_PUBLIC_SUPABASE_URL + publishable/anon key จะคืน NextResponse.next() ทันที
  */
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabaseKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({

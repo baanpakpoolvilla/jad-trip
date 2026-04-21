@@ -21,10 +21,10 @@ function PublicBrandLinkResolved({
   return (
     <Link href={href} className={brandLinkClassName}>
       <span className="text-base font-bold leading-tight tracking-tight text-white sm:text-xl">
-        Just Trip
+        Say Hi Trip
       </span>
       <span className="text-[10px] font-medium leading-none text-white/70 sm:text-[11px]">
-        จัดทริปแล้วลุยเลย
+        ส่ง Trip ให้ทุกคน
       </span>
     </Link>
   );
@@ -40,10 +40,10 @@ function PublicBrandLinkFallback({
   return (
     <Link href={href} className={brandLinkClassName}>
       <span className="text-base font-bold leading-tight tracking-tight text-white sm:text-xl">
-        Just Trip
+        Say Hi Trip
       </span>
       <span className="text-[10px] font-medium leading-none text-white/70 sm:text-[11px]">
-        จัดทริปแล้วลุยเลย
+        ส่ง Trip ให้ทุกคน
       </span>
     </Link>
   );

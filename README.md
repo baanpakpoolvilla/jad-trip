@@ -1,6 +1,6 @@
-# justtrip
+# Say Hi Trip
 
-แพลตฟอร์มจองทริปกลุ่ม — คอนเซปต์ «จัดทริปแล้วลุยเลย» รองรับผู้จัดทริป ผู้จอง แอดมิน และชำระเงินผ่าน Stripe
+แพลตฟอร์มจัดทริปกลุ่มแบบอบอุ่น — คอนเซปต์ «ส่ง Trip ให้ทุกทริป» รองรับผู้จัดทริป ผู้จอง แอดมิน และชำระเงินผ่าน Stripe — sayhitrip.com
 
 ## รันในเครื่อง
 
@@ -34,4 +34,4 @@ docker compose up -d --build
 - [ฐานข้อมูล Supabase](docs/database-supabase.md)  
 - [บัญชีทดสอบ (demo)](docs/demo-accounts.md)
 
-Repository: [github.com/baanpakpoolvilla/jad-trip](https://github.com/baanpakpoolvilla/jad-trip) (โฟลเดอร์โปรเจกต์อาจชื่อ `dernpa` หรือ `justtrip` ตามที่ clone)
+Repository: [github.com/baanpakpoolvilla/jad-trip](https://github.com/baanpakpoolvilla/jad-trip) (โฟลเดอร์โปรเจกต์อาจชื่อ `dernpa` หรือ `sayhitrip` ตามที่ clone)

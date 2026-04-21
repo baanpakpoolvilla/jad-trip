@@ -24,7 +24,7 @@
 จากโฟลเดอร์โปรเจกต์:
 
 ```bash
-cd /path/to/justtrip   # โฟลเดอร์หลัง clone จาก GitHub
+cd /path/to/sayhitrip   # โฟลเดอร์หลัง clone จาก GitHub
 env -u VERCEL_TOKEN npx vercel@latest login
 env -u VERCEL_TOKEN npx vercel@latest link
 env -u VERCEL_TOKEN npx vercel@latest deploy        # preview
@@ -40,12 +40,14 @@ env -u VERCEL_TOKEN npx vercel@latest deploy --prod # production
 | `DATABASE_URL` | Connection string ของ Postgres บนคลาวด์ (Production + Preview แยก DB ได้) — บน Supabase มักใช้ **pooler** |
 | `DIRECT_URL` | **บังคับ** (Prisma `schema.prisma`) — ต้องเป็น **Direct** (เช่น Supabase พอร์ต 5432) สำหรับ migrate / `db push` จาก CI หรือเครื่อง |
 | `AUTH_SECRET` | สุ่มด้วย `openssl rand -base64 32` |
-| `AUTH_URL` | URL จริงของเว็บบน Vercel เช่น `https://ชื่อโปรเจกต์.vercel.app` (ช่วย NextAuth / Auth.js บน production) |
-| `NEXT_PUBLIC_APP_URL` | ควรตรงกับ public URL เดียวกัน (Stripe redirect) |
+| `AUTH_URL` | URL จริงของเว็บบน Vercel เช่น `https://sayhitrip.com` หรือ `https://ชื่อโปรเจกต์.vercel.app` (ช่วย NextAuth / Auth.js บน production) |
+| `NEXT_PUBLIC_APP_URL` | ควรตรงกับ public URL เดียวกัน เช่น `https://sayhitrip.com` (Stripe redirect) |
 | `STRIPE_SECRET_KEY` | จาก Stripe Dashboard |
-| `STRIPE_WEBHOOK_SECRET` | สร้าง Webhook endpoint ชี้ไปที่ `https://<โดเมน>/api/stripe/webhook` |
+| `STRIPE_WEBHOOK_SECRET` | สร้าง Webhook endpoint ชี้ไปที่ `https://sayhitrip.com/api/stripe/webhook` |
 | `NEXT_PUBLIC_SUPABASE_URL` | (ถ้าใช้) จาก Supabase → Settings → API — ใช้กับ `@supabase/ssr` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | (ถ้าใช้) publishable / anon key คู่กับ URL ด้านบน — ไม่มีค่า = middleware ข้ามการรีเฟรช Supabase โดยไม่ error |
+
+ถ้าใช้ **Vercel Supabase integration** แล้วเห็นแต่ตัวแปร `POSTGRES_*` — แอปยังไม่เห็นฐานข้อมูลจนกว่าจะเพิ่ม **`DATABASE_URL`** และ **`DIRECT_URL`** ตามคู่มือ [database-supabase.md](database-supabase.md) (หัวข้อเชื่อมผ่าน Vercel)
 
 หลังดีพลอยแล้ว: ไป Stripe → Webhooks → เพิ่ม URL production และเลือก event `checkout.session.completed`
 
