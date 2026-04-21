@@ -61,6 +61,8 @@ model User {
   role         Role     @default(ORGANIZER)
   /// เปิดแล้วผู้จัดคนอื่นสามารถค้นหาและเลือกเป็นผู้นำทริปในฟอร์มทริปได้
   isGuide      Boolean  @default(false)
+  /// วันที่ผู้ใช้ทำ onboarding เสร็จสิ้น (null = ยังไม่เสร็จ)
+  onboardingCompletedAt DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   trips        Trip[]

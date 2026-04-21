@@ -15,6 +15,13 @@ export default async function OrganizerLayout({
     redirect(session.user.role === "ADMIN" ? "/admin" : "/");
   }
 
+  const userOnboarding = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboardingCompletedAt: true },
+  });
+
+  if (!userOnboarding?.onboardingCompletedAt) redirect("/onboarding");
+
   const [unreadNotifications, publicBrochureHref] = await Promise.all([
     db.notification.count({ where: { userId: session.user.id, readAt: null } }),
     getOrganizerPublicBrochureHref(session.user.id),
