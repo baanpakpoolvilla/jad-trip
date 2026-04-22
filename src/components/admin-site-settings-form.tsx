@@ -229,6 +229,17 @@ export function AdminSiteSettingsForm({ settings }: { settings: SiteSettings }) 
             disabled={pending}
           />
         </div>
+
+        <div className="border-t border-border/60 pt-4">
+          <ImageUploadField
+            label="รูปพรีวิวลิ้งค์ (OG Image)"
+            hint="แสดงเมื่อแชร์ลิ้งค์บน Facebook, LINE, Twitter ฯลฯ — JPEG, PNG, WebP แนะนำ 1200×630 px ไม่เกิน 2 MB"
+            name="ogImageUrl"
+            initialUrl={settings.ogImageUrl}
+            previewShape="wide"
+            disabled={pending}
+          />
+        </div>
       </section>
 
       {/* หมายเหตุ */}

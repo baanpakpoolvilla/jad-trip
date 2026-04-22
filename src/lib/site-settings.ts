@@ -7,6 +7,7 @@ export type SiteSettings = {
   siteDescription: string;
   logoUrl: string | null;
   faviconUrl: string | null;
+  ogImageUrl: string | null;
 };
 
 export const SITE_SETTINGS_TAG = "site-settings";
@@ -18,6 +19,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
     "แพลตฟอร์มจัดทริปกลุ่มแบบอบอุ่น — นำเสนอทริป รับจอง ตามสถานะชำระเงิน และส่งลิงก์ให้เพื่อนหรือลูกค้าได้ในที่เดียว",
   logoUrl: null,
   faviconUrl: null,
+  ogImageUrl: null,
 };
 
 /** โหลดการตั้งค่าเว็บไซต์จาก DB — cache ไว้จนกว่าจะมีการบันทึกใหม่ */
@@ -31,6 +33,7 @@ export const getSiteSettings = unstable_cache(
       siteDescription: row.siteDescription,
       logoUrl: row.logoUrl,
       faviconUrl: row.faviconUrl,
+      ogImageUrl: row.ogImageUrl,
     };
   },
   ["site-settings"],

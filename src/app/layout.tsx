@@ -39,13 +39,19 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: s.siteName,
       title,
       description: s.siteDescription,
-      ...(s.logoUrl?.trim() ? { images: [{ url: s.logoUrl.trim() }] } : {}),
+      ...(() => {
+        const img = s.ogImageUrl?.trim() || s.logoUrl?.trim();
+        return img ? { images: [{ url: img, width: 1200, height: 630 }] } : {};
+      })(),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: s.siteDescription,
-      ...(s.logoUrl?.trim() ? { images: [s.logoUrl.trim()] } : {}),
+      ...(() => {
+        const img = s.ogImageUrl?.trim() || s.logoUrl?.trim();
+        return img ? { images: [img] } : {};
+      })(),
     },
     robots: {
       index: true,

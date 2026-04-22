@@ -164,10 +164,12 @@ model SiteSettings {
   siteName        String   @default("Say Hi Trip")
   siteTagline     String   @default("ส่ง Trip ให้ทุกคน")
   siteDescription String   @default("แพลตฟอร์มจัดทริปกลุ่มแบบอบอุ่น — นำเสนอทริป รับจอง ตามสถานะชำระเงิน และส่งลิงก์ให้เพื่อนหรือลูกค้าได้ในที่เดียว")
-  /// URL รูปโลโก้ (https://…) — แสดงในเฮดเดอร์และ Open Graph
+  /// URL รูปโลโก้ (https://…) — แสดงในเฮดเดอร์
   logoUrl         String?
   /// URL favicon (https://…) — ใช้ใน <head>
   faviconUrl      String?
+  /// URL รูป Open Graph (https://…) — ใช้เป็นพรีวิวเมื่อแชร์ลิ้งค์ (1200×630 px แนะนำ)
+  ogImageUrl      String?
   updatedAt       DateTime @updatedAt
 }
 

@@ -20,6 +20,11 @@ const schema = z.object({
     .url("URL favicon ไม่ถูกต้อง")
     .or(z.literal(""))
     .transform((v) => v || null),
+  ogImageUrl: z
+    .string()
+    .url("URL รูป OG ไม่ถูกต้อง")
+    .or(z.literal(""))
+    .transform((v) => v || null),
 });
 
 export async function saveSiteSettings(
@@ -35,20 +40,21 @@ export async function saveSiteSettings(
     siteDescription: formData.get("siteDescription") ?? "",
     logoUrl: formData.get("logoUrl") ?? "",
     faviconUrl: formData.get("faviconUrl") ?? "",
+    ogImageUrl: formData.get("ogImageUrl") ?? "",
   });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" };
   }
 
-  const { siteName, siteTagline, siteDescription, logoUrl, faviconUrl } = parsed.data;
+  const { siteName, siteTagline, siteDescription, logoUrl, faviconUrl, ogImageUrl } = parsed.data;
 
   await db.siteSettings.upsert({
     where: { id: "1" },
-    update: { siteName, siteTagline, siteDescription, logoUrl, faviconUrl },
-    create: { id: "1", siteName, siteTagline, siteDescription, logoUrl, faviconUrl },
+    update: { siteName, siteTagline, siteDescription, logoUrl, faviconUrl, ogImageUrl },
+    create: { id: "1", siteName, siteTagline, siteDescription, logoUrl, faviconUrl, ogImageUrl },
   });
 
-  revalidateTag(SITE_SETTINGS_TAG, "default");
+  revalidateTag(SITE_SETTINGS_TAG);
   return { ok: true };
 }
