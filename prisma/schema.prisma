@@ -4,9 +4,12 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  // ใช้ pooler (6543 + pgbouncer) บน serverless ได้ — ต้องมี DIRECT_URL แบบ direct สำหรับ migrate/db push
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // POSTGRES_PRISMA_URL = pooler (port 6543, pgbouncer=true) — ใช้บน serverless/Vercel
+  // POSTGRES_URL_NON_POOLING = direct (port 5432) — ใช้สำหรับ prisma db push / migrate
+  // ทั้งสองตัวถูก set โดย Supabase-Vercel integration อัตโนมัติ
+  // DATABASE_URL / DIRECT_URL ยังรองรับอยู่ (fallback สำหรับ local Docker dev)
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 enum Role {
