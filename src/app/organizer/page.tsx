@@ -159,7 +159,7 @@ export default async function OrganizerDashboardPage() {
             </Link>
           ))}
         </div>
-        <p className="text-[11px] text-fg-hint">"จองที่ active" = รอชำระ + ยืนยันแล้ว</p>
+        <p className="text-[11px] text-fg-hint">&quot;จองที่ active&quot; = รอชำระ + ยืนยันแล้ว</p>
       </div>
 
       <section className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">

@@ -55,6 +55,6 @@ export async function saveSiteSettings(
     create: { id: "1", siteName, siteTagline, siteDescription, logoUrl, faviconUrl, ogImageUrl },
   });
 
-  revalidateTag(SITE_SETTINGS_TAG);
+  revalidateTag(SITE_SETTINGS_TAG, "default");
   return { ok: true };
 }
