@@ -1,11 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Globe, Image as ImageIcon, Info, Trash2, Type, Upload } from "lucide-react";
+import { Image as ImageIcon, Info, Trash2, Type, Upload } from "lucide-react";
 import { saveSiteSettings } from "@/app/actions/admin-site-settings";
 import type { SiteSettings } from "@/lib/site-settings";
 
-const ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/x-icon";
+const ACCEPT = "image/jpeg,image/png,image/webp,image/svg+xml,image/x-icon";
+const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2 MB — must match route.ts
 
 async function uploadSiteImage(file: File): Promise<string> {
   const fd = new FormData();
@@ -100,6 +101,10 @@ function ImageUploadField({
                 e.target.value = "";
                 if (!f) return;
                 setErr(null);
+                if (f.size > MAX_FILE_BYTES) {
+                  setErr("ไฟล์ต้องไม่เกิน 2 MB");
+                  return;
+                }
                 setBusy(true);
                 try {
                   setUrl(await uploadSiteImage(f));
@@ -206,7 +211,7 @@ export function AdminSiteSettingsForm({ settings }: { settings: SiteSettings }) 
       {/* รูปภาพ */}
       <section className="jad-card space-y-5">
         <div className="flex items-center gap-2 border-b border-border pb-4">
-          <Globe className="size-4 text-brand" strokeWidth={1.5} aria-hidden />
+          <ImageIcon className="size-4 text-brand" strokeWidth={1.5} aria-hidden />
           <h2 className="text-sm font-semibold text-fg">รูปภาพ</h2>
         </div>
 

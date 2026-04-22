@@ -59,6 +59,16 @@ const nextConfig: NextConfig = {
   // Do not bundle Prisma with Turbopack — avoids a stale / mismatched query engine in `next dev`.
   serverExternalPackages: ["@prisma/client", "prisma"],
 
+  experimental: {
+    // Next.js treats any multipart POST as a "possible server action" and enforces
+    // the serverActions.bodySizeLimit (default 1 MB) before the request reaches the
+    // Route Handler.  The /api/admin/site-images handler allows up to 2 MB, so we
+    // raise the limit to match — server-side validation still rejects anything > 2 MB.
+    serverActions: {
+      bodySizeLimit: "2mb",
+    },
+  },
+
   images: {
     remotePatterns: [
       // Supabase Storage — trip images
