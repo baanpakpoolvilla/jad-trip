@@ -6,9 +6,9 @@ import { db } from "@/lib/db";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(8),
+  name: z.string().min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร"),
+  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
+  password: z.string().min(8, "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"),
 });
 
 function prismaFriendlyMessage(err: unknown): string | undefined {
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const parsed = schema.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" },
+        { error: parsed.error.issues[0]?.message ?? "ข้อมูลที่กรอกไม่ถูกต้อง" },
         { status: 400 },
       );
     }
