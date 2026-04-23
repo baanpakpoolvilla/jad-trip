@@ -1,3 +1,4 @@
+import type { Session } from "next-auth";
 import { db } from "@/lib/db";
 import { randomShareCode } from "@/lib/trip-share-code";
 import { organizerBrochureShortPath } from "@/lib/trips-public";
@@ -30,4 +31,12 @@ export async function ensureOrganizerBrochureShareCode(userId: string): Promise<
 export async function getOrganizerPublicBrochureHref(userId: string): Promise<string> {
   const code = await ensureOrganizerBrochureShareCode(userId);
   return organizerBrochureShortPath(code);
+}
+
+/** ลิงก์ `/o/…` สำหรับ ORGANIZER ที่ล็อกอินแล้ว — มิฉะนั้น null */
+export async function getOrganizerBrochureHrefForSession(
+  session: Session | null,
+): Promise<string | null> {
+  if (session?.user?.role !== "ORGANIZER") return null;
+  return getOrganizerPublicBrochureHref(session.user.id);
 }

@@ -44,6 +44,13 @@
     @apply mx-auto w-full max-w-2xl sm:max-w-3xl md:max-w-4xl;
   }
 
+  .jad-public-header {
+    background: linear-gradient(to right, #163829, #1e4d3a);
+    box-shadow:
+      0 1px 0 rgb(0 0 0 / 0.1),
+      0 2px 8px rgb(0 0 0 / 0.08);
+  }
+
   .jad-page-title {
     @apply text-[1.5rem] font-semibold leading-snug tracking-tight text-fg sm:text-[2rem] sm:leading-tight;
   }

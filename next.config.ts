@@ -91,6 +91,10 @@ const nextConfig: NextConfig = {
   // Gzip/Brotli compression สำหรับ HTML + JSON responses
   compress: true,
 
+  async redirects() {
+    return [{ source: "/ai-read", destination: "/", permanent: true }];
+  },
+
   async headers() {
     return [
       {

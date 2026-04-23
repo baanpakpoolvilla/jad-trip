@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
-import { db } from "@/lib/db";
 import { TripStatus } from "@prisma/client";
+import { db } from "@/lib/db";
+import { getPublicSiteBaseUrl } from "@/lib/public-site-url";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://sayhitrip.com";
+  const base = getPublicSiteBaseUrl();
 
   const trips = await db.trip.findMany({
     where: { status: TripStatus.PUBLISHED },

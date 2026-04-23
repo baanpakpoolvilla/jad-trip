@@ -9,7 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { auth } from "@/auth";
-import { getOrganizerPublicBrochureHref } from "@/lib/organizer-brochure-share-code";
+import { getOrganizerBrochureHrefForSession } from "@/lib/organizer-brochure-share-code";
 
 export const dynamic = "force-dynamic";
 
@@ -44,10 +44,7 @@ const steps = [
 
 export default async function HomePage() {
   const session = await auth();
-  const brochureHref =
-    session?.user?.role === "ORGANIZER" && session.user.id
-      ? await getOrganizerPublicBrochureHref(session.user.id)
-      : null;
+  const brochureHref = await getOrganizerBrochureHrefForSession(session);
 
   return (
     <div className="space-y-8 md:space-y-14">

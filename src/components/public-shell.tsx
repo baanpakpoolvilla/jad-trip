@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { auth } from "@/auth";
 import { PublicBrandLink } from "@/components/public-brand-link";
-import { getOrganizerPublicBrochureHref } from "@/lib/organizer-brochure-share-code";
+import { getOrganizerBrochureHrefForSession } from "@/lib/organizer-brochure-share-code";
 import { getSiteSettings } from "@/lib/site-settings";
 
 const navItemClass =
@@ -16,21 +16,11 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
       : session?.user?.role === "ORGANIZER"
         ? "/organizer"
         : null;
-  const organizerBrochureHref =
-    session?.user?.role === "ORGANIZER" && session.user.id
-      ? await getOrganizerPublicBrochureHref(session.user.id)
-      : null;
+  const organizerBrochureHref = await getOrganizerBrochureHrefForSession(session);
 
   return (
     <div className="flex min-h-full flex-col bg-canvas">
-      {/* Header — gradient brand-dark → brand เพิ่ม depth */}
-      <header
-        className="sticky top-0 z-30"
-        style={{
-          background: "linear-gradient(to right, #163829, #1e4d3a)",
-          boxShadow: "0 1px 0 rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.08)",
-        }}
-      >
+      <header className="jad-public-header sticky top-0 z-30">
         <div className="jad-container flex min-h-12 items-center gap-2 px-3 py-2 sm:min-h-13 sm:gap-3 sm:px-6 sm:py-2.5">
           <PublicBrandLink
             dashboardHref={dashboardHref}
@@ -77,7 +67,6 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
 
       <main className="jad-container flex-1 px-3 py-5 sm:px-6 sm:py-10">{children}</main>
 
-      {/* Footer — structured layout */}
       <footer className="mt-auto border-t border-border bg-surface py-5 sm:py-8">
         <div className="jad-container flex flex-col items-center gap-1 px-3 sm:flex-row sm:justify-between sm:gap-1.5 sm:px-6">
           <p className="text-sm font-semibold text-fg-muted">{siteSettings.siteName}</p>
