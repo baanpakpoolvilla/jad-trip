@@ -102,7 +102,7 @@ model Trip {
   /// พิกัดจุดนัดพบ / เช็คอิน (WGS84) — ว่างได้ถ้าไม่เลือกจากแผนที่
   meetPointLat     Float?
   meetPointLng     Float?
-  /// ชื่อสถานที่จากแผนที่ (OpenStreetMap / Nominatim) — แสดงในหน้ารายละเอียด
+  /// ชื่อสถานที่จากแผนที่ (Google Places / สำรอง Nominatim) — แสดงในหน้ารายละเอียด
   destinationName  String   @default("")
   /// พิกัดจุดหมายปลายทาง (WGS84) — ว่างได้ถ้าไม่เลือกจากแผนที่
   destinationLat   Float?

@@ -12,11 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import { formatBangkokTripDates } from "@/lib/datetime";
-import {
-  tripDestinationGoogleMapsWebUrl,
-  tripDestinationMapEmbedUrl,
-  tripDestinationOpenStreetMapUrl,
-} from "@/lib/trip-destination-map-embed";
+import { tripDestinationGoogleMapsWebUrl, tripDestinationMapEmbedUrl } from "@/lib/trip-destination-map-embed";
 import { itineraryIsStructuredJson, type TripItineraryDay } from "@/lib/trip-itinerary-json";
 
 export function parseGalleryUrls(text: string): string[] {
@@ -174,7 +170,7 @@ export function TripDestinationSection({
   lon: number;
 }) {
   const label = name.trim() || "จุดหมายปลายทาง";
-  const osmHref = tripDestinationOpenStreetMapUrl(lat, lon, 15);
+  const mapsHref = tripDestinationGoogleMapsWebUrl(lat, lon, 14);
   return (
     <section className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:rounded-2xl sm:p-6">
       <div className="flex items-start gap-3">
@@ -195,16 +191,7 @@ export function TripDestinationSection({
             />
           </div>
           <p className="mt-2 text-[10px] text-fg-hint sm:text-xs">
-            <a href={osmHref} className="font-medium text-brand hover:text-brand-mid" target="_blank" rel="noreferrer">
-              เปิดใน OpenStreetMap
-            </a>
-            {" · "}
-            <a
-              href={tripDestinationGoogleMapsWebUrl(lat, lon, 14)}
-              className="font-medium text-brand hover:text-brand-mid"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={mapsHref} className="font-medium text-brand hover:text-brand-mid" target="_blank" rel="noreferrer">
               เปิดใน Google Maps
             </a>
           </p>

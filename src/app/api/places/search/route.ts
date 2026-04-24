@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const runtime = "edge";
+
 const MAX_Q = 200;
 
 function nominatimUserAgent(): string {
@@ -27,20 +29,72 @@ function splitDisplayName(raw: string): { label: string; sublabel: string } {
   };
 }
 
-/**
- * ค้นหาสถานที่ผ่าน Nominatim (OSM) — เรียกจากเซิร์ฟเวอร์เท่านั้น ตามนโยบาย User-Agent
- * @see https://nominatim.org/release-docs/latest/api/Search/
- */
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const q = searchParams.get("q")?.trim() ?? "";
-  if (q.length < 2) {
-    return NextResponse.json({ results: [] satisfies PlaceSearchHit[] });
+type GooglePlaceRow = {
+  displayName?: { text?: string };
+  formattedAddress?: string;
+  location?: { latitude?: number; longitude?: number };
+};
+
+function placeHitFromGoogle(place: GooglePlaceRow): PlaceSearchHit | null {
+  const name = typeof place.displayName?.text === "string" ? place.displayName.text.trim() : "";
+  const addr = typeof place.formattedAddress === "string" ? place.formattedAddress.trim() : "";
+  const lat = place.location?.latitude;
+  const lon = place.location?.longitude;
+  if (lat === undefined || lon === undefined) return null;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+  if (!name && !addr) return null;
+  if (name) {
+    const sublabel = addr && addr !== name ? addr : "";
+    return { label: name, sublabel, lat, lon };
   }
-  if (q.length > MAX_Q) {
-    return NextResponse.json({ error: "คำค้นยาวเกินไป" }, { status: 400 });
+  const { label, sublabel } = splitDisplayName(addr);
+  return { label, sublabel, lat, lon };
+}
+
+/**
+ * Google Places API (New) — Text Search
+ * @see https://developers.google.com/maps/documentation/places/web-service/text-search
+ */
+async function searchWithGooglePlaces(q: string, apiKey: string): Promise<PlaceSearchHit[]> {
+  const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location",
+    },
+    body: JSON.stringify({
+      textQuery: q,
+      languageCode: "th",
+      regionCode: "TH",
+      maxResultCount: 10,
+    }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    return [];
   }
 
+  type Body = { places?: GooglePlaceRow[] };
+  let body: Body;
+  try {
+    body = (await res.json()) as Body;
+  } catch {
+    return [];
+  }
+
+  const out: PlaceSearchHit[] = [];
+  for (const place of Array.isArray(body.places) ? body.places : []) {
+    const hit = placeHitFromGoogle(place);
+    if (hit) out.push(hit);
+  }
+  return out;
+}
+
+/** สำรอง — Nominatim (OSM) เมื่อยังไม่ตั้ง GOOGLE_MAPS_API_KEY */
+async function searchWithNominatim(q: string): Promise<PlaceSearchHit[]> {
   const url = new URL("https://nominatim.openstreetmap.org/search");
   url.searchParams.set("q", q);
   url.searchParams.set("format", "json");
@@ -48,29 +102,22 @@ export async function GET(req: Request) {
   url.searchParams.set("addressdetails", "0");
   url.searchParams.set("countrycodes", "th");
 
-  let res: Response;
-  try {
-    res = await fetch(url.toString(), {
-      headers: {
-        "User-Agent": nominatimUserAgent(),
-        "Accept-Language": "th,en;q=0.9",
-      },
-      cache: "no-store",
-    });
-  } catch {
-    return NextResponse.json({ error: "เชื่อมต่อบริการแผนที่ไม่สำเร็จ" }, { status: 503 });
-  }
+  const res = await fetch(url.toString(), {
+    headers: {
+      "User-Agent": nominatimUserAgent(),
+      "Accept-Language": "th,en;q=0.9",
+    },
+    cache: "no-store",
+  });
 
-  if (!res.ok) {
-    return NextResponse.json({ error: "ค้นหาไม่สำเร็จ" }, { status: 502 });
-  }
+  if (!res.ok) return [];
 
   type Raw = { display_name?: string; lat?: string; lon?: string };
   let raw: Raw[];
   try {
     raw = (await res.json()) as Raw[];
   } catch {
-    return NextResponse.json({ error: "รูปแบบผลลัพธ์ไม่ถูกต้อง" }, { status: 502 });
+    return [];
   }
 
   const results: PlaceSearchHit[] = [];
@@ -83,6 +130,38 @@ export async function GET(req: Request) {
     const { label, sublabel } = splitDisplayName(displayName);
     results.push({ label, sublabel, lat, lon });
   }
+  return results;
+}
 
-  return NextResponse.json({ results });
+/**
+ * ค้นหาสถานที่ — ใช้ Google Places (Text Search) เมื่อมี GOOGLE_MAPS_API_KEY
+ * ถ้าไม่มี key จะใช้ Nominatim (OpenStreetMap) เป็นทางสำรอง
+ */
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const q = searchParams.get("q")?.trim() ?? "";
+  if (q.length < 2) {
+    return NextResponse.json({ results: [] satisfies PlaceSearchHit[] });
+  }
+  if (q.length > MAX_Q) {
+    return NextResponse.json({ error: "คำค้นยาวเกินไป" }, { status: 400 });
+  }
+
+  const googleKey = process.env.GOOGLE_MAPS_API_KEY?.trim();
+
+  try {
+    if (googleKey) {
+      const googleResults = await searchWithGooglePlaces(q, googleKey);
+      if (googleResults.length > 0) {
+        return NextResponse.json({ results: googleResults });
+      }
+      const fallback = await searchWithNominatim(q);
+      return NextResponse.json({ results: fallback });
+    }
+
+    const results = await searchWithNominatim(q);
+    return NextResponse.json({ results });
+  } catch {
+    return NextResponse.json({ error: "เชื่อมต่อบริการแผนที่ไม่สำเร็จ" }, { status: 503 });
+  }
 }

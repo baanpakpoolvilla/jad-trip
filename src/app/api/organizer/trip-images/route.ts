@@ -1,5 +1,7 @@
 import { randomBytes } from "crypto";
 import { auth } from "@/auth";
+
+export const runtime = "nodejs";
 import {
   TRIP_IMAGE_MAX_BYTES,
   TRIP_IMAGE_MIME_TO_EXT,

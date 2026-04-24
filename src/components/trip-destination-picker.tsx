@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MapPin, Search, X } from "lucide-react";
-import {
-  tripDestinationMapEmbedUrl,
-  tripDestinationOpenStreetMapUrl,
-} from "@/lib/trip-destination-map-embed";
+import { tripDestinationGoogleMapsWebUrl, tripDestinationMapEmbedUrl } from "@/lib/trip-destination-map-embed";
 
 type Hit = { label: string; sublabel?: string; lat: number; lon: number };
 type SelectedPlace = { label: string; lat: number | null; lon: number | null };
@@ -109,7 +106,7 @@ export function TripDestinationPicker({
       <div className={dense ? "space-y-1.5" : "space-y-2"}>
         {hideHeading ? (
           <label htmlFor={searchId} className="sr-only">
-            จุดหมายปลายทาง (ไม่บังคับ) — พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ ข้อมูลจาก OpenStreetMap
+            จุดหมายปลายทาง (ไม่บังคับ) — พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ (Google Maps)
           </label>
         ) : (
           <label
@@ -126,7 +123,7 @@ export function TripDestinationPicker({
           </label>
         )}
         <p id={hintId} className={dense ? "sr-only" : "text-xs leading-relaxed text-fg-muted"}>
-          พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ — ข้อมูลจาก OpenStreetMap
+          พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ — ค้นหาผ่าน Google Places
         </p>
         <div className="relative">
           <Search
@@ -220,14 +217,13 @@ export function TripDestinationPicker({
                 />
               </div>
               <p className="text-[10px] text-fg-hint sm:text-xs">
-                แผนที่ (ฝัง) · ค้นหาสถานที่จาก OpenStreetMap —{" "}
                 <a
-                  href={tripDestinationOpenStreetMapUrl(selected.lat, selected.lon, 15)}
+                  href={tripDestinationGoogleMapsWebUrl(selected.lat, selected.lon, 14)}
                   className="font-medium text-brand hover:text-brand-mid"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  เปิดใน OpenStreetMap
+                  เปิดใน Google Maps
                 </a>
               </p>
             </>

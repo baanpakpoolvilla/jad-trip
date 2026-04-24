@@ -582,8 +582,8 @@ export function TripForm(props: Props) {
         title="จุดหมายปลายทาง"
         lede={
           dense
-            ? "ไม่บังคับ — พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ (OpenStreetMap)"
-            : "ไม่บังคับ — พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ ข้อมูลจาก OpenStreetMap"
+            ? "ไม่บังคับ — พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ (Google Maps)"
+            : "ไม่บังคับ — พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ ค้นหาผ่าน Google Places"
         }
       >
         <TripDestinationPicker

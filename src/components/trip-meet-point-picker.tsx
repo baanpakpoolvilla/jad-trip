@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MapPin, Search, X } from "lucide-react";
-import {
-  tripDestinationMapEmbedUrl,
-  tripDestinationOpenStreetMapUrl,
-} from "@/lib/trip-destination-map-embed";
+import { tripDestinationGoogleMapsWebUrl, tripDestinationMapEmbedUrl } from "@/lib/trip-destination-map-embed";
 
 type Hit = { label: string; sublabel?: string; lat: number; lon: number };
 
@@ -225,12 +222,12 @@ export function TripMeetPointPicker({
           </div>
           <p className="text-[10px] text-fg-hint sm:text-xs">
             <a
-              href={tripDestinationOpenStreetMapUrl(selected.lat, selected.lon, 16)}
+              href={tripDestinationGoogleMapsWebUrl(selected.lat, selected.lon, 15)}
               className="font-medium text-brand hover:text-brand-mid"
               target="_blank"
               rel="noreferrer"
             >
-              เปิดใน OpenStreetMap
+              เปิดใน Google Maps
             </a>
           </p>
         </div>

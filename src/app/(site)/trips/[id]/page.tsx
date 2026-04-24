@@ -18,10 +18,7 @@ import {
   organizerPublicBrochureHrefFromOrganizer,
   organizerPublicProfilePath,
 } from "@/lib/trips-public";
-import {
-  tripDestinationMapEmbedUrl,
-  tripDestinationOpenStreetMapUrl,
-} from "@/lib/trip-destination-map-embed";
+import { tripDestinationGoogleMapsWebUrl, tripDestinationMapEmbedUrl } from "@/lib/trip-destination-map-embed";
 import {
   formatDepartureOptions,
   parseDepartureRounds,
@@ -186,12 +183,12 @@ export default async function TripDetailPage({ params }: Props) {
                 </div>
                 <p className="mt-2 text-[10px] text-fg-hint sm:text-xs">
                   <a
-                    href={tripDestinationOpenStreetMapUrl(trip.meetPointLat, trip.meetPointLng, 16)}
+                    href={tripDestinationGoogleMapsWebUrl(trip.meetPointLat, trip.meetPointLng, 15)}
                     className="font-medium text-brand hover:text-brand-mid"
                     target="_blank"
                     rel="noreferrer"
                   >
-                    เปิดจุดนี้ใน OpenStreetMap
+                    เปิดจุดนี้ใน Google Maps
                   </a>
                 </p>
               </>
