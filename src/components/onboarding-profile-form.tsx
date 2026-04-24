@@ -55,7 +55,7 @@ export function OnboardingProfileForm({ defaults }: { defaults: Defaults }) {
           >
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt="" className="size-full object-cover" />
+              <img src={avatarUrl} alt="" loading="lazy" className="size-full object-cover" />
             ) : (
               <div className="flex size-full items-center justify-center bg-brand-light/40 text-2xl font-semibold text-brand">
                 {initial}

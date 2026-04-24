@@ -709,7 +709,7 @@ export function TripForm(props: Props) {
                   className="relative h-21 w-21 shrink-0 overflow-hidden rounded-lg border border-border shadow-sm"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={url} alt="" className="h-full w-full object-cover" />
+                  <img src={url} alt="" loading="lazy" className="h-full w-full object-cover" />
                   <button
                     type="button"
                     className="absolute right-0.5 top-0.5 flex size-8 items-center justify-center rounded-full border border-white/30 bg-black/70 text-lg font-light leading-none text-white shadow-sm backdrop-blur-[2px] transition-colors hover:bg-black/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/40"
