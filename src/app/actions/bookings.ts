@@ -16,6 +16,7 @@ const bookingSchema = z.object({
   tripId: z.string().min(1),
   participantName: z.string().min(2, "กรอกชื่อ"),
   participantPhone: z.string().min(8, "กรอกเบอร์โทร"),
+  selectedRound: z.string().optional(),
 });
 
 export type BookingCreateState =
@@ -31,6 +32,7 @@ export async function createBooking(
     participantName: formData.get("participantName"),
     participantPhone: formData.get("participantPhone"),
     acceptTerms: formData.get("acceptTerms"),
+    selectedRound: formData.get("selectedRound") ?? undefined,
   };
 
   const parsed = bookingSchema.safeParse(raw);
@@ -84,6 +86,7 @@ export async function createBooking(
       participantName: parsed.data.participantName.trim(),
       participantEmail: "",
       participantPhone: parsed.data.participantPhone.trim(),
+      selectedRound: parsed.data.selectedRound?.trim() || null,
       viewToken,
       expiresAt,
       status: BookingStatus.PENDING_PAYMENT,

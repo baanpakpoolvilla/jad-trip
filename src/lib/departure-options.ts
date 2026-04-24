@@ -1,7 +1,15 @@
+import { formatBangkokTripDates } from "@/lib/datetime";
+
 const THAI_MONTHS_SHORT = [
   "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
   "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
 ];
+
+export interface DepartureRound {
+  /** index 0 = รอบหลัก (startAt–endAt), 1..n = รอบจาก departureOptions */
+  index: number;
+  label: string;
+}
 
 function d(iso: string) {
   return new Date(iso + "T00:00:00Z");
@@ -59,4 +67,30 @@ export function formatDepartureOptions(raw: string): string {
     .filter(Boolean)
     .map(formatDepartureOption)
     .join("\n");
+}
+
+/**
+ * รวมรอบหลัก (startAt–endAt) และ departureOptions เป็น array สำหรับตัวเลือกรอบ
+ * ใช้เมื่อทริปมี departureOptions (มีหลายรอบ)
+ */
+export function parseDepartureRounds(
+  startAt: Date,
+  endAt: Date,
+  departureOptions: string,
+): DepartureRound[] {
+  const rounds: DepartureRound[] = [
+    { index: 0, label: formatBangkokTripDates(startAt, endAt) },
+  ];
+
+  if (departureOptions.trim()) {
+    const lines = departureOptions
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    lines.forEach((line, i) => {
+      rounds.push({ index: i + 1, label: formatDepartureOption(line) });
+    });
+  }
+
+  return rounds;
 }

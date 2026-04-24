@@ -14,11 +14,13 @@ export function BookingForm({
   pricePerPerson,
   policyNotes,
   tripPageHref,
+  selectedRound,
 }: {
   tripId: string;
   pricePerPerson: number;
   policyNotes?: string | null;
   tripPageHref?: string;
+  selectedRound?: string | null;
 }) {
   const id = useId();
   const router = useRouter();
@@ -33,7 +35,17 @@ export function BookingForm({
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="tripId" value={tripId} />
+      {selectedRound ? (
+        <input type="hidden" name="selectedRound" value={selectedRound} />
+      ) : null}
       {state && "error" in state ? <p className="jad-alert-error">{state.error}</p> : null}
+
+      {selectedRound ? (
+        <div className="rounded-lg border border-brand/20 bg-brand-light/50 px-4 py-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-brand">รอบที่เลือก</p>
+          <p className="mt-0.5 text-sm font-medium text-fg">{selectedRound}</p>
+        </div>
+      ) : null}
 
       <div className="rounded-lg border border-border bg-canvas-muted/40 px-4 py-3 text-center">
         <p className="text-xs font-medium uppercase tracking-wide text-fg-muted">ราคาต่อคน</p>

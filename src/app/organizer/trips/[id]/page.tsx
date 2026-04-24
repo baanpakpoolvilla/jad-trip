@@ -8,6 +8,7 @@ import {
   setTripStatus,
 } from "@/app/actions/trips";
 import { formatBangkok } from "@/lib/datetime";
+import { parseDepartureRounds } from "@/lib/departure-options";
 import { ConfirmForm } from "@/components/confirm-form";
 import { CopyBookingsButton } from "@/components/copy-bookings-button";
 import { resolveSlipUrls } from "@/lib/slip-storage";
@@ -53,6 +54,97 @@ function bookingStatusBadge(s: string) {
   }
 }
 
+type BookingItem = {
+  id: string;
+  participantName: string;
+  participantEmail: string;
+  participantPhone: string;
+  status: string;
+  createdAt: Date;
+  viewToken: string;
+  selectedRound: string | null;
+};
+
+function BookingList({
+  bookings,
+  slipUrls,
+}: {
+  bookings: BookingItem[];
+  slipUrls: Record<string, string | undefined>;
+}) {
+  return (
+    <ul className="space-y-1.5">
+      {bookings.map((b) => {
+        const tel = bookingTelHref(b.participantPhone);
+        return (
+          <li
+            key={b.id}
+            className="jad-card grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 p-3 sm:p-3.5"
+          >
+            <div className="min-w-0 space-y-0.5">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <p className="text-sm font-medium leading-tight text-fg">{b.participantName}</p>
+                {bookingStatusBadge(b.status)}
+                <span className="text-[11px] leading-tight text-fg-hint">
+                  สร้าง {formatBangkok(b.createdAt)}
+                </span>
+              </div>
+              <p className="truncate text-[11px] leading-snug text-fg-muted sm:text-xs">
+                {[b.participantEmail.trim(), b.participantPhone.trim()]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            </div>
+            <div className="flex max-w-full flex-wrap items-center justify-end gap-1.5 justify-self-end">
+              {tel ? (
+                <a
+                  href={tel}
+                  aria-label={`โทรหา ${b.participantName}`}
+                  className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-border bg-surface px-2.5 text-xs font-medium text-fg shadow-sm transition-colors hover:border-brand/40 hover:bg-brand-light/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/25 focus-visible:ring-offset-2"
+                >
+                  <Phone className="size-3.5 shrink-0 text-brand" strokeWidth={1.75} aria-hidden />
+                  โทร
+                </a>
+              ) : null}
+              {slipUrls[b.id] ? (
+                <a
+                  href={slipUrls[b.id]!}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`ดูสลิปของ ${b.participantName}`}
+                  className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-success/35 bg-success-light px-2.5 text-xs font-medium text-success shadow-sm transition-colors hover:border-success/60 hover:bg-success-light/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30 focus-visible:ring-offset-2"
+                >
+                  <Receipt className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+                  ดูสลิป
+                </a>
+              ) : null}
+              <Link
+                href={`/bookings/${b.viewToken}`}
+                className="inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium text-brand hover:bg-brand-light/40 hover:text-brand-mid"
+              >
+                ลิงก์ผู้จอง
+              </Link>
+              <ConfirmForm
+                action={cancelBookingAsOrganizerForm}
+                message={`ยกเลิกการจองของ "${b.participantName}" หรือไม่?`}
+                className="inline"
+              >
+                <input type="hidden" name="bookingId" value={b.id} />
+                <button
+                  type="submit"
+                  className="inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium text-danger hover:bg-danger-light"
+                >
+                  ยกเลิก
+                </button>
+              </ConfirmForm>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export default async function OrganizerTripDetailPage({ params }: Props) {
   const { id } = await params;
   const trip = await getTripForOrganizer(id);
@@ -80,6 +172,29 @@ export default async function OrganizerTripDetailPage({ params }: Props) {
 
   const confirmedCount = trip.bookings.filter((b) => b.status === "CONFIRMED").length;
   const pendingCount = trip.bookings.filter((b) => b.status === "PENDING_PAYMENT").length;
+
+  // จัดกลุ่มผู้จองตามรอบ — ถ้าทริปมี departureOptions
+  const hasMultipleRounds = trip.departureOptions.trim().length > 0;
+  const roundLabels = hasMultipleRounds
+    ? parseDepartureRounds(trip.startAt, trip.endAt, trip.departureOptions).map((r) => r.label)
+    : [];
+
+  type BookingRow = (typeof trip.bookings)[number];
+
+  // จัดกลุ่ม: roundLabel → bookings
+  const bookingsByRound: Map<string, BookingRow[]> = new Map();
+  const unassignedBookings: BookingRow[] = [];
+
+  if (hasMultipleRounds) {
+    for (const label of roundLabels) bookingsByRound.set(label, []);
+    for (const b of trip.bookings) {
+      if (b.selectedRound && bookingsByRound.has(b.selectedRound)) {
+        bookingsByRound.get(b.selectedRound)!.push(b);
+      } else {
+        unassignedBookings.push(b);
+      }
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -208,82 +323,53 @@ export default async function OrganizerTripDetailPage({ params }: Props) {
               name: b.participantName,
               phone: b.participantPhone,
               status: b.status,
+              round: b.selectedRound ?? undefined,
             }))}
             tripTitle={trip.title}
           />
         </div>
+
         {trip.bookings.length === 0 ? (
           <p className="text-sm text-fg-muted">ยังไม่มีผู้จอง</p>
-        ) : (
-          <ul className="space-y-1.5">
-            {trip.bookings.map((b) => {
-              const tel = bookingTelHref(b.participantPhone);
+        ) : hasMultipleRounds ? (
+          /* แสดงแยกรอบ */
+          <div className="space-y-5">
+            {roundLabels.map((label, roundIdx) => {
+              const bookings = bookingsByRound.get(label) ?? [];
+              const roundConfirmed = bookings.filter((b) => b.status === "CONFIRMED").length;
+              const roundPending = bookings.filter((b) => b.status === "PENDING_PAYMENT").length;
               return (
-                <li
-                  key={b.id}
-                  className="jad-card grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 p-3 sm:p-3.5"
-                >
-                  <div className="min-w-0 space-y-0.5">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <p className="text-sm font-medium leading-tight text-fg">{b.participantName}</p>
-                      {bookingStatusBadge(b.status)}
-                      <span className="text-[11px] leading-tight text-fg-hint">
-                        สร้าง {formatBangkok(b.createdAt)}
-                      </span>
-                    </div>
-                    <p className="truncate text-[11px] leading-snug text-fg-muted sm:text-xs">
-                      {[b.participantEmail.trim(), b.participantPhone.trim()]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
+                <div key={label} className="space-y-2">
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-sm font-semibold text-fg">
+                      รอบที่ {roundIdx + 1} · {label}
+                    </h3>
+                    <span className="text-xs text-fg-hint">
+                      จองแล้ว {roundConfirmed} คน
+                      {roundPending > 0 ? ` · รอชำระ ${roundPending} คน` : ""}
+                    </span>
                   </div>
-                  <div className="flex max-w-full flex-wrap items-center justify-end gap-1.5 justify-self-end">
-                    {tel ? (
-                      <a
-                        href={tel}
-                        aria-label={`โทรหา ${b.participantName}`}
-                        className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-border bg-surface px-2.5 text-xs font-medium text-fg shadow-sm transition-colors hover:border-brand/40 hover:bg-brand-light/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/25 focus-visible:ring-offset-2"
-                      >
-                        <Phone className="size-3.5 shrink-0 text-brand" strokeWidth={1.75} aria-hidden />
-                        โทร
-                      </a>
-                    ) : null}
-                    {slipUrls[b.id] ? (
-                      <a
-                        href={slipUrls[b.id]!}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={`ดูสลิปของ ${b.participantName}`}
-                        className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-success/35 bg-success-light px-2.5 text-xs font-medium text-success shadow-sm transition-colors hover:border-success/60 hover:bg-success-light/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30 focus-visible:ring-offset-2"
-                      >
-                        <Receipt className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
-                        ดูสลิป
-                      </a>
-                    ) : null}
-                    <Link
-                      href={`/bookings/${b.viewToken}`}
-                      className="inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium text-brand hover:bg-brand-light/40 hover:text-brand-mid"
-                    >
-                      ลิงก์ผู้จอง
-                    </Link>
-                    <ConfirmForm
-                      action={cancelBookingAsOrganizerForm}
-                      message={`ยกเลิกการจองของ "${b.participantName}" หรือไม่?`}
-                      className="inline"
-                    >
-                      <input type="hidden" name="bookingId" value={b.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium text-danger hover:bg-danger-light"
-                      >
-                        ยกเลิก
-                      </button>
-                    </ConfirmForm>
-                  </div>
-                </li>
+                  {bookings.length === 0 ? (
+                    <p className="text-xs text-fg-hint italic">ยังไม่มีผู้จองรอบนี้</p>
+                  ) : (
+                    <BookingList bookings={bookings} slipUrls={slipUrls} />
+                  )}
+                </div>
               );
             })}
-          </ul>
+            {unassignedBookings.length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-sm font-semibold text-fg-muted">ไม่ระบุรอบ</h3>
+                  <span className="text-xs text-fg-hint">{unassignedBookings.length} คน</span>
+                </div>
+                <BookingList bookings={unassignedBookings} slipUrls={slipUrls} />
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          /* แสดงแบบเดิม — ทริปรอบเดียว */
+          <BookingList bookings={trip.bookings} slipUrls={slipUrls} />
         )}
       </section>
     </div>

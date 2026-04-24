@@ -131,6 +131,12 @@ export default async function BookingPage({ params }: Props) {
               <dd className="text-right text-fg">{booking.participantEmail}</dd>
             </div>
           ) : null}
+          {booking.selectedRound ? (
+            <div className="flex justify-between gap-4 py-2.5">
+              <dt className="text-fg-muted">รอบเดินทาง</dt>
+              <dd className="text-right font-medium text-brand">{booking.selectedRound}</dd>
+            </div>
+          ) : null}
           <div className="flex justify-between gap-4 py-2.5">
             <dt className="text-fg-muted">ราคา / ที่นั่ง</dt>
             <dd className="text-right font-semibold text-fg">
@@ -205,9 +211,15 @@ export default async function BookingPage({ params }: Props) {
             <div className="py-3 first:pt-0">
               <dt className="text-xs font-medium uppercase tracking-wide text-fg-muted">📅 วันเดินทาง</dt>
               <dd className="mt-1 font-semibold text-fg">
-                {formatBangkok(trip.startAt)}
-                <span className="mx-1.5 text-fg-hint">—</span>
-                {formatBangkok(trip.endAt)}
+                {booking.selectedRound ? (
+                  booking.selectedRound
+                ) : (
+                  <>
+                    {formatBangkok(trip.startAt)}
+                    <span className="mx-1.5 text-fg-hint">—</span>
+                    {formatBangkok(trip.endAt)}
+                  </>
+                )}
               </dd>
             </div>
             {trip.meetPoint?.trim() ? (

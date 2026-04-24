@@ -147,6 +147,8 @@ model Booking {
   participantEmail   String
   participantPhone   String
   status             BookingStatus  @default(PENDING_PAYMENT)
+  /// รอบที่ผู้จองเลือก เช่น "27 ก.ค. – 1 ส.ค. 2568 · รอบเช้า" (null = ทริปมีรอบเดียว)
+  selectedRound      String?
   viewToken          String         @unique
   expiresAt          DateTime
   stripeSessionId    String?        @unique

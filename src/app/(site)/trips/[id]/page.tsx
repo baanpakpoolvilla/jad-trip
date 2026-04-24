@@ -12,6 +12,7 @@ import {
   TripRichBlock,
 } from "@/components/trip-public-parts";
 import { TripShareButton } from "@/components/trip-share-button";
+import { TripRoundPickerCta } from "@/components/trip-round-picker-cta";
 import {
   getPublishedTripById,
   organizerPublicBrochureHrefFromOrganizer,
@@ -21,7 +22,10 @@ import {
   tripDestinationMapEmbedUrl,
   tripDestinationOpenStreetMapUrl,
 } from "@/lib/trip-destination-map-embed";
-import { formatDepartureOptions } from "@/lib/departure-options";
+import {
+  formatDepartureOptions,
+  parseDepartureRounds,
+} from "@/lib/departure-options";
 import { getPublicSiteBaseUrl } from "@/lib/public-site-url";
 import { safeHttpHref } from "@/lib/social-link";
 
@@ -73,6 +77,11 @@ export default async function TripDetailPage({ params }: Props) {
   const canBook = spotsLeft > 0;
   if (!trip.shareCode) notFound();
 
+  const hasMultipleRounds = trip.departureOptions.trim().length > 0;
+  const rounds = hasMultipleRounds
+    ? parseDepartureRounds(trip.startAt, trip.endAt, trip.departureOptions)
+    : [];
+
   const backHref = organizerPublicBrochureHrefFromOrganizer({
     id: trip.organizerId,
     brochureShareCode: trip.organizer.brochureShareCode ?? null,
@@ -113,12 +122,16 @@ export default async function TripDetailPage({ params }: Props) {
         maxParticipants={trip.maxParticipants}
       />
 
-      <TripRichBlock
-        title="รอบเดินทางเพิ่มเติม"
-        body={formatDepartureOptions(trip.departureOptions)}
-        variant="card"
-        bodyAsList
-      />
+      {hasMultipleRounds ? (
+        <TripRoundPickerCta tripId={trip.id} rounds={rounds} canBook={canBook} />
+      ) : (
+        <TripRichBlock
+          title="รอบเดินทางเพิ่มเติม"
+          body={formatDepartureOptions(trip.departureOptions)}
+          variant="card"
+          bodyAsList
+        />
+      )}
       <TripRichBlock title="ภาพรวมทริป" body={trip.description} variant="card" />
 
       {/* ลำดับเดียวกับหมวด «เล่าเรื่องทริป» ในฟอร์มผู้จัด */}
@@ -229,23 +242,25 @@ export default async function TripDetailPage({ params }: Props) {
         </section>
       ) : null}
 
-      {/* Sticky bottom CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/80 bg-canvas/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] backdrop-blur-md supports-backdrop-filter:bg-canvas/80 sm:px-6 sm:pt-3.5 sm:pb-[max(0.875rem,env(safe-area-inset-bottom,0px))]">
-        <div className="jad-container">
-          {canBook ? (
-            <Link
-              href={`/trips/${trip.id}/book`}
-              className="jad-btn-primary flex h-12 w-full text-[15px] font-semibold shadow-[0_4px_16px_rgba(30,77,58,0.22)] sm:h-14 sm:text-base"
-            >
-              จองที่นั่ง
-            </Link>
-          ) : (
-            <p className="rounded-xl border border-border bg-surface py-4 text-center text-sm font-medium text-fg-hint">
-              ทริปนี้เต็มแล้ว หรือปิดรับจองแล้ว
-            </p>
-          )}
+      {/* Sticky bottom CTA — single-round trips only; multi-round handled by TripRoundPickerCta */}
+      {!hasMultipleRounds && (
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/80 bg-canvas/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] backdrop-blur-md supports-backdrop-filter:bg-canvas/80 sm:px-6 sm:pt-3.5 sm:pb-[max(0.875rem,env(safe-area-inset-bottom,0px))]">
+          <div className="jad-container">
+            {canBook ? (
+              <Link
+                href={`/trips/${trip.id}/book`}
+                className="jad-btn-primary flex h-12 w-full text-[15px] font-semibold shadow-[0_4px_16px_rgba(30,77,58,0.22)] sm:h-14 sm:text-base"
+              >
+                จองที่นั่ง
+              </Link>
+            ) : (
+              <p className="rounded-xl border border-border bg-surface py-4 text-center text-sm font-medium text-fg-hint">
+                ทริปนี้เต็มแล้ว หรือปิดรับจองแล้ว
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </article>
   );
 }

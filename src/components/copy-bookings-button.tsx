@@ -7,6 +7,7 @@ type BookingRow = {
   name: string;
   phone: string;
   status: string;
+  round?: string;
 };
 
 function statusLabel(s: string) {
@@ -30,7 +31,8 @@ export function CopyBookingsButton({
       `รวม ${bookings.length} คน`,
       "",
       ...bookings.map(
-        (b, i) => `${i + 1}. ${b.name} | ${b.phone} | ${statusLabel(b.status)}`,
+        (b, i) =>
+          `${i + 1}. ${b.name} | ${b.phone} | ${statusLabel(b.status)}${b.round ? ` | ${b.round}` : ""}`,
       ),
     ];
     void navigator.clipboard.writeText(lines.join("\n")).then(() => {

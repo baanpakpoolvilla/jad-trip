@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { BookingStatus } from "@prisma/client";
+
+export const runtime = "nodejs";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -152,7 +154,9 @@ export async function POST(request: Request) {
         userId: booking.trip.organizerId,
         kind: "BOOKING_PAID",
         title: "มีผู้จองชำระเงินแล้ว",
-        message: `${booking.participantName} ชำระทริป "${booking.trip.title}" เรียบร้อย`,
+        message: booking.selectedRound
+          ? `${booking.participantName} ชำระทริป "${booking.trip.title}" รอบ ${booking.selectedRound} เรียบร้อย`
+          : `${booking.participantName} ชำระทริป "${booking.trip.title}" เรียบร้อย`,
         href: `/organizer/trips/${booking.tripId}`,
       },
     }),
