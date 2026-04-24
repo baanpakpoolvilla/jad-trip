@@ -29,6 +29,7 @@ export function TripDestinationPicker({
   const [hits, setHits] = useState<Hit[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [noHitsForQuery, setNoHitsForQuery] = useState(false);
   const [selected, setSelected] = useState<SelectedPlace | null>(() => {
     if (!defaultName.trim()) return null;
     if (
@@ -48,6 +49,7 @@ export function TripDestinationPicker({
     if (t.length < 2) {
       setHits([]);
       setSearchError(null);
+      setNoHitsForQuery(false);
       return;
     }
     setLoading(true);
@@ -60,12 +62,16 @@ export function TripDestinationPicker({
       const data = (await res.json()) as { results?: Hit[]; error?: string };
       if (!res.ok) {
         setHits([]);
+        setNoHitsForQuery(false);
         setSearchError(data.error ?? "ค้นหาไม่สำเร็จ");
         return;
       }
-      setHits(Array.isArray(data.results) ? data.results : []);
+      const list = Array.isArray(data.results) ? data.results : [];
+      setHits(list);
+      setNoHitsForQuery(list.length === 0);
     } catch {
       setHits([]);
+      setNoHitsForQuery(false);
       setSearchError("เชื่อมต่อไม่สำเร็จ");
     } finally {
       setLoading(false);
@@ -106,7 +112,7 @@ export function TripDestinationPicker({
       <div className={dense ? "space-y-1.5" : "space-y-2"}>
         {hideHeading ? (
           <label htmlFor={searchId} className="sr-only">
-            จุดหมายปลายทาง (ไม่บังคับ) — พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ (Google Maps)
+            จุดหมายปลายทาง (ไม่บังคับ) — พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ ค้นหาผ่าน Google Maps / Places
           </label>
         ) : (
           <label
@@ -123,8 +129,12 @@ export function TripDestinationPicker({
           </label>
         )}
         <p id={hintId} className={dense ? "sr-only" : "text-xs leading-relaxed text-fg-muted"}>
-          พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ — ค้นหาผ่าน Google Places
+          พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ — ค้นหาผ่าน Google Maps (Places) เมื่อตั้ง GOOGLE_MAPS_API_KEY ไว้
+          ไม่เช่นนั้นใช้ OpenStreetMap เป็นสำรอง
         </p>
+        {dense ? (
+          <p className="text-[11px] leading-snug text-fg-muted">ค้นหา: Google Maps/Places หรือ OpenStreetMap</p>
+        ) : null}
         <div className="relative">
           <Search
             className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-fg-hint"
@@ -135,9 +145,12 @@ export function TripDestinationPicker({
             id={searchId}
             type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setNoHitsForQuery(false);
+              setQuery(e.target.value);
+            }}
             autoComplete="off"
-            placeholder="เช่น ดอยอินทนนท์ เชียงใหม่ หรือชื่ออุทยาน…"
+            placeholder="ค้นหาใน Google Maps / Places เช่น ดอยอินทนนท์ เชียงใหม่…"
             aria-describedby={hintId}
             className={`jad-input w-full pl-9 ${dense ? "text-sm" : ""}`}
           />
@@ -146,6 +159,15 @@ export function TripDestinationPicker({
           ) : null}
         </div>
         {visibleSearchError ? <p className="text-xs text-red-600">{visibleSearchError}</p> : null}
+        {searchActive &&
+        !visibleLoading &&
+        !visibleSearchError &&
+        !showHitList &&
+        noHitsForQuery ? (
+          <p className="text-xs text-fg-muted">
+            ไม่พบสถานที่ — ลองคำอื่น หรือตรวจสอบว่าเปิด Places API และตั้ง GOOGLE_MAPS_API_KEY แล้ว
+          </p>
+        ) : null}
 
         {showHitList ? (
           <ul
@@ -165,6 +187,7 @@ export function TripDestinationPicker({
                   onClick={() => {
                     setSelected({ label: h.label, lat: h.lat, lon: h.lon });
                     setHits([]);
+                    setNoHitsForQuery(false);
                     setQuery("");
                   }}
                 >
@@ -196,6 +219,7 @@ export function TripDestinationPicker({
               onClick={() => {
                 setSelected(null);
                 setHits([]);
+                setNoHitsForQuery(false);
                 setQuery("");
               }}
             >

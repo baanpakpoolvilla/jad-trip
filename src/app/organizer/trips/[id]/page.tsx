@@ -70,7 +70,7 @@ function BookingList({
   slipUrls,
 }: {
   bookings: BookingItem[];
-  slipUrls: Record<string, string | undefined>;
+  slipUrls: Record<string, string | null | undefined>;
 }) {
   return (
     <ul className="space-y-1.5">

@@ -49,6 +49,8 @@ const securityHeaders = [
       "connect-src 'self' https://*.supabase.co",
       // form ส่งไปได้เฉพาะ self
       "form-action 'self'",
+      // ฝัง iframe แผนที่ (trip meet / destination pickers) — ไม่มี frame-src จะสืบทอดจาก default-src และบล็อก google.com
+      "frame-src 'self' https://www.google.com https://maps.google.com",
       // ป้องกัน Clickjacking ซ้ำในระดับ CSP
       "frame-ancestors 'self'",
     ].join("; "),

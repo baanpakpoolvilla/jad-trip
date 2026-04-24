@@ -29,6 +29,8 @@ export function TripMeetPointPicker({
   const [hits, setHits] = useState<Hit[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  /** ค้นหาครั้งล่าสุดเสร็จแล้วและไม่มีผลลัพธ์ (สำหรับข้อความช่วย) */
+  const [noHitsForQuery, setNoHitsForQuery] = useState(false);
   const [meetText, setMeetText] = useState(defaultMeetPoint);
   const [selected, setSelected] = useState<Hit | null>(() => {
     if (
@@ -52,6 +54,7 @@ export function TripMeetPointPicker({
     if (t.length < 2) {
       setHits([]);
       setSearchError(null);
+      setNoHitsForQuery(false);
       return;
     }
     setLoading(true);
@@ -64,12 +67,16 @@ export function TripMeetPointPicker({
       const data = (await res.json()) as { results?: Hit[]; error?: string };
       if (!res.ok) {
         setHits([]);
+        setNoHitsForQuery(false);
         setSearchError(data.error ?? "ค้นหาไม่สำเร็จ");
         return;
       }
-      setHits(Array.isArray(data.results) ? data.results : []);
+      const list = Array.isArray(data.results) ? data.results : [];
+      setHits(list);
+      setNoHitsForQuery(list.length === 0);
     } catch {
       setHits([]);
+      setNoHitsForQuery(false);
       setSearchError("เชื่อมต่อไม่สำเร็จ");
     } finally {
       setLoading(false);
@@ -119,8 +126,14 @@ export function TripMeetPointPicker({
           <span className="text-[11px] font-normal text-fg-hint sm:text-xs">ไม่บังคับ</span>
         </label>
         <p id={hintId} className={dense ? "sr-only" : "text-xs leading-relaxed text-fg-muted"}>
-          เลือกสถานที่จากแผนที่ — ระบบจะใส่ชื่อลงในช่องรายละเอียดด้านล่าง คุณแก้ต่อได้ เช่น ทางออก ชั้น จุดสังเกต
+          พิมพ์ชื่อสถานที่แล้วเลือกจากรายการ — ค้นหาผ่าน Google Maps (Places) เมื่อตั้ง GOOGLE_MAPS_API_KEY ไว้
+          ไม่เช่นนั้นใช้ OpenStreetMap เป็นสำรอง จากนั้นระบบจะใส่ชื่อลงในช่องรายละเอียดด้านล่าง คุณแก้ต่อได้ เช่น ทางออก ชั้น จุดสังเกต
         </p>
+        {dense ? (
+          <p className="text-[11px] leading-snug text-fg-muted">
+            ค้นหา: Google Maps/Places หรือ OpenStreetMap
+          </p>
+        ) : null}
         <div className="relative">
           <Search
             className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-fg-hint"
@@ -131,9 +144,12 @@ export function TripMeetPointPicker({
             id={searchId}
             type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setNoHitsForQuery(false);
+              setQuery(e.target.value);
+            }}
             autoComplete="off"
-            placeholder="เช่น BTS หมอชิต สนามบินสุวรรณภูมิ…"
+            placeholder="ค้นหาใน Google Maps / Places เช่น BTS หมอชิต สุวรรณภูมิ…"
             aria-describedby={hintId}
             disabled={locked}
             className={`jad-input w-full pl-9 ${dense ? "text-sm" : ""} read-only:bg-canvas read-only:text-fg-muted`}
@@ -143,6 +159,17 @@ export function TripMeetPointPicker({
           ) : null}
         </div>
         {visibleSearchError ? <p className="text-xs text-red-600">{visibleSearchError}</p> : null}
+        {!locked &&
+        canSearch &&
+        !selected &&
+        !visibleLoading &&
+        !visibleSearchError &&
+        visibleHits.length === 0 &&
+        noHitsForQuery ? (
+          <p className="text-xs text-fg-muted">
+            ไม่พบสถานที่ — ลองคำอื่น หรือตรวจสอบว่าเปิด Places API และตั้ง GOOGLE_MAPS_API_KEY แล้ว
+          </p>
+        ) : null}
 
         {!locked && visibleHits.length > 0 && !selected ? (
           <ul
@@ -163,6 +190,7 @@ export function TripMeetPointPicker({
                     setSelected(h);
                     setMeetText(h.label);
                     setHits([]);
+                    setNoHitsForQuery(false);
                     setQuery("");
                   }}
                 >
@@ -197,6 +225,7 @@ export function TripMeetPointPicker({
                 onClick={() => {
                   setSelected(null);
                   setHits([]);
+                  setNoHitsForQuery(false);
                   setQuery("");
                 }}
               >
