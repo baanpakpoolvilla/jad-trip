@@ -32,6 +32,7 @@ const tripFormSchema = z.object({
   packingList: z.string().optional(),
   safetyNotes: z.string().optional(),
   guideProvides: z.string().optional(),
+  departureOptions: z.string().optional(),
   guideUserId: z.string().optional(),
   destinationName: z.string().optional(),
   destinationLat: z.string().optional(),
@@ -63,6 +64,7 @@ function parseTripForm(formData: FormData) {
     packingList: formData.get("packingList")?.toString() ?? "",
     safetyNotes: formData.get("safetyNotes")?.toString() ?? "",
     guideProvides: formData.get("guideProvides")?.toString() ?? "",
+    departureOptions: formData.get("departureOptions")?.toString() ?? "",
     guideUserId: formData.get("guideUserId")?.toString() ?? "",
     destinationName: formData.get("destinationName")?.toString() ?? "",
     destinationLat: formData.get("destinationLat")?.toString() ?? "",
@@ -129,6 +131,7 @@ function tripRichContentFromParsed(v: z.infer<typeof tripFormSchema>) {
     packingList: trim(v.packingList),
     safetyNotes: trim(v.safetyNotes),
     guideProvides: trim(v.guideProvides),
+    departureOptions: trim(v.departureOptions),
   };
 }
 

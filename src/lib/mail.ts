@@ -30,8 +30,8 @@ export function getDefaultFromAddress(): string {
   const explicit = process.env.EMAIL_FROM?.trim();
   if (explicit) return explicit;
   const user = process.env.SMTP_USER?.trim();
-  if (user?.includes("@")) return `"Just Trip" <${user}>`;
-  return `"Just Trip" <noreply@localhost>`;
+  if (user?.includes("@")) return `"Say Hi Trip" <${user}>`;
+  return `"Say Hi Trip" <noreply@localhost>`;
 }
 
 export async function sendTransactionalEmail(opts: {

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Just Trip — design tokens → Tailwind v4 @theme  (CI v2.0) */
+/* Say Hi Trip — design tokens → Tailwind v4 @theme  (CI v2.0) */
 @theme inline {
   --font-sans: var(--font-noto-thai), var(--font-inter), ui-sans-serif, system-ui,
     sans-serif;

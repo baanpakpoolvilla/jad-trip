@@ -1,14 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { TripForm } from "@/components/trip-form";
+import { OrganizerNewTripShell } from "@/components/organizer-new-trip-shell";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import {
-  buildDemoTripPrefill,
-  DEMO_GUIDE_EMAIL,
-  DEMO_ORGANIZER_EMAIL,
-} from "@/lib/demo-new-trip-prefill";
-
 export default async function NewTripPage() {
   const session = await auth();
   let organizerProfile = {
@@ -32,17 +26,6 @@ export default async function NewTripPage() {
     }
   }
 
-  let demoTripPrefill = null;
-  if (session?.user?.email === DEMO_ORGANIZER_EMAIL) {
-    const guide = await db.user.findFirst({
-      where: { email: DEMO_GUIDE_EMAIL, isGuide: true },
-      select: { id: true, name: true, email: true, bio: true, avatarUrl: true },
-    });
-    if (guide) {
-      demoTripPrefill = buildDemoTripPrefill(guide);
-    }
-  }
-
   return (
     <div className="space-y-4">
       <Link href="/organizer/trips" className="jad-back-link">
@@ -56,11 +39,7 @@ export default async function NewTripPage() {
         </p>
       </header>
       <div className="jad-card p-3 sm:p-5">
-        <TripForm
-          mode="create"
-          organizerProfile={organizerProfile}
-          demoTripPrefill={demoTripPrefill}
-        />
+        <OrganizerNewTripShell organizerProfile={organizerProfile} />
       </div>
     </div>
   );

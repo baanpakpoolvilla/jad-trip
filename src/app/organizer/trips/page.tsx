@@ -48,6 +48,7 @@ export default async function OrganizerTripsPage() {
         highlights: true,
         itinerary: true,
         guideProvides: true,
+        departureOptions: true,
         policyNotes: true,
         _count: { select: { bookings: true } },
       },
@@ -127,6 +128,7 @@ export default async function OrganizerTripsPage() {
               highlights: t.highlights,
               itinerary: t.itinerary,
               guideProvides: t.guideProvides,
+              departureOptions: t.departureOptions,
               policyNotes: t.policyNotes,
               tripUrl,
               organizer: {

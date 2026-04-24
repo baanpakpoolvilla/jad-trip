@@ -6,14 +6,26 @@ function nominatimUserAgent(): string {
   const base = process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000";
   const custom = process.env.NOMINATIM_USER_AGENT?.trim();
   if (custom) return custom;
-  return `JustTrip/1.0 (${base})`;
+  return `SayHiTrip/1.0 (${base})`;
 }
 
 export type PlaceSearchHit = {
   label: string;
+  /** บริบทเสริม เช่น จังหวัด / ประเทศ — แสดงเป็น subtext ในดรอปดาวน์ */
+  sublabel: string;
   lat: number;
   lon: number;
 };
+
+/** แยก display_name → label (ชื่อสั้น) + sublabel (บริบท) */
+function splitDisplayName(raw: string): { label: string; sublabel: string } {
+  const parts = raw.split(", ");
+  if (parts.length <= 2) return { label: raw, sublabel: "" };
+  return {
+    label: parts.slice(0, 2).join(", "),
+    sublabel: parts.slice(2).join(", "),
+  };
+}
 
 /**
  * ค้นหาสถานที่ผ่าน Nominatim (OSM) — เรียกจากเซิร์ฟเวอร์เท่านั้น ตามนโยบาย User-Agent
@@ -34,6 +46,7 @@ export async function GET(req: Request) {
   url.searchParams.set("format", "json");
   url.searchParams.set("limit", "10");
   url.searchParams.set("addressdetails", "0");
+  url.searchParams.set("countrycodes", "th");
 
   let res: Response;
   try {
@@ -62,12 +75,13 @@ export async function GET(req: Request) {
 
   const results: PlaceSearchHit[] = [];
   for (const row of Array.isArray(raw) ? raw : []) {
-    const label = typeof row.display_name === "string" ? row.display_name.trim() : "";
+    const displayName = typeof row.display_name === "string" ? row.display_name.trim() : "";
     const lat = Number(row.lat);
     const lon = Number(row.lon);
-    if (!label || !Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+    if (!displayName || !Number.isFinite(lat) || !Number.isFinite(lon)) continue;
     if (Math.abs(lat) > 90 || Math.abs(lon) > 180) continue;
-    results.push({ label, lat, lon });
+    const { label, sublabel } = splitDisplayName(displayName);
+    results.push({ label, sublabel, lat, lon });
   }
 
   return NextResponse.json({ results });

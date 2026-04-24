@@ -61,7 +61,7 @@ export async function requestPasswordReset(
   try {
     await sendTransactionalEmail({
       to: user.email,
-      subject: "รีเซ็ตรหัสผ่าน Just Trip",
+      subject: "รีเซ็ตรหัสผ่าน Say Hi Trip",
       text: `คุณสามารถรีเซ็ตรหัสผ่านได้โดยเปิดลิงก์นี้ (ใช้ได้ภายใน ${EXPIRY_MINUTES} นาที):\n\n${link}\n\nหากคุณไม่ได้ขอรีเซ็ตรหัสผ่าน ให้ละเลยอีเมลนี้`,
       html: `<p>คุณสามารถรีเซ็ตรหัสผ่านได้โดยคลิกลิงก์ด้านล่าง (ใช้ได้ภายใน <strong>${EXPIRY_MINUTES} นาที</strong>):</p><p><a href="${link}">รีเซ็ตรหัสผ่าน</a></p><p style="word-break:break-all;font-size:12px;color:#666">${link}</p><p>หากคุณไม่ได้ขอรีเซ็ตรหัสผ่าน ให้ละเลยอีเมลนี้</p>`,
     });

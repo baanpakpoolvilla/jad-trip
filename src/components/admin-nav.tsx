@@ -158,7 +158,7 @@ export function AdminBrandLink() {
   return (
     <Link href="/admin" className="flex min-w-0 items-center gap-2 text-white">
       <ShieldCheck className="size-5 shrink-0" strokeWidth={1.5} aria-hidden />
-      <span className="min-w-0 truncate text-lg font-bold">Just Trip</span>
+      <span className="min-w-0 truncate text-lg font-bold">Say Hi Trip</span>
       <span className="hidden shrink-0 text-sm font-medium text-white/85 sm:inline">แอดมิน</span>
     </Link>
   );

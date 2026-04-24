@@ -22,19 +22,8 @@ import { TripItineraryBuilder } from "@/components/trip-itinerary-builder";
 import { TripGuidePicker } from "@/components/trip-guide-picker";
 import { TripTravelNotesField } from "@/components/trip-travel-notes-field";
 import { BulletLinesField } from "@/components/bullet-lines-field";
-import type { NewTripDemoPrefill } from "@/lib/demo-new-trip-prefill";
-
-function defaultWeekAhead() {
-  const start = new Date();
-  start.setDate(start.getDate() + 7);
-  start.setHours(6, 0, 0, 0);
-  const end = new Date(start);
-  end.setHours(18, 0, 0, 0);
-  return {
-    startAt: toDatetimeLocalValueBangkok(start),
-    endAt: toDatetimeLocalValueBangkok(end),
-  };
-}
+import { DepartureRoundsField } from "@/components/departure-rounds-field";
+import type { TripAiPrefillFields } from "@/lib/trip-ai-prefill-fields";
 
 /** ข้อมูลการ์ดผู้จัดบนหน้าทริป — แก้ที่หน้าโปรไฟล์เท่านั้น */
 type OrganizerProfilePreview = {
@@ -58,8 +47,8 @@ type Props =
   | {
       mode: "create";
       organizerProfile?: OrganizerProfilePreview | null;
-      /** เติมฟอร์มตัวอย่าง (เช่น ล็อกอิน demo-organizer) */
-      demoTripPrefill?: NewTripDemoPrefill | null;
+      /** ลงทับค่าเริ่มต้นจาก AI — ใช้คู่ `key` บน TripForm เพื่อรีเมาต์ */
+      aiFieldOverrides?: TripAiPrefillFields | null;
     }
   | {
       mode: "edit";
@@ -224,10 +213,8 @@ export function TripForm(props: Props) {
   const router = useRouter();
   const organizerPreview = organizerPreviewFromProps(props);
 
-  const demoFill = props.mode === "create" ? props.demoTripPrefill : null;
-  const demoRest = demoFill
-    ? (({ guide, ...r }: NewTripDemoPrefill) => (void guide, r))(demoFill)
-    : null;
+  const aiOverlay =
+    props.mode === "create" && props.aiFieldOverrides ? props.aiFieldOverrides : null;
 
   const defaults =
     props.mode === "create"
@@ -250,13 +237,15 @@ export function TripForm(props: Props) {
           packingList: "",
           safetyNotes: "",
           guideProvides: "",
-          ...defaultWeekAhead(),
-          maxParticipants: 8,
-          pricePerPerson: 1500,
+          departureOptions: "",
+          startAt: "",
+          endAt: "",
+          maxParticipants: undefined as number | undefined,
+          pricePerPerson: undefined as number | undefined,
           bookingClosesAt: "",
           policyNotes: "",
           groupUrl: "",
-          ...(demoRest ?? {}),
+          ...(aiOverlay ?? {}),
         }
       : {
           title: props.trip.title,
@@ -277,6 +266,7 @@ export function TripForm(props: Props) {
           packingList: props.trip.packingList ?? "",
           safetyNotes: props.trip.safetyNotes ?? "",
           guideProvides: props.trip.guideProvides ?? "",
+          departureOptions: props.trip.departureOptions ?? "",
           startAt: toDatetimeLocalValueBangkok(props.trip.startAt),
           endAt: toDatetimeLocalValueBangkok(props.trip.endAt),
           maxParticipants: props.trip.maxParticipants,
@@ -416,10 +406,11 @@ export function TripForm(props: Props) {
             id={`${fid}-short`}
             name="shortDescription"
             required
+            readOnly={locked}
             defaultValue={defaults.shortDescription}
             autoComplete="off"
             placeholder="สรุปใจความสำคัญของทริป"
-            className="jad-input"
+            className="jad-input read-only:bg-canvas read-only:text-fg-muted"
           />
         </FieldRow>
       </FormSection>
@@ -448,6 +439,7 @@ export function TripForm(props: Props) {
               id={`${fid}-description`}
               name="description"
               required
+              readOnly={locked}
               rows={dense ? 5 : 6}
               defaultValue={defaults.description}
               placeholder={
@@ -455,13 +447,12 @@ export function TripForm(props: Props) {
                   ? "กิจกรรมหลัก ระดับความเหนื่อย รวม/ไม่รวมอะไรบ้าง"
                   : "เช่น ลำดับวันโดยย่อ กิจกรรมหลัก ระดับความเหนื่อย หรือสิ่งที่รวม/ไม่รวม"
               }
-              className={`jad-input resize-y ${dense ? "min-h-[120px]" : "min-h-[140px]"}`}
+              className={`jad-input resize-y read-only:bg-canvas read-only:text-fg-muted ${dense ? "min-h-[120px]" : "min-h-[140px]"}`}
             />
           </FieldRow>
         }
       >
         <div className={dense ? "space-y-3" : "space-y-5"}>
-            <input type="hidden" name="guideDetails" defaultValue={defaults.guideDetails} />
             <FieldRow
               dense={dense}
               label="การเดินทางระหว่างทริป"
@@ -883,21 +874,31 @@ export function TripForm(props: Props) {
             </p>
           )}
           <TripGuidePicker
-            initialGuideUserId={
-              props.mode === "edit"
-                ? props.trip.guideUserId
-                : props.mode === "create" && props.demoTripPrefill
-                  ? props.demoTripPrefill.guide.id
-                  : null
-            }
+            initialGuideUserId={props.mode === "edit" ? props.trip.guideUserId : null}
             initialGuide={
-              props.mode === "edit" && props.trip.guide
-                ? props.trip.guide
-                : props.mode === "create" && props.demoTripPrefill
-                  ? props.demoTripPrefill.guide
-                  : null
+              props.mode === "edit" && props.trip.guide ? props.trip.guide : null
             }
           />
+          <FieldRow
+            dense={dense}
+            label="รู้จักไกด์ / ทีมงาน"
+            hint={
+              dense
+                ? "ข้อความเพิ่มเติมนอกเหนือจากการ์ดไกด์ — แสดงใต้การ์ดบนหน้าทริป"
+                : "เล่าประสบการณ์หรือสไตล์การนำทริป — แสดงใต้การ์ดไกด์บนหน้าทริปสาธารณะ"
+            }
+            optional
+            controlId={`${fid}-guide-details`}
+          >
+            <textarea
+              id={`${fid}-guide-details`}
+              name="guideDetails"
+              rows={dense ? 3 : 4}
+              defaultValue={defaults.guideDetails}
+              placeholder="เช่น ประสบการณ์นำเส้นทางนี้ หรือสิ่งที่อยากให้ผู้จองรู้เกี่ยวกับทีมงาน"
+              className={`jad-input resize-y ${dense ? "min-h-[72px] text-sm" : "min-h-[88px]"}`}
+            />
+          </FieldRow>
         </div>
       </FormSection>
 
@@ -908,7 +909,7 @@ export function TripForm(props: Props) {
         title="เวลา ที่นั่ง และราคา"
         lede={
           dense
-            ? undefined
+            ? "จองบนเว็บตามวันเริ่ม–จบรอบเดียว · รอบอื่นใส่รายการด้านล่าง"
             : "เวลาเป็นเขตเวลาไทย — ตรวจให้ตรงกับวันจริงของทริป"
         }
       >
@@ -926,7 +927,7 @@ export function TripForm(props: Props) {
               type="datetime-local"
               required
               readOnly={locked}
-              defaultValue={defaults.startAt}
+              defaultValue={defaults.startAt || ""}
               className="jad-input read-only:bg-canvas read-only:text-fg-muted"
             />
           </FieldRow>
@@ -937,11 +938,25 @@ export function TripForm(props: Props) {
               type="datetime-local"
               required
               readOnly={locked}
-              defaultValue={defaults.endAt}
+              defaultValue={defaults.endAt || ""}
               className="jad-input read-only:bg-canvas read-only:text-fg-muted"
             />
           </FieldRow>
         </div>
+        <FieldRow
+          dense={dense}
+          label="รอบวันออกเพิ่มเติม"
+          hint="ไม่ผูกการจอง — แสดงบนหน้าทริปเท่านั้น"
+          optional
+          controlId={`${fid}-departure-options`}
+        >
+          <DepartureRoundsField
+            name="departureOptions"
+            baseId={`${fid}-departure-options`}
+            defaultValue={defaults.departureOptions}
+            dense={dense}
+          />
+        </FieldRow>
         <div
           className={
             dense
@@ -957,7 +972,12 @@ export function TripForm(props: Props) {
               min={1}
               required
               readOnly={locked}
-              defaultValue={defaults.maxParticipants}
+              defaultValue={
+                defaults.maxParticipants === undefined ||
+                defaults.maxParticipants === null
+                  ? ""
+                  : defaults.maxParticipants
+              }
               className="jad-input read-only:bg-canvas read-only:text-fg-muted"
             />
           </FieldRow>
@@ -974,31 +994,16 @@ export function TripForm(props: Props) {
               min={0}
               required
               readOnly={locked}
-              defaultValue={defaults.pricePerPerson}
+              defaultValue={
+                defaults.pricePerPerson === undefined || defaults.pricePerPerson === null
+                  ? ""
+                  : defaults.pricePerPerson
+              }
               className="jad-input read-only:bg-canvas read-only:text-fg-muted"
             />
           </FieldRow>
         </div>
-        <FieldRow
-          dense={dense}
-          label="ปิดรับจองล่วงหน้า"
-          hint={
-            dense
-              ? undefined
-              : "ถ้าไม่ระบุ จะไม่มีวันปิดรับจองแยกจากนี้ (ยังต้องเป็นทริปที่เผยแพร่และไม่เลยกำหนดอื่นของระบบ)"
-          }
-          optional
-          controlId={`${fid}-closes`}
-        >
-          <input
-            id={`${fid}-closes`}
-            name="bookingClosesAt"
-            type="datetime-local"
-            readOnly={locked}
-            defaultValue={defaults.bookingClosesAt}
-            className="jad-input read-only:bg-canvas read-only:text-fg-muted"
-          />
-        </FieldRow>
+        <input type="hidden" name="bookingClosesAt" value="" />
         <FieldRow
           dense={dense}
           label="นโยบายและการยกเลิก"

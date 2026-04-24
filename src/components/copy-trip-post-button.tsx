@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
+import { formatDepartureOptions } from "@/lib/departure-options";
 
 export type TripPostData = {
   title: string;
@@ -16,6 +17,7 @@ export type TripPostData = {
   highlights: string;
   itinerary: string;
   guideProvides: string;
+  departureOptions: string;
   policyNotes: string;
   tripUrl: string;
   organizer: {
@@ -57,6 +59,11 @@ function buildPostText(d: TripPostData): string {
   info.push(`👥 รับสูงสุด: ${d.maxParticipants} คน`);
   if (d.bookingClosesAt) info.push(`⏰ ปิดรับจอง: ${d.bookingClosesAt}`);
   sections.push(info);
+
+  const depBullets = toBullets(formatDepartureOptions(d.departureOptions));
+  if (depBullets.length > 0) {
+    sections.push(["📆 รอบอื่น / วันออกเพิ่มเติม", ...depBullets]);
+  }
 
   // ─── ไฮไลต์ ──────────────────────────────────────────────
   const hlBullets = toBullets(d.highlights);

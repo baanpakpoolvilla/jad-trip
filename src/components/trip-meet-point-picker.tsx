@@ -7,7 +7,7 @@ import {
   tripDestinationOpenStreetMapUrl,
 } from "@/lib/trip-destination-map-embed";
 
-type Hit = { label: string; lat: number; lon: number };
+type Hit = { label: string; sublabel?: string; lat: number; lon: number };
 
 export function TripMeetPointPicker({
   dense,
@@ -161,7 +161,7 @@ export function TripMeetPointPicker({
               <li key={`${h.lat}-${h.lon}-${h.label.slice(0, 40)}`}>
                 <button
                   type="button"
-                  className="w-full px-3 py-2 text-left text-xs leading-snug text-fg hover:bg-brand-light/50 sm:text-sm"
+                  className="w-full px-3 py-2 text-left hover:bg-brand-light/50"
                   onClick={() => {
                     setSelected(h);
                     setMeetText(h.label);
@@ -169,7 +169,10 @@ export function TripMeetPointPicker({
                     setQuery("");
                   }}
                 >
-                  {h.label}
+                  <p className="text-xs leading-snug text-fg sm:text-sm">{h.label}</p>
+                  {h.sublabel ? (
+                    <p className="mt-0.5 text-[11px] leading-snug text-fg-muted">{h.sublabel}</p>
+                  ) : null}
                 </button>
               </li>
             ))}

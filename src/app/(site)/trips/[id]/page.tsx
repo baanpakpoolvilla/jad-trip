@@ -21,6 +21,7 @@ import {
   tripDestinationMapEmbedUrl,
   tripDestinationOpenStreetMapUrl,
 } from "@/lib/trip-destination-map-embed";
+import { formatDepartureOptions } from "@/lib/departure-options";
 
 export const dynamic = "force-dynamic";
 
@@ -109,6 +110,12 @@ export default async function TripDetailPage({ params }: Props) {
         maxParticipants={trip.maxParticipants}
       />
 
+      <TripRichBlock
+        title="รอบเดินทางเพิ่มเติม"
+        body={formatDepartureOptions(trip.departureOptions)}
+        variant="card"
+        bodyAsList
+      />
       <TripRichBlock title="ภาพรวมทริป" body={trip.description} variant="card" />
 
       {/* ลำดับเดียวกับหมวด «เล่าเรื่องทริป» ในฟอร์มผู้จัด */}

@@ -29,6 +29,7 @@ export type NewTripDemoPrefillFields = {
   packingList: string;
   safetyNotes: string;
   guideProvides: string;
+  departureOptions: string;
   destinationName: string;
 };
 
@@ -113,6 +114,7 @@ export function buildDemoTripPrefill(guide: GuideSearchResult): NewTripDemoPrefi
       "เดินในกลุ่ม แจ้งไกด์หากไม่สบาย\nดื่มน้ำสม่ำเสมอ",
     guideProvides:
       "น้ำดื่มคนละ 2 ขวด/วัน\nชุดปฐมพยาบาลเบื้องต้น",
+    departureOptions: "รอบ B (ตัวอย่าง)\nรอบ C — ราคาต่าง",
     destinationName: "อุทยานแห่งชาติเขาใหญ่",
   };
 }

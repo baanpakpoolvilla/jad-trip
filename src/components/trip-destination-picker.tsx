@@ -7,7 +7,8 @@ import {
   tripDestinationOpenStreetMapUrl,
 } from "@/lib/trip-destination-map-embed";
 
-type Hit = { label: string; lat: number; lon: number };
+type Hit = { label: string; sublabel?: string; lat: number; lon: number };
+type SelectedPlace = { label: string; lat: number | null; lon: number | null };
 
 export function TripDestinationPicker({
   dense,
@@ -31,17 +32,18 @@ export function TripDestinationPicker({
   const [hits, setHits] = useState<Hit[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Hit | null>(() => {
+  const [selected, setSelected] = useState<SelectedPlace | null>(() => {
+    if (!defaultName.trim()) return null;
     if (
       defaultLat != null &&
       defaultLng != null &&
       Number.isFinite(defaultLat) &&
-      Number.isFinite(defaultLng) &&
-      defaultName.trim()
+      Number.isFinite(defaultLng)
     ) {
       return { label: defaultName.trim(), lat: defaultLat, lon: defaultLng };
     }
-    return null;
+    // name-only (e.g. from AI prefill — no coordinates yet)
+    return { label: defaultName.trim(), lat: null, lon: null };
   });
 
   const runSearch = useCallback(async (q: string) => {
@@ -91,14 +93,18 @@ export function TripDestinationPicker({
   const visibleHits = searchActive ? hits : [];
   const visibleSearchError = searchActive ? searchError : null;
   const visibleLoading = searchActive && loading;
+  /** แสดงผลค้นหาเมื่อยังไม่เลือกพิกัด หรือเลือกแค่ชื่อ (เช่น จาก AI) แล้วกำลังค้นหาใหม่ */
+  const showHitList =
+    visibleHits.length > 0 &&
+    (!selected || (selected.lat == null && selected.lon == null && searchActive));
 
   const hintId = `${fid}-dest-hint`;
 
   return (
     <div className={dense ? "space-y-2" : "space-y-3"}>
       <input type="hidden" name="destinationName" value={selected?.label ?? ""} readOnly />
-      <input type="hidden" name="destinationLat" value={selected != null ? String(selected.lat) : ""} readOnly />
-      <input type="hidden" name="destinationLng" value={selected != null ? String(selected.lon) : ""} readOnly />
+      <input type="hidden" name="destinationLat" value={selected?.lat != null ? String(selected.lat) : ""} readOnly />
+      <input type="hidden" name="destinationLng" value={selected?.lon != null ? String(selected.lon) : ""} readOnly />
 
       <div className={dense ? "space-y-1.5" : "space-y-2"}>
         {hideHeading ? (
@@ -144,7 +150,7 @@ export function TripDestinationPicker({
         </div>
         {visibleSearchError ? <p className="text-xs text-red-600">{visibleSearchError}</p> : null}
 
-        {visibleHits.length > 0 && !selected ? (
+        {showHitList ? (
           <ul
             className={
               dense
@@ -158,14 +164,17 @@ export function TripDestinationPicker({
               <li key={`${h.lat}-${h.lon}-${h.label.slice(0, 40)}`}>
                 <button
                   type="button"
-                  className="w-full px-3 py-2 text-left text-xs leading-snug text-fg hover:bg-brand-light/50 sm:text-sm"
+                  className="w-full px-3 py-2 text-left hover:bg-brand-light/50"
                   onClick={() => {
-                    setSelected(h);
+                    setSelected({ label: h.label, lat: h.lat, lon: h.lon });
                     setHits([]);
                     setQuery("");
                   }}
                 >
-                  {h.label}
+                  <p className="text-xs leading-snug text-fg sm:text-sm">{h.label}</p>
+                  {h.sublabel ? (
+                    <p className="mt-0.5 text-[11px] leading-snug text-fg-muted">{h.sublabel}</p>
+                  ) : null}
                 </button>
               </li>
             ))}
@@ -196,29 +205,37 @@ export function TripDestinationPicker({
               <X className="size-4" strokeWidth={1.5} />
             </button>
           </div>
-          <div
-            className={`relative w-full overflow-hidden ${dense ? "aspect-5/3 min-h-40 rounded-md border-0 bg-brand-light/25" : "aspect-video min-h-[12.5rem] rounded-md border border-border/60 bg-brand-light/20 sm:min-h-[14rem]"}`}
-          >
-            <iframe
-              title="แผนที่จุดหมายปลายทาง"
-              src={tripDestinationMapEmbedUrl(selected.lat, selected.lon, 14)}
-              className="absolute inset-0 h-full w-full border-0"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              allowFullScreen
-            />
-          </div>
-          <p className="text-[10px] text-fg-hint sm:text-xs">
-            แผนที่ (ฝัง) · ค้นหาสถานที่จาก OpenStreetMap —{" "}
-            <a
-              href={tripDestinationOpenStreetMapUrl(selected.lat, selected.lon, 15)}
-              className="font-medium text-brand hover:text-brand-mid"
-              target="_blank"
-              rel="noreferrer"
-            >
-              เปิดใน OpenStreetMap
-            </a>
-          </p>
+          {selected.lat != null && selected.lon != null ? (
+            <>
+              <div
+                className={`relative w-full overflow-hidden ${dense ? "aspect-5/3 min-h-40 rounded-md border-0 bg-brand-light/25" : "aspect-video min-h-[12.5rem] rounded-md border border-border/60 bg-brand-light/20 sm:min-h-[14rem]"}`}
+              >
+                <iframe
+                  title="แผนที่จุดหมายปลายทาง"
+                  src={tripDestinationMapEmbedUrl(selected.lat, selected.lon, 14)}
+                  className="absolute inset-0 h-full w-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
+              </div>
+              <p className="text-[10px] text-fg-hint sm:text-xs">
+                แผนที่ (ฝัง) · ค้นหาสถานที่จาก OpenStreetMap —{" "}
+                <a
+                  href={tripDestinationOpenStreetMapUrl(selected.lat, selected.lon, 15)}
+                  className="font-medium text-brand hover:text-brand-mid"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  เปิดใน OpenStreetMap
+                </a>
+              </p>
+            </>
+          ) : (
+            <p className="text-[11px] text-fg-hint sm:text-xs">
+              ยังไม่มีพิกัด — ค้นหาชื่อสถานที่ด้านบนเพื่อเพิ่มแผนที่
+            </p>
+          )}
         </div>
       ) : null}
     </div>
