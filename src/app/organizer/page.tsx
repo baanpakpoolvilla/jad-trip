@@ -39,17 +39,16 @@ export default async function OrganizerDashboardPage() {
   const organizerId = session.user.id;
   const now = new Date();
 
-  const [tripGroups, bookingGroups, upcomingTrips, recentTrips, userRow] = await Promise.all([
+  const [tripGroups, tripIds, upcomingTrips, recentTrips, userRow] = await Promise.all([
     db.trip.groupBy({
       by: ["status"],
       where: { organizerId },
       _count: { _all: true },
     }),
-    db.booking.groupBy({
-      by: ["status"],
-      where: { trip: { organizerId } },
-      _count: { _all: true },
-    }),
+    // Prisma ไม่รองรับ relation filter ใน groupBy — ดึง tripIds แยก แล้วใช้ tripId: { in: ... }
+    db.trip.findMany({ where: { organizerId }, select: { id: true } }).then((ts) =>
+      ts.map((t) => t.id),
+    ),
     db.trip.findMany({
       where: {
         organizerId,
@@ -79,6 +78,12 @@ export default async function OrganizerDashboardPage() {
       select: { brochureShareCode: true },
     }),
   ]);
+
+  const bookingGroups = await db.booking.groupBy({
+    by: ["status"],
+    where: { tripId: { in: tripIds } },
+    _count: { _all: true },
+  });
 
   const totalTrips = tripGroups.reduce((s, g) => s + g._count._all, 0);
   const published = countByStatus(tripGroups, TripStatus.PUBLISHED);
