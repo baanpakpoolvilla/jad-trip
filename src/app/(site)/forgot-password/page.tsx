@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { safeAuth } from "@/lib/auth-session";
 import { ForgotPasswordForm } from "@/components/forgot-password-form";
 
 export default async function ForgotPasswordPage() {
-  const session = await auth();
+  const session = await safeAuth();
   if (session?.user) redirect("/post-login");
 
   return (

@@ -8,7 +8,7 @@ import {
   Share2,
   Sparkles,
 } from "lucide-react";
-import { auth } from "@/auth";
+import { safeAuth } from "@/lib/auth-session";
 import { getOrganizerBrochureHrefForSession } from "@/lib/organizer-brochure-share-code";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +43,7 @@ const steps = [
 ] as const;
 
 export default async function HomePage() {
-  const session = await auth();
+  const session = await safeAuth();
   const brochureHref = await getOrganizerBrochureHrefForSession(session);
 
   return (

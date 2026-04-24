@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
-import { auth } from "@/auth";
 import { PublicBrandLink } from "@/components/public-brand-link";
+import { safeAuth } from "@/lib/auth-session";
 import { getOrganizerBrochureHrefForSession } from "@/lib/organizer-brochure-share-code";
-import { getSiteSettings } from "@/lib/site-settings";
+import { getSiteSettingsSafe } from "@/lib/site-settings";
 
 const navItemClass =
   "inline-flex min-h-10 min-w-10 items-center justify-center gap-1 rounded-full px-2.5 text-[13px] font-medium text-white/95 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brand sm:min-h-11 sm:min-w-11 sm:gap-1.5 sm:px-3.5 sm:text-sm";
 
 export async function PublicShell({ children }: { children: React.ReactNode }) {
-  const [session, siteSettings] = await Promise.all([auth(), getSiteSettings()]);
+  const [session, siteSettings] = await Promise.all([safeAuth(), getSiteSettingsSafe()]);
   const dashboardHref =
     session?.user?.role === "ADMIN"
       ? "/admin"

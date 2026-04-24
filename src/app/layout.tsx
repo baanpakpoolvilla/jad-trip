@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_Thai } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { getMetadataBaseUrl } from "@/lib/public-site-url";
-import { getSiteSettings } from "@/lib/site-settings";
+import { getSiteSettingsSafe } from "@/lib/site-settings";
+import { safeHttpHref } from "@/lib/social-link";
 import "./globals.css";
 
 const notoSansThai = Noto_Sans_Thai({
@@ -19,9 +20,10 @@ const inter = Inter({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const s = await getSiteSettings();
+  const s = await getSiteSettingsSafe();
   const title = `${s.siteName} — ${s.siteTagline}`;
-  const shareImageUrl = s.ogImageUrl?.trim() || s.logoUrl?.trim();
+  const shareImageUrl = safeHttpHref(s.ogImageUrl) ?? safeHttpHref(s.logoUrl);
+  const faviconHref = safeHttpHref(s.faviconUrl);
 
   return {
     metadataBase: getMetadataBaseUrl(),
@@ -30,8 +32,8 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${s.siteName}`,
     },
     description: s.siteDescription,
-    ...(s.faviconUrl?.trim()
-      ? { icons: { icon: s.faviconUrl.trim(), shortcut: s.faviconUrl.trim() } }
+    ...(faviconHref
+      ? { icons: { icon: faviconHref, shortcut: faviconHref } }
       : {}),
     openGraph: {
       type: "website",

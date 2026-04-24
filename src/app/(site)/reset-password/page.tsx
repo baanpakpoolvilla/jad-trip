@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { safeAuth } from "@/lib/auth-session";
 import { ResetPasswordForm } from "@/components/reset-password-form";
 
 type Props = { searchParams: Promise<{ token?: string | string[] }> };
 
 export default async function ResetPasswordPage({ searchParams }: Props) {
-  const session = await auth();
+  const session = await safeAuth();
   if (session?.user) redirect("/post-login");
 
   const sp = await searchParams;

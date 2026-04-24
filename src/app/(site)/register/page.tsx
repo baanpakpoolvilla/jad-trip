@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { safeAuth } from "@/lib/auth-session";
 import { RegisterForm } from "@/components/register-form";
 
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RegisterPage() {
-  const session = await auth();
+  const session = await safeAuth();
   if (session?.user) redirect("/post-login");
 
   return (

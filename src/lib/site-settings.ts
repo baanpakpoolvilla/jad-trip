@@ -39,3 +39,15 @@ export const getSiteSettings = unstable_cache(
   ["site-settings"],
   { tags: [SITE_SETTINGS_TAG] },
 );
+
+/** ใช้ใน layout / เชลล์สาธารณะ — DB ล่มหรือ Prisma error จะได้ค่า default แทนล้มทั้งหน้า */
+export async function getSiteSettingsSafe(): Promise<SiteSettings> {
+  try {
+    return await getSiteSettings();
+  } catch (err) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[getSiteSettings]", err);
+    }
+    return DEFAULT_SITE_SETTINGS;
+  }
+}

@@ -6,11 +6,16 @@ import { getPublicSiteBaseUrl } from "@/lib/public-site-url";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = getPublicSiteBaseUrl();
 
-  const trips = await db.trip.findMany({
-    where: { status: TripStatus.PUBLISHED },
-    select: { id: true, updatedAt: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  let trips: { id: string; updatedAt: Date }[] = [];
+  try {
+    trips = await db.trip.findMany({
+      where: { status: TripStatus.PUBLISHED },
+      select: { id: true, updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+    });
+  } catch {
+    // DB ไม่พร้อมระหว่าง build/prerender — อย่าให้ล้มทั้ง sitemap
+  }
 
   const tripEntries: MetadataRoute.Sitemap = trips.map((t) => ({
     url: `${base}/trips/${t.id}`,

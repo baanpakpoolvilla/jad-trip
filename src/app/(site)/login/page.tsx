@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { safeAuth } from "@/lib/auth-session";
 import { LoginForm } from "@/components/login-form";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 type Props = { searchParams: Promise<{ reset?: string | string[] }> };
 
 export default async function LoginPage({ searchParams }: Props) {
-  const session = await auth();
+  const session = await safeAuth();
   if (session?.user) redirect("/post-login");
 
   const sp = await searchParams;

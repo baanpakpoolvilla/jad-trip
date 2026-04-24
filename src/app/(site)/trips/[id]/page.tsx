@@ -22,6 +22,8 @@ import {
   tripDestinationOpenStreetMapUrl,
 } from "@/lib/trip-destination-map-embed";
 import { formatDepartureOptions } from "@/lib/departure-options";
+import { getPublicSiteBaseUrl } from "@/lib/public-site-url";
+import { safeHttpHref } from "@/lib/social-link";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description =
     trip.shortDescription?.trim() ||
     (trip.description?.replace(/<[^>]*>/g, "").slice(0, 155) ?? "");
+  const ogImage = safeHttpHref(trip.coverImageUrl);
 
   return {
     title,
@@ -47,13 +50,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       type: "article",
-      ...(trip.coverImageUrl ? { images: [{ url: trip.coverImageUrl, alt: title }] } : {}),
+      ...(ogImage ? { images: [{ url: ogImage, alt: title }] } : {}),
     },
     twitter: {
-      card: trip.coverImageUrl ? "summary_large_image" : "summary",
+      card: ogImage ? "summary_large_image" : "summary",
       title,
       description,
-      ...(trip.coverImageUrl ? { images: [trip.coverImageUrl] } : {}),
+      ...(ogImage ? { images: [ogImage] } : {}),
     },
     alternates: {
       canonical: `/trips/${id}`,
@@ -93,7 +96,7 @@ export default async function TripDetailPage({ params }: Props) {
           </Link>
         </nav>
         <TripShareButton
-          url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/trips/${trip.id}`}
+          url={`${getPublicSiteBaseUrl()}/trips/${trip.id}`}
           tripTitle={trip.title}
         />
       </div>
