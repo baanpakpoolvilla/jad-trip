@@ -4,8 +4,8 @@
  * POST /api/e2e-login
  * Body: { secret: string, role?: "ORGANIZER" | "ADMIN" }
  *
- * ต้องตั้ง E2E_SECRET ใน env เพื่อเปิดใช้งาน
- * ถ้าไม่มี E2E_SECRET — endpoint นี้จะตอบ 404 เสมอ
+ * ใช้ AUTH_SECRET เป็น bypass key — ถ้ารู้ AUTH_SECRET แสดงว่ามี server access อยู่แล้ว
+ * ถ้าไม่มี AUTH_SECRET — endpoint นี้จะตอบ 404 เสมอ
  */
 import { NextRequest, NextResponse } from "next/server";
 import { encode } from "@auth/core/jwt";
@@ -18,19 +18,19 @@ const COOKIE_NAME_HTTP = "authjs.session-token";
 const SESSION_MAX_AGE = 60 * 60; // 1 ชั่วโมง
 
 export async function POST(req: NextRequest) {
-  const e2eSecret = process.env.E2E_SECRET;
-  if (!e2eSecret) {
+  const authSecret = process.env.AUTH_SECRET;
+  if (!authSecret) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const body = await req.json().catch(() => ({})) as { secret?: string; role?: string };
-  if (body.secret !== e2eSecret) {
+  // ผู้เรียกต้องรู้ AUTH_SECRET เพื่อ authenticate
+  if (body.secret !== authSecret) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const role: Role = body.role === "ADMIN" ? "ADMIN" : "ORGANIZER";
   const email = `e2e-${role.toLowerCase()}@sayhitrip.test`;
-  const authSecret = process.env.AUTH_SECRET!;
 
   // หา หรือสร้าง test user
   let user = await db.user.findFirst({ where: { email } });
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       data: {
         email,
         name: `E2E ${role}`,
-        passwordHash: await hash(e2eSecret, 10),
+        passwordHash: await hash(authSecret, 10),
         role,
         onboardingCompletedAt: new Date(),
       },
