@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { safeAuth } from "@/lib/auth-session";
 
 export default async function OnboardingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const session = await safeAuth();
   if (!session?.user) redirect("/login");
+  if (!session.user.id) redirect("/login");
   if (session.user.role !== "ORGANIZER") redirect("/admin");
 
   return (

@@ -37,7 +37,7 @@ export async function getOrganizerPublicBrochureHref(userId: string): Promise<st
 export async function getOrganizerBrochureHrefForSession(
   session: Session | null,
 ): Promise<string | null> {
-  if (session?.user?.role !== "ORGANIZER") return null;
+  if (!session?.user?.id || session.user.role !== "ORGANIZER") return null;
   try {
     return await getOrganizerPublicBrochureHref(session.user.id);
   } catch {

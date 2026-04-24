@@ -119,10 +119,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id!;
         token.role = user.role;
       }
+      // ไม่ใช่ else-if: ถ้าเข้า branch Google แล้วยังไม่มี id (แข่ง DB / token เก่า) หรือรีเฟรช JWT ไม่มี `account`
+      if (token.email && !token.id) {
+        const dbUser = await db.user.findUnique({
+          where: { email: token.email },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        }
+      }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (session.user && token.id && token.role) {
         session.user.id = token.id as string;
         session.user.role = token.role as Role;
       }
