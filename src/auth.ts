@@ -4,6 +4,10 @@ import Google from "next-auth/providers/google";
 import { compare } from "bcryptjs";
 import type { Role } from "@prisma/client";
 import { db } from "@/lib/db";
+import {
+  isGoogleUserContentAvatarUrl,
+  mirrorGoogleAvatarToSupabase,
+} from "@/lib/mirror-google-avatar-to-supabase";
 
 // ALLOWED_EMAIL_DOMAINS: ถ้าตั้งค่า จะจำกัด Google sign-in เฉพาะโดเมนที่ระบุ
 // เช่น ALLOWED_EMAIL_DOMAINS="company.com,partner.org"
@@ -72,15 +76,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: user.email },
         });
         if (!existing) {
+          const mirrored = await mirrorGoogleAvatarToSupabase(user.image);
           await db.user.create({
             data: {
               email: user.email,
               name: user.name ?? user.email,
               passwordHash: "",
               role: "ORGANIZER",
-              avatarUrl: user.image ?? null,
+              avatarUrl: mirrored ?? user.image ?? null,
             },
           });
+        } else {
+          const current = existing.avatarUrl?.trim() ?? "";
+          const fromOAuth = user.image?.trim() ?? "";
+          const isGoogleStored = current.length > 0 && isGoogleUserContentAvatarUrl(current);
+          const shouldFillFromOAuth = current.length === 0 && fromOAuth.length > 0;
+          if (isGoogleStored || shouldFillFromOAuth) {
+            const source = isGoogleStored ? current : fromOAuth;
+            const mirrored = await mirrorGoogleAvatarToSupabase(source);
+            const nextAvatar = mirrored ?? source;
+            if (nextAvatar !== existing.avatarUrl) {
+              await db.user.update({
+                where: { id: existing.id },
+                data: { avatarUrl: nextAvatar },
+              });
+            }
+          }
         }
       }
       return true;

@@ -213,10 +213,9 @@ export function OrganizerAppShell({
             className="fixed inset-y-0 left-0 z-50 flex w-[min(18rem,88vw)] flex-col border-r border-white/10 bg-brand text-white shadow-2xl md:hidden"
             style={{
               paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))",
-              paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))",
             }}
           >
-            <div className="flex items-center justify-between gap-2 border-b border-white/15 px-3 py-2.5 sm:px-4 sm:py-3">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/15 px-3 py-2.5 sm:px-4 sm:py-3">
               <p className="text-[13px] font-semibold tracking-wide text-white/95 sm:text-sm">เมนูผู้จัด</p>
               <button
                 type="button"
@@ -227,14 +226,16 @@ export function OrganizerAppShell({
                 <X className="size-5" strokeWidth={1.5} aria-hidden />
               </button>
             </div>
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-2.5 pb-3 pt-1.5 sm:px-3 sm:pb-4 sm:pt-2">
-              <OrganizerNavLinks
-                onNavigate={() => setMenuOpen(false)}
-                unreadNotifications={unreadNotifications}
-                publicBrochureHref={publicBrochureHref}
-                flags={navFlags}
-              />
-              <div className="mt-4 border-t border-white/15 pt-3 sm:mt-6 sm:pt-4">
+            <div className="flex min-h-0 flex-1 flex-col px-2.5 pt-1.5 sm:px-3 sm:pt-2">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pb-2">
+                <OrganizerNavLinks
+                  onNavigate={() => setMenuOpen(false)}
+                  unreadNotifications={unreadNotifications}
+                  publicBrochureHref={publicBrochureHref}
+                  flags={navFlags}
+                />
+              </div>
+              <div className="shrink-0 border-t border-white/15 px-0.5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:pt-4">
                 <SignOutButton
                   variant="onBrand"
                   className="w-full justify-center rounded-lg border-white/35 py-2 text-[13px] sm:py-2.5 sm:text-sm"
@@ -245,12 +246,12 @@ export function OrganizerAppShell({
         </>
       ) : null}
 
-      {/* เดสก์ท็อป: sidebar */}
-      <aside className="relative z-10 hidden w-56 shrink-0 flex-col border-r border-brand-active/25 bg-brand text-white shadow-md md:flex md:min-h-dvh md:w-62 xl:w-60">
-        <div className="flex flex-1 flex-col px-3 pb-6 pt-8">
+      {/* เดสก์ท็อป: sidebar — sticky ติด viewport, เมนูกลางเลื่อนได้, ออกจากระบบติดล่างจอ */}
+      <aside className="relative z-10 hidden w-56 shrink-0 flex-col border-r border-brand-active/25 bg-brand text-white shadow-md md:sticky md:top-0 md:flex md:h-dvh md:max-h-dvh md:w-62 md:self-start xl:w-60">
+        <div className="flex min-h-0 flex-1 flex-col px-3 pt-8">
           <Link
             href="/organizer"
-            className="mb-8 flex items-center gap-2.5 rounded-lg px-2 py-1 text-white hover:bg-white/10"
+            className="mb-6 shrink-0 flex items-center gap-2.5 rounded-lg px-2 py-1 text-white hover:bg-white/10 sm:mb-8"
           >
             <Compass className="size-7 shrink-0" strokeWidth={1.5} aria-hidden />
             <div className="leading-tight">
@@ -258,12 +259,14 @@ export function OrganizerAppShell({
               <span className="text-xs font-medium text-white/75">ผู้จัดทริป</span>
             </div>
           </Link>
-          <OrganizerNavLinks
-            unreadNotifications={unreadNotifications}
-            publicBrochureHref={publicBrochureHref}
-            flags={navFlags}
-          />
-          <div className="mt-auto pt-6">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+            <OrganizerNavLinks
+              unreadNotifications={unreadNotifications}
+              publicBrochureHref={publicBrochureHref}
+              flags={navFlags}
+            />
+          </div>
+          <div className="shrink-0 border-t border-white/15 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))]">
             <SignOutButton
               variant="onBrand"
               className="w-full justify-center rounded-lg border-white/35 py-2.5"

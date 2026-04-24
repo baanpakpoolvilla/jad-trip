@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { OrganizerAppShell } from "@/components/organizer-app-shell";
-import { getOrganizerPublicBrochureHref } from "@/lib/organizer-brochure-share-code";
+import { getOrganizerBrochureHrefForSession } from "@/lib/organizer-brochure-share-code";
 
 export default async function OrganizerLayout({
   children,
@@ -22,10 +22,11 @@ export default async function OrganizerLayout({
 
   if (!userOnboarding?.onboardingCompletedAt) redirect("/onboarding");
 
-  const [unreadNotifications, publicBrochureHref] = await Promise.all([
+  const [unreadNotifications, brochureHref] = await Promise.all([
     db.notification.count({ where: { userId: session.user.id, readAt: null } }),
-    getOrganizerPublicBrochureHref(session.user.id),
+    getOrganizerBrochureHrefForSession(session),
   ]);
+  const publicBrochureHref = brochureHref ?? "/organizer";
 
   return (
     <OrganizerAppShell

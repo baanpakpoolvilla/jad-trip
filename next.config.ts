@@ -41,8 +41,8 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       // styles จาก self + inline (Tailwind)
       "style-src 'self' 'unsafe-inline'",
-      // รูปภาพจาก self + Supabase Storage + data URI
-      "img-src 'self' data: blob: https://*.supabase.co",
+      // รูปภาพ: Supabase + (สำรอง) Google OAuth — โดยปกติรูป Google ถูก mirror ไป Supabase ตอน sign-in
+      "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com",
       // fonts จาก self
       "font-src 'self' data:",
       // API calls ไปได้เฉพาะ self + Supabase
@@ -82,6 +82,12 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/sign/**",
+      },
+      // Google account profile pictures (OAuth)
+      {
+        protocol: "https",
+        hostname: "*.googleusercontent.com",
+        pathname: "/**",
       },
     ],
     // เปิด modern formats (WebP / AVIF) เพื่อลดขนาดไฟล์
