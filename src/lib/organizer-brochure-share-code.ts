@@ -38,5 +38,10 @@ export async function getOrganizerBrochureHrefForSession(
   session: Session | null,
 ): Promise<string | null> {
   if (session?.user?.role !== "ORGANIZER") return null;
-  return getOrganizerPublicBrochureHref(session.user.id);
+  try {
+    return await getOrganizerPublicBrochureHref(session.user.id);
+  } catch {
+    // JWT ยังเป็นผู้จัด แต่แถว User ถูกลบ / DB ผิดปกติ — อย่าให้ PublicShell ล้มทั้งหน้า
+    return null;
+  }
 }

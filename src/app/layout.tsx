@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_Thai } from "next/font/google";
 import { Providers } from "@/components/providers";
-import { getPublicSiteBaseUrl } from "@/lib/public-site-url";
+import { getMetadataBaseUrl } from "@/lib/public-site-url";
 import { getSiteSettings } from "@/lib/site-settings";
 import "./globals.css";
 
@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const shareImageUrl = s.ogImageUrl?.trim() || s.logoUrl?.trim();
 
   return {
-    metadataBase: new URL(getPublicSiteBaseUrl()),
+    metadataBase: getMetadataBaseUrl(),
     title: {
       default: title,
       template: `%s | ${s.siteName}`,
