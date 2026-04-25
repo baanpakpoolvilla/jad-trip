@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers";
 import { getMetadataBaseUrl } from "@/lib/public-site-url";
 import { getSiteSettingsSafe } from "@/lib/site-settings";
 import { safeHttpHref } from "@/lib/social-link";
+import { safeAuth } from "@/lib/auth-session";
 import "./globals.css";
 
 const notoSansThai = Noto_Sans_Thai({
@@ -65,18 +66,19 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await safeAuth();
   return (
     <html
       lang="th"
       className={`${notoSansThai.variable} ${inter.variable} h-full`}
     >
       <body className="min-h-full bg-canvas font-sans text-fg antialiased">
-        <Providers>{children}</Providers>
+        <Providers session={session}>{children}</Providers>
       </body>
     </html>
   );

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookingStatus, TripStatus } from "@prisma/client";
 import { Bell, CreditCard, PlusCircle, UserRound } from "lucide-react";
-import { auth } from "@/auth";
+import { safeAuth, getOrganizerUser } from "@/lib/auth-session";
 import { db } from "@/lib/db";
 import { formatBangkok } from "@/lib/datetime";
 import { OrganizerBrochureLinkCopy } from "@/components/organizer-brochure-link-copy";
@@ -33,22 +33,33 @@ function countByStatus<T extends string>(
 }
 
 export default async function OrganizerDashboardPage() {
-  const session = await auth();
+  const session = await safeAuth(); // cached — reuses layout's auth result
   if (!session?.user?.id) redirect("/login");
 
   const organizerId = session.user.id;
   const now = new Date();
 
-  const [tripGroups, tripIds, upcomingTrips, recentTrips, userRow] = await Promise.all([
+  // รวมทุก query เข้า Promise.all เดียว:
+  // เดิม: Promise.all([..., tripIds, ...]) → bookingGroups (2 round-trips แบบ sequential)
+  // ใหม่: raw SQL join Trip+Booking ทำให้ bookingGroups อยู่ใน round-trip เดียวกัน
+  // userRow ใช้ cache เดียวกับ layout — ไม่มี DB hit เพิ่ม
+  const [tripGroups, bookingGroups, upcomingTrips, recentTrips, userRow] = await Promise.all([
     db.trip.groupBy({
       by: ["status"],
       where: { organizerId },
       _count: { _all: true },
     }),
-    // Prisma ไม่รองรับ relation filter ใน groupBy — ดึง tripIds แยก แล้วใช้ tripId: { in: ... }
-    db.trip.findMany({ where: { organizerId }, select: { id: true } }).then((ts) =>
-      ts.map((t) => t.id),
-    ),
+    db.$queryRaw<{ status: string; count: bigint }[]>`
+      SELECT b.status, COUNT(*) AS count
+      FROM "Booking" b
+      INNER JOIN "Trip" t ON b."tripId" = t.id
+      WHERE t."organizerId" = ${organizerId}
+        AND (
+          b.status = 'CONFIRMED'
+          OR (b.status = 'PENDING_PAYMENT' AND b."expiresAt" >= ${now})
+        )
+      GROUP BY b.status
+    `,
     db.trip.findMany({
       where: {
         organizerId,
@@ -61,7 +72,12 @@ export default async function OrganizerDashboardPage() {
         _count: {
           select: {
             bookings: {
-              where: { status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_PAYMENT] } },
+              where: {
+                OR: [
+                  { status: BookingStatus.CONFIRMED },
+                  { status: BookingStatus.PENDING_PAYMENT, expiresAt: { gte: now } },
+                ],
+              },
             },
           },
         },
@@ -73,23 +89,14 @@ export default async function OrganizerDashboardPage() {
       take: 5,
       include: { _count: { select: { bookings: true } } },
     }),
-    db.user.findUnique({
-      where: { id: organizerId },
-      select: { brochureShareCode: true },
-    }),
+    getOrganizerUser(organizerId), // cached — reuses layout's DB result
   ]);
-
-  const bookingGroups = await db.booking.groupBy({
-    by: ["status"],
-    where: { tripId: { in: tripIds } },
-    _count: { _all: true },
-  });
 
   const totalTrips = tripGroups.reduce((s, g) => s + g._count._all, 0);
   const published = countByStatus(tripGroups, TripStatus.PUBLISHED);
   const drafts = countByStatus(tripGroups, TripStatus.DRAFT);
-  const confirmed = countByStatus(bookingGroups, BookingStatus.CONFIRMED);
-  const pendingPay = countByStatus(bookingGroups, BookingStatus.PENDING_PAYMENT);
+  const confirmed = Number(bookingGroups.find((r) => r.status === BookingStatus.CONFIRMED)?.count ?? 0);
+  const pendingPay = Number(bookingGroups.find((r) => r.status === BookingStatus.PENDING_PAYMENT)?.count ?? 0);
   const activeBookings = pendingPay + confirmed;
 
   const displayName = session.user.name?.trim() || "ผู้จัด";
@@ -112,6 +119,7 @@ export default async function OrganizerDashboardPage() {
           <h2 className="text-sm font-semibold text-brand">ลิงก์แชร์รายการทริป</h2>
           <Link
             href={brochureShortPath}
+            prefetch={false}
             className="text-xs font-medium text-brand hover:text-brand-mid sm:text-sm"
           >
             เปิดหน้าลูกค้า →
@@ -123,6 +131,7 @@ export default async function OrganizerDashboardPage() {
           โปรไฟล์สาธารณะ (ชื่อ รูป แนะนำตัว — ไม่มีอีเมล/เบอร์):{" "}
           <Link
             href={`${brochureShortPath}/profile`}
+            prefetch={false}
             className="font-medium text-brand hover:text-brand-mid hover:underline"
           >
             เปิดหน้าโปรไฟล์ →
@@ -140,6 +149,7 @@ export default async function OrganizerDashboardPage() {
             <Link
               key={c.label}
               href={c.href}
+              prefetch={false}
               className="jad-card-interactive block transition-colors"
             >
               <p className="text-xs text-fg-muted sm:text-sm">{c.label}</p>
@@ -155,6 +165,7 @@ export default async function OrganizerDashboardPage() {
             <Link
               key={c.label}
               href={c.href}
+              prefetch={false}
               className="jad-card-interactive block transition-colors"
             >
               <p className="text-xs text-fg-muted sm:text-sm">{c.label}</p>
@@ -170,6 +181,7 @@ export default async function OrganizerDashboardPage() {
       <section className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
         <Link
           href="/organizer/trips/new"
+          prefetch={false}
           className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-2 text-center text-[13px] font-medium leading-tight text-fg shadow-sm transition-colors hover:border-brand/35 hover:bg-brand-light/60 sm:min-h-0 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
         >
           <PlusCircle className="size-4 shrink-0 text-brand" strokeWidth={1.5} aria-hidden />
@@ -177,6 +189,7 @@ export default async function OrganizerDashboardPage() {
         </Link>
         <Link
           href="/organizer/payments"
+          prefetch={false}
           className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-2 text-center text-[13px] font-medium leading-tight text-fg shadow-sm transition-colors hover:border-brand/35 hover:bg-brand-light/60 sm:min-h-0 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
         >
           <CreditCard className="size-4 shrink-0 text-brand" strokeWidth={1.5} aria-hidden />
@@ -184,6 +197,7 @@ export default async function OrganizerDashboardPage() {
         </Link>
         <Link
           href="/organizer/notifications"
+          prefetch={false}
           className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-2 text-center text-[13px] font-medium leading-tight text-fg shadow-sm transition-colors hover:border-brand/35 hover:bg-brand-light/60 sm:min-h-0 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
         >
           <Bell className="size-4 shrink-0 text-brand" strokeWidth={1.5} aria-hidden />
@@ -191,6 +205,7 @@ export default async function OrganizerDashboardPage() {
         </Link>
         <Link
           href="/organizer/profile"
+          prefetch={false}
           className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-2 text-center text-[13px] font-medium leading-tight text-fg shadow-sm transition-colors hover:border-brand/35 hover:bg-brand-light/60 sm:min-h-0 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
         >
           <UserRound className="size-4 shrink-0 text-brand" strokeWidth={1.5} aria-hidden />
@@ -202,14 +217,14 @@ export default async function OrganizerDashboardPage() {
         <section className="space-y-3">
           <div className="flex items-end justify-between gap-2">
             <h2 className="text-lg font-semibold text-fg">ทริปที่กำลังจะถึง</h2>
-            <Link href="/organizer/trips" className="text-sm font-medium text-brand hover:underline">
+            <Link href="/organizer/trips" prefetch={false} className="text-sm font-medium text-brand hover:underline">
               ดูทั้งหมด
             </Link>
           </div>
           {upcomingTrips.length === 0 ? (
             <p className="text-sm text-fg-muted">
               ยังไม่มีทริปสถานะเปิดรับที่วันที่เริ่มอยู่ข้างหน้า —{" "}
-              <Link href="/organizer/trips/new" className="font-medium text-brand hover:underline">
+              <Link href="/organizer/trips/new" prefetch={false} className="font-medium text-brand hover:underline">
                 สร้างทริป
               </Link>
             </p>
@@ -219,6 +234,7 @@ export default async function OrganizerDashboardPage() {
                 <li key={t.id} className="min-w-0">
                   <Link
                     href={`/organizer/trips/${t.id}`}
+                    prefetch={false}
                     className="jad-card-interactive flex h-full min-h-26 flex-col gap-2 lg:min-h-0 lg:flex-row lg:items-center lg:justify-between"
                   >
                     <div className="min-w-0">
@@ -247,7 +263,7 @@ export default async function OrganizerDashboardPage() {
         <section className="space-y-3">
           <div className="flex items-end justify-between gap-2">
             <h2 className="text-lg font-semibold text-fg">อัปเดตล่าสุด</h2>
-            <Link href="/organizer/trips" className="text-sm font-medium text-brand hover:underline">
+            <Link href="/organizer/trips" prefetch={false} className="text-sm font-medium text-brand hover:underline">
               รายการทริป
             </Link>
           </div>
@@ -259,6 +275,7 @@ export default async function OrganizerDashboardPage() {
                 <li key={t.id} className="min-w-0">
                   <Link
                     href={`/organizer/trips/${t.id}`}
+                    prefetch={false}
                     className="jad-card-interactive flex h-full min-h-26 flex-col gap-2 lg:min-h-0 lg:flex-row lg:items-center lg:justify-between"
                   >
                     <div className="min-w-0">
