@@ -109,7 +109,7 @@ model Trip {
   destinationLng   Float?
   startAt          DateTime
   endAt            DateTime
-  /// รอบวันออกเพิ่มเติม / แพ็กเกจย่อย (บรรทัดละรายการ) — การจองในระบบผูกกับ startAt–endAt เท่านั้น
+  /// รอบวันออกเพิ่มเติม / แพ็กเกจย่อย (บรรทัดละรายการ) — การจองหลายรอบจะแยกโควตาตาม selectedRound
   departureOptions String      @default("")
   maxParticipants  Int
   pricePerPerson   Int

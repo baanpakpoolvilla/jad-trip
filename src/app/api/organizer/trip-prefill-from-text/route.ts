@@ -75,26 +75,90 @@ export async function POST(req: Request) {
 
   const model = (process.env.OPENAI_TRIP_PREFILL_MODEL ?? DEFAULT_OPENAI_MODEL).trim() || DEFAULT_OPENAI_MODEL;
 
-  const system = [
-    "You extract structured trip listing data from pasted social posts (often Thai).",
-    "Your entire reply must be one JSON object only (no markdown, no prose outside JSON).",
-    "Use empty string or omit keys when unknown.",
-    "title: concise trip name (Thai ok, e.g. 'ดอยห้วยทู่ 2 วัน 1 คืน'). Extract from the post headline or most prominent trip name.",
-    "shortDescription: 1–2 sentence hook / tagline for the trip (Thai ok). Use the post's opening narrative or catchy caption if present.",
-    "description: full trip overview in Thai — route description, difficulty, highlights, what participants will experience. Combine the narrative body of the post.",
-    "Datetime fields startAt, endAt, bookingClosesAt must be wall time in Asia/Bangkok as YYYY-MM-DDTHH:mm (no timezone suffix, no seconds).",
-    "Infer year 2026 when the post gives only month/day without year.",
-    "departureOptions: array of objects {startDate:'YYYY-MM-DD', endDate:'YYYY-MM-DD', note:string}. One entry per departure window. Infer year 2026. Put ALL listed date ranges EXCEPT the one mapped to startAt/endAt (use the first upcoming or earliest listed round for startAt/endAt). Use note for extra info like '#วันธรรมดา', 'ว่าง 4', sub-package names (e.g. 'สายอีสาน 3,700 บาท'), or pickup add-ons.",
-    "maxParticipants and pricePerPerson must be numbers when known.",
-    "itinerary: prefer object { \"days\": [ { \"title\": string, \"slots\": [ { \"time\": \"HH:mm\", \"detail\": string } ] } ] } when the post has a schedule; else omit or use empty string.",
-    "highlights, packingList, safetyNotes, guideProvides may be string (newlines or bullets) or string arrays (each line one item).",
-    "travelNotes: free text about transport between activities (Thai ok).",
-    "meetPoint: where to meet / pickup point (Thai). destinationName: main destination place name without requiring coordinates.",
-    "groupUrl: LINE or Facebook group URL if present in the paste.",
-    "Do not invent URLs for coverImageUrl unless clearly present in the paste.",
-  ].join("\n");
+  const system = `
+คุณคือผู้ช่วยแยก field ทริปจากโพสต์โซเชียล (ภาษาไทยหรืออังกฤษ) ให้กลับมาเป็น JSON object ตาม spec ด้านล่าง
+ตอบด้วย JSON object ล้วน ๆ เท่านั้น — ห้ามมี markdown, prose หรือข้อความนอก JSON
+ถ้าไม่มีข้อมูลสำหรับ field ใด ให้ละ key นั้นออก (อย่าใส่ null หรือ string ว่าง)
 
-  const user = `Extract trip fields as JSON from this pasted text:\n\n---\n${t}\n---`;
+===== FIELD SPEC =====
+
+title (string)
+  ชื่อทริปกระชับ เข้าใจง่าย — บอกจุดหมายและจุดเด่นหลัก เช่น "ดอยอินทนนท์ 1 วัน รวมรถไป-กลับ"
+  ดึงจากหัวข้อหรือชื่อที่โดดเด่นที่สุดในโพสต์ ไม่เกิน 80 ตัวอักษร
+
+shortDescription (string)
+  คำโปรยดึงดูด 1–2 ประโยค (ไทย) — เขียนเหมือน caption ชวนสมัคร ไม่ใช่ outline
+  ตัวอย่าง: "พิชิตดอยสูงสุดในไทย ชมทะเลหมอก สัมผัสอากาศเย็นสบาย ใน 1 วัน"
+  ถ้าโพสต์มี caption หรือวลีเปิดที่ดึงดูด ให้นำมาปรับใช้
+
+description (string)
+  ภาพรวมทริปแบบ "เรื่องเล่า" เป็นย่อหน้าต่อเนื่อง (ไทย) — ไม่ใช่ตาราง ไม่ใช่หัวข้อย่อย
+  ครอบคลุม: เส้นทาง/กิจกรรมหลัก ระดับความเหนื่อย/ยาก สิ่งที่ผู้เข้าร่วมจะได้สัมผัส
+  ถ้าโพสต์ต้นฉบับเป็นตารางหรือ bullet ให้แปลงเป็นย่อหน้าเรื่องเล่าที่ลื่นไหลอ่านง่าย
+  ไม่ต้องพูดถึงราคา วันที่ หรือรายการรวม/ไม่รวม (field อื่นจัดการ)
+
+highlights (string[] หรือ string บรรทัดละรายการ)
+  รายการ "รวมในราคา" และ "ไม่รวม/จ่ายเอง" — แต่ละบรรทัด = 1 รายการ
+  รูปแบบที่ดี: "รวม: รถรับ-ส่ง", "รวม: ที่พัก 1 คืน", "ไม่รวม: ตั๋วเครื่องบิน", "ไม่รวม: อาหาร"
+  ถ้าโพสต์มีตารางรวม/ไม่รวม ให้แตกเป็นบรรทัด อย่าใส่ทั้งตารางเป็น string เดียว
+
+packingList (string[] หรือ string บรรทัดละรายการ)
+  ของที่ผู้เข้าร่วมควรเตรียม — 1 รายการต่อบรรทัด สั้นกระชับ
+  เช่น: "รองเท้าเดินป่า", "เสื้อกันหนาว", "ยาส่วนตัว", "หมวก ครีมกันแดด"
+
+safetyNotes (string[] หรือ string บรรทัดละรายการ)
+  ข้อควรระวัง/ข้อจำกัด — 1 รายการต่อบรรทัด
+  เช่น: "ทางชันบางช่วง ต้องพร้อมร่างกาย", "ห้ามนำสัตว์เลี้ยง", "ผู้ป่วยโรคหัวใจควรแจ้งก่อน"
+
+guideProvides (string[] หรือ string บรรทัดละรายการ)
+  สิ่งที่ทีมงาน/ไกด์จัดให้ — 1 รายการต่อบรรทัด
+  เช่น: "น้ำดื่มตลอดทริป", "อุปกรณ์ปฐมพยาบาลเบื้องต้น", "วิทยุสื่อสาร"
+
+travelNotes (string)
+  รูปแบบการเดินทาง เช่น รถตู้/รถบัส/เครื่องบิน รวมหรือไม่รวม มีรับจากจุดใดบ้าง
+  เขียนเป็นข้อความต่อเนื่อง ถ้าโพสต์มีตารางรับส่ง ให้สรุปเป็นย่อหน้าสั้น
+
+itinerary (object หรือ string)
+  ถ้าโพสต์มีกำหนดการชัดเจน ให้คืน object: { "days": [ { "title": "วันที่ 1", "slots": [ { "time": "07:00", "detail": "รายละเอียด" } ] } ] }
+  ถ้าไม่มีกำหนดการ ให้ละ field นี้
+
+meetPoint (string)
+  จุดนัดพบหรือจุดรับ — ที่อยู่/ชื่อสถานที่ที่ชัดเจนในภาษาไทย
+  เช่น: "ลานจอดรถห้างเซ็นทรัลพระราม 9 ชั้น G ประตูฝั่ง MRT"
+
+destinationName (string)
+  ชื่อจุดหมายปลายทางหลัก ไม่ต้องมีพิกัด เช่น "ดอยอินทนนท์ จ.เชียงใหม่"
+
+startAt, endAt, bookingClosesAt (string YYYY-MM-DDTHH:mm)
+  เวลาไทย (Asia/Bangkok) ไม่มี timezone suffix ไม่มีวินาที
+  ถ้าโพสต์บอกแค่วัน ไม่บอกเวลา: startAt ใช้ 06:00, endAt ใช้ 20:00
+  ถ้าบอกแค่เดือน/วัน ไม่มีปี: สมมติปี 2026
+
+departureOptions (array of {startDate, endDate, note})
+  รอบออกเดินทางเพิ่มเติม — ทุกรอบ ยกเว้นรอบที่ใส่ใน startAt/endAt แล้ว
+  note: ใส่ข้อมูลเพิ่มเติมเช่น "วันธรรมดา", "ว่าง 4 ที่", ชื่อ sub-package, จุดรับเพิ่ม
+
+pricePerPerson (number), maxParticipants (number)
+  ตัวเลขเท่านั้น ห้ามใส่หน่วย
+
+policyNotes (string)
+  นโยบายการจอง/ยกเลิก เขียนเป็นย่อหน้าหรือบรรทัดต่อเนื่อง
+  เช่น เงื่อนไขมัดจำ กำหนดชำระส่วนที่เหลือ เงื่อนไขคืนเงิน
+
+groupUrl (string)
+  URL กลุ่ม LINE หรือ Facebook ถ้ามีในโพสต์ ห้ามแต่งขึ้นมาเอง
+
+coverImageUrl, galleryImageUrls: ละ field เหล่านี้ไว้เลย ไม่ต้องใส่
+
+===== END SPEC =====
+`.trim();
+
+  const user = `วิเคราะห์ข้อความด้านล่างและแยกข้อมูลทริปออกมาเป็น JSON ตาม spec
+หากข้อมูลอยู่ในรูปตาราง หัวข้อ หรือ bullet ให้แปลงเนื้อหาให้เหมาะกับวัตถุประสงค์ของแต่ละ field ตาม spec
+
+---
+${t}
+---`;
 
   let res: Response;
   try {

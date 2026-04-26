@@ -25,6 +25,7 @@ import {
 } from "@/lib/departure-options";
 import { getPublicSiteBaseUrl } from "@/lib/public-site-url";
 import { safeHttpHref } from "@/lib/social-link";
+import { countActiveSeatsByRoundNoExpire } from "@/lib/bookings";
 
 export const dynamic = "force-dynamic";
 
@@ -71,13 +72,27 @@ export default async function TripDetailPage({ params }: Props) {
   if (!data) notFound();
 
   const { trip, spotsLeft } = data;
-  const canBook = spotsLeft > 0;
   if (!trip.shareCode) notFound();
 
   const hasMultipleRounds = trip.departureOptions.trim().length > 0;
   const rounds = hasMultipleRounds
     ? parseDepartureRounds(trip.startAt, trip.endAt, trip.departureOptions)
     : [];
+  const roundsWithSpotsLeft = hasMultipleRounds
+    ? (() => {
+        const labels = rounds.map((r) => r.label);
+        return countActiveSeatsByRoundNoExpire(trip.id, labels, new Date()).then((usedByRound) =>
+          rounds.map((r) => ({
+            ...r,
+            spotsLeft: Math.max(0, trip.maxParticipants - (usedByRound[r.label] ?? 0)),
+          })),
+        );
+      })()
+    : Promise.resolve([]);
+  const resolvedRounds = await roundsWithSpotsLeft;
+  const canBook = hasMultipleRounds
+    ? resolvedRounds.some((r) => r.spotsLeft > 0)
+    : spotsLeft > 0;
 
   const backHref = organizerPublicBrochureHrefFromOrganizer({
     id: trip.organizerId,
@@ -120,7 +135,7 @@ export default async function TripDetailPage({ params }: Props) {
       />
 
       {hasMultipleRounds ? (
-        <TripRoundPickerCta tripId={trip.id} rounds={rounds} canBook={canBook} />
+        <TripRoundPickerCta tripId={trip.id} rounds={resolvedRounds} canBook={canBook} />
       ) : (
         <TripRichBlock
           title="รอบเดินทางเพิ่มเติม"

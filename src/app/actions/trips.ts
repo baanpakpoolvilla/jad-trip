@@ -413,12 +413,18 @@ export async function cancelBookingAsOrganizer(
 export async function getTripForOrganizer(tripId: string) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "ORGANIZER") return null;
+  const now = new Date();
 
   return db.trip.findFirst({
     where: { id: tripId, organizerId: session.user.id },
     include: {
       bookings: {
-        where: { status: { in: ["CONFIRMED", "PENDING_PAYMENT"] } },
+        where: {
+          OR: [
+            { status: "CONFIRMED" },
+            { status: "PENDING_PAYMENT", expiresAt: { gte: now } },
+          ],
+        },
         orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       },
     },

@@ -33,6 +33,7 @@ function NavLink({
   return (
     <Link
       href={href}
+      prefetch={false}
       onClick={() => onNavigate?.()}
       className={`flex w-full min-w-0 items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors sm:gap-3 sm:px-3 sm:py-2.5 sm:text-sm ${className} ${
         active
@@ -100,6 +101,7 @@ function OrganizerNavLinks({
       <div className="my-1.5 border-t border-white/15 sm:my-2" />
       <Link
         href={publicBrochureHref}
+        prefetch={false}
         onClick={() => onNavigate?.()}
         className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white sm:gap-3 sm:px-3 sm:py-2.5 sm:text-sm"
       >
@@ -173,6 +175,7 @@ export function OrganizerAppShell({
         <div className="flex items-center justify-between gap-2 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top,0px))] sm:gap-3 sm:px-6 sm:pb-3 sm:pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
           <Link
             href="/organizer"
+            prefetch={false}
             className="flex min-w-0 flex-1 items-center gap-1.5 rounded-lg py-0.5 text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/30 focus-visible:ring-offset-2 sm:gap-2 sm:py-1"
           >
             <Compass className="size-4.5 shrink-0 sm:size-5" strokeWidth={1.5} aria-hidden />
@@ -251,6 +254,7 @@ export function OrganizerAppShell({
         <div className="flex min-h-0 flex-1 flex-col px-3 pt-8">
           <Link
             href="/organizer"
+            prefetch={false}
             className="mb-6 shrink-0 flex items-center gap-2.5 rounded-lg px-2 py-1 text-white hover:bg-white/10 sm:mb-8"
           >
             <Compass className="size-7 shrink-0" strokeWidth={1.5} aria-hidden />

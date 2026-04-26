@@ -81,7 +81,7 @@ export default async function OrganizerTripsPage() {
             {trips.length} ทริป · คลิกเพื่อดูผู้จอง
           </p>
         </header>
-        <Link href="/organizer/trips/new" className="jad-btn-primary shrink-0 text-sm">
+        <Link href="/organizer/trips/new" prefetch={false} className="jad-btn-primary shrink-0 text-sm">
           สร้างทริป
         </Link>
       </div>
@@ -96,10 +96,10 @@ export default async function OrganizerTripsPage() {
             <p className="text-xs text-fg-hint">บัญชีปัจจุบัน: {session.user.email}</p>
           ) : null}
           <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-center">
-            <Link href="/organizer/trips/new" className="jad-btn-primary text-sm">
+            <Link href="/organizer/trips/new" prefetch={false} className="jad-btn-primary text-sm">
               สร้างทริป
             </Link>
-            <Link href={brochureHref} className="jad-btn-secondary text-sm">
+            <Link href={brochureHref} prefetch={false} className="jad-btn-secondary text-sm">
               ลิงก์รายการทริป (แชร์)
             </Link>
           </div>
@@ -146,6 +146,7 @@ export default async function OrganizerTripsPage() {
               <li key={t.id} className="jad-card flex items-center gap-3 p-0 overflow-hidden">
                 <Link
                   href={`/organizer/trips/${t.id}`}
+                  prefetch={false}
                   className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3.5 transition-colors hover:bg-brand-light/30"
                 >
                   <div className="min-w-0 flex-1">
@@ -162,6 +163,7 @@ export default async function OrganizerTripsPage() {
                   <CopyTripPostButton trip={postData} />
                   <Link
                     href={`/organizer/trips/${t.id}/edit`}
+                    prefetch={false}
                     aria-label={`แก้ไขทริป ${t.title}`}
                     className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-fg-muted transition-colors hover:border-brand/40 hover:bg-brand-light/50 hover:text-brand"
                   >

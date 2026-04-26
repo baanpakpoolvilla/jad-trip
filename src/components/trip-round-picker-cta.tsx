@@ -5,19 +5,24 @@ import Link from "next/link";
 import { CalendarDays, Check } from "lucide-react";
 import type { DepartureRound } from "@/lib/departure-options";
 
+type RoundWithSpotsLeft = DepartureRound & { spotsLeft: number };
+
 export function TripRoundPickerCta({
   tripId,
   rounds,
   canBook,
 }: {
   tripId: string;
-  rounds: DepartureRound[];
+  rounds: RoundWithSpotsLeft[];
   canBook: boolean;
 }) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const selectedRound = rounds.find((round) => round.index === selectedIdx) ?? null;
 
   const bookHref =
-    selectedIdx !== null ? `/trips/${tripId}/book?round=${selectedIdx}` : null;
+    selectedRound && selectedRound.spotsLeft > 0
+      ? `/trips/${tripId}/book?round=${selectedRound.index}`
+      : null;
 
   return (
     <>
@@ -38,13 +43,18 @@ export function TripRoundPickerCta({
               <div className="mt-3 space-y-2">
                 {rounds.map((round) => {
                   const isSelected = selectedIdx === round.index;
+                  const isFull = round.spotsLeft <= 0;
                   return (
                     <button
                       key={round.index}
                       type="button"
+                      disabled={isFull}
                       onClick={() => setSelectedIdx(round.index)}
                       className={[
                         "flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-all",
+                        isFull
+                          ? "cursor-not-allowed border-border/80 bg-canvas-muted/40 text-fg-hint"
+                          : "",
                         isSelected
                           ? "border-brand bg-brand-light/60 font-medium text-brand shadow-sm"
                           : "border-border bg-canvas hover:border-brand/40 hover:bg-brand-light/30 text-fg",
@@ -65,7 +75,9 @@ export function TripRoundPickerCta({
                         {round.label}
                       </span>
                       <span className="shrink-0 text-[11px] font-normal text-fg-hint">
-                        รอบที่ {round.index + 1}
+                        {isFull
+                          ? "เต็มแล้ว"
+                          : `เหลือ ${round.spotsLeft.toLocaleString("th-TH")} ที่`}
                       </span>
                     </button>
                   );

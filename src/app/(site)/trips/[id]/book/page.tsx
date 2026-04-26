@@ -7,6 +7,7 @@ import { formatBangkokTripDates } from "@/lib/datetime";
 import { PAYMENT_MINUTES } from "@/lib/constants";
 import { getPublishedTripById } from "@/lib/trips-public";
 import { parseDepartureRounds } from "@/lib/departure-options";
+import { countActiveSeatsForRound } from "@/lib/bookings";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,6 @@ export default async function BookTripPage({ params, searchParams }: Props) {
   const data = await getPublishedTripById(id);
   if (!data) notFound();
   const { trip, spotsLeft } = data;
-  if (spotsLeft <= 0) notFound();
 
   const hasMultipleRounds = trip.departureOptions.trim().length > 0;
 
@@ -38,6 +38,16 @@ export default async function BookTripPage({ params, searchParams }: Props) {
     }
 
     selectedRound = rounds[roundIndex]!.label;
+    const leftInRound = Math.max(
+      0,
+      trip.maxParticipants - (await countActiveSeatsForRound(trip.id, selectedRound)),
+    );
+    if (leftInRound <= 0) {
+      // รอบที่เลือกเต็มแล้ว — กลับไปหน้าเลือกรอบ
+      redirect(`/trips/${id}`);
+    }
+  } else if (spotsLeft <= 0) {
+    notFound();
   }
 
   const dateLabel = formatBangkokTripDates(trip.startAt, trip.endAt);

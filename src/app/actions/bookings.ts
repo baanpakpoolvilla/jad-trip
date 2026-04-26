@@ -7,10 +7,12 @@ import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import {
   countActiveSeats,
+  countActiveSeatsForRound,
   paymentDeadlineFromNow,
   spotsLeft,
   tripAcceptsBookings,
 } from "@/lib/bookings";
+import { parseDepartureRounds } from "@/lib/departure-options";
 
 const bookingSchema = z.object({
   tripId: z.string().min(1),
@@ -49,8 +51,29 @@ export async function createBooking(
   const gate = tripAcceptsBookings(trip);
   if (!gate.ok) return { error: gate.reason };
 
-  const left = await spotsLeft(trip);
-  if (left <= 0) return { error: "ที่นั่งเต็มแล้ว" };
+  const hasMultipleRounds = trip.departureOptions.trim().length > 0;
+  let selectedRoundForBooking: string | null = null;
+  if (hasMultipleRounds) {
+    const rounds = parseDepartureRounds(trip.startAt, trip.endAt, trip.departureOptions);
+    const roundLabels = rounds.map((r) => r.label);
+    const submittedRound = parsed.data.selectedRound?.trim() ?? "";
+    if (!submittedRound) {
+      return { error: "กรุณาเลือกรอบเดินทางก่อนจอง" };
+    }
+    if (!roundLabels.includes(submittedRound)) {
+      return { error: "รอบเดินทางไม่ถูกต้อง กรุณาเลือกใหม่" };
+    }
+    selectedRoundForBooking = submittedRound;
+
+    const leftInRound = Math.max(
+      0,
+      trip.maxParticipants - (await countActiveSeatsForRound(trip.id, submittedRound)),
+    );
+    if (leftInRound <= 0) return { error: "รอบนี้เต็มแล้ว กรุณาเลือกรอบอื่น" };
+  } else {
+    const left = await spotsLeft(trip);
+    if (left <= 0) return { error: "ที่นั่งเต็มแล้ว" };
+  }
 
   const normalizedPhone = parsed.data.participantPhone.trim().replace(/[\s\-().]/g, "");
   const normalizedName = parsed.data.participantName.trim().toLowerCase();
@@ -61,8 +84,14 @@ export async function createBooking(
       status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_PAYMENT] },
       expiresAt: { gt: new Date() },
       OR: [
-        { participantPhone: { equals: normalizedPhone, mode: "insensitive" } },
-        { participantName: { equals: normalizedName, mode: "insensitive" } },
+        {
+          participantPhone: { equals: normalizedPhone, mode: "insensitive" },
+          ...(selectedRoundForBooking ? { selectedRound: selectedRoundForBooking } : {}),
+        },
+        {
+          participantName: { equals: normalizedName, mode: "insensitive" },
+          ...(selectedRoundForBooking ? { selectedRound: selectedRoundForBooking } : {}),
+        },
       ],
     },
     select: { participantName: true, participantPhone: true, status: true },
@@ -86,7 +115,7 @@ export async function createBooking(
       participantName: parsed.data.participantName.trim(),
       participantEmail: "",
       participantPhone: parsed.data.participantPhone.trim(),
-      selectedRound: parsed.data.selectedRound?.trim() || null,
+      selectedRound: selectedRoundForBooking,
       viewToken,
       expiresAt,
       status: BookingStatus.PENDING_PAYMENT,

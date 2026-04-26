@@ -294,6 +294,14 @@ export function TripForm(props: Props) {
   );
   const [coverBusy, setCoverBusy] = useState(false);
   const [galleryBusy, setGalleryBusy] = useState(false);
+  const [coverUploadProgress, setCoverUploadProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
+  const [galleryUploadProgress, setGalleryUploadProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
   const [imageUploadError, setImageUploadError] = useState<string | null>(
     null,
   );
@@ -655,25 +663,33 @@ export function TripForm(props: Props) {
             aria-describedby={`${fid}-cover-hint`}
             className="jad-input file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-brand-mid"
             onChange={async (e) => {
-              const f = e.target.files?.[0];
+              const f = Array.from(e.target.files ?? [])[0];
               e.target.value = "";
               if (!f) return;
               setImageUploadError(null);
               setCoverBusy(true);
+              setCoverUploadProgress({ done: 0, total: 1 });
               try {
                 const url = await uploadOrganizerImageFile(f);
                 setCoverUrl(url);
+                setCoverUploadProgress({ done: 1, total: 1 });
               } catch (err) {
                 setImageUploadError(
                   err instanceof Error ? err.message : "อัปโหลดไม่สำเร็จ",
                 );
               } finally {
                 setCoverBusy(false);
+                setCoverUploadProgress(null);
               }
             }}
           />
           {coverBusy ? (
-            <p className="text-xs text-fg-muted">กำลังอัปโหลดรูปหน้าปก…</p>
+            <p className="text-xs text-fg-muted" aria-live="polite">
+              กำลังอัปโหลดรูปหน้าปก…{" "}
+              {coverUploadProgress
+                ? `(${coverUploadProgress.done}/${coverUploadProgress.total})`
+                : ""}
+            </p>
           ) : null}
           {coverUrl && !locked ? (
             <button
@@ -736,28 +752,54 @@ export function TripForm(props: Props) {
             aria-describedby={`${fid}-gallery-hint`}
             className="jad-input file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-brand-mid"
             onChange={async (e) => {
-              const list = e.target.files;
+              const files = Array.from(e.target.files ?? []);
               e.target.value = "";
-              if (!list?.length) return;
+              if (!files.length) return;
               setImageUploadError(null);
               setGalleryBusy(true);
+              setGalleryUploadProgress({ done: 0, total: files.length });
               try {
                 const next: string[] = [];
-                for (const f of list) {
-                  next.push(await uploadOrganizerImageFile(f));
+                let failed = 0;
+                for (const f of files) {
+                  try {
+                    next.push(await uploadOrganizerImageFile(f));
+                  } catch {
+                    failed += 1;
+                  } finally {
+                    setGalleryUploadProgress((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            done: Math.min(prev.done + 1, prev.total),
+                          }
+                        : prev,
+                    );
+                  }
                 }
-                setGalleryLines((prev) => [...prev, ...next]);
-              } catch (err) {
-                setImageUploadError(
-                  err instanceof Error ? err.message : "อัปโหลดไม่สำเร็จ",
-                );
+                if (next.length > 0) {
+                  setGalleryLines((prev) => [...prev, ...next]);
+                }
+                if (failed > 0) {
+                  setImageUploadError(
+                    failed === files.length
+                      ? "อัปโหลดไม่สำเร็จ"
+                      : `อัปโหลดสำเร็จ ${next.length} รูป และไม่สำเร็จ ${failed} รูป`,
+                  );
+                }
               } finally {
                 setGalleryBusy(false);
+                setGalleryUploadProgress(null);
               }
             }}
           />
           {galleryBusy ? (
-            <p className="text-xs text-fg-muted">กำลังอัปโหลดแกลลอรี่…</p>
+            <p className="text-xs text-fg-muted" aria-live="polite">
+              กำลังอัปโหลดแกลลอรี่…{" "}
+              {galleryUploadProgress
+                ? `(${galleryUploadProgress.done}/${galleryUploadProgress.total})`
+                : ""}
+            </p>
           ) : null}
         </div>
       </FormSection>

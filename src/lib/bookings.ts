@@ -54,6 +54,22 @@ export async function countActiveSeats(tripId: string) {
   });
 }
 
+/** นับที่นั่งที่ใช้งานอยู่เฉพาะรอบที่เลือก */
+export async function countActiveSeatsForRound(tripId: string, selectedRound: string) {
+  await expireStaleBookingsForTrip(tripId);
+  const now = new Date();
+  return db.booking.count({
+    where: {
+      tripId,
+      selectedRound,
+      OR: [
+        { status: BookingStatus.CONFIRMED },
+        { status: BookingStatus.PENDING_PAYMENT, expiresAt: { gte: now } },
+      ],
+    },
+  });
+}
+
 /**
  * นับที่นั่งโดยไม่ expire (ใช้หลังจาก expireStaleBookingsGlobal ทำงานแล้ว)
  * ลด DB call ใน batch operations
@@ -68,6 +84,40 @@ export async function countActiveSeatsNoExpire(tripId: string, now: Date) {
       ],
     },
   });
+}
+
+/**
+ * นับที่นั่งรายรอบแบบ batch โดยไม่ expire ซ้ำ
+ * เหมาะใช้บนหน้าที่เรียก expireStaleBookingsGlobal มาก่อนแล้ว
+ */
+export async function countActiveSeatsByRoundNoExpire(
+  tripId: string,
+  rounds: string[],
+  now: Date,
+): Promise<Record<string, number>> {
+  const normalizedRounds = rounds
+    .map((r) => r.trim())
+    .filter(Boolean);
+  if (normalizedRounds.length === 0) return {};
+
+  const grouped = await db.booking.groupBy({
+    by: ["selectedRound"],
+    where: {
+      tripId,
+      selectedRound: { in: normalizedRounds },
+      OR: [
+        { status: BookingStatus.CONFIRMED },
+        { status: BookingStatus.PENDING_PAYMENT, expiresAt: { gte: now } },
+      ],
+    },
+    _count: { _all: true },
+  });
+
+  const counts: Record<string, number> = {};
+  for (const row of grouped) {
+    if (row.selectedRound) counts[row.selectedRound] = row._count._all;
+  }
+  return counts;
 }
 
 export function tripAcceptsBookings(trip: Trip) {
